@@ -37,13 +37,6 @@ builder.Services.Configure<CorsSettings>(configuration.GetSection(nameof(CorsSet
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
-// Cors
-builder.Services.AddCors(options => options.AddPolicy(AppConstants.CorsPolicies.WebClient, build => build
-    .AllowAnyHeader()
-    .WithOrigins(origins: configuration.GetValue("CorsSettings:PortalUrl", ""))
-    .AllowAnyMethod()
-    .AllowCredentials()));
-
 builder.Services.AddControllers();
 
 var app = builder.Build();
