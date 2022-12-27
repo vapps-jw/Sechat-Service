@@ -1,10 +1,8 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Sechat.Data;
 using Sechat.Service.Config;
+using Sechat.Service.Configuration;
+using Sechat.Service.Middleware;
 using Sechat.Service.Settings;
 using Serilog;
 
@@ -31,36 +29,49 @@ if (builder.Environment.IsDevelopment())
 var configuration = builder.Configuration;
 
 // Data Related
-builder.Services.AddDbContext<SechatContext>(options =>
-    options.UseNpgsql(configuration.GetConnectionString("Master"),
-    serverAction =>
-    {
-        _ = serverAction.EnableRetryOnFailure(3);
-        _ = serverAction.CommandTimeout(20);
-    }));
-builder.Services.AddDataProtection()
-                .SetApplicationName("vapps")
-                .PersistKeysToDbContext<SechatContext>();
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-                .AddEntityFrameworkStores<SechatContext>()
-                .AddDefaultTokenProviders();
+builder.Services.InstallServices(builder.Configuration, typeof(IServiceInstaller).Assembly);
 
 // Options from Settings
 builder.Services.Configure<CorsSettings>(configuration.GetSection(nameof(CorsSettings)));
 
-builder.Services.AddControllers();
-
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
+// Cors
+builder.Services.AddCors(options => options.AddPolicy(AppConstants.CorsPolicies.WebClient, build => build
+    .AllowAnyHeader()
+    .WithOrigins(origins: configuration.GetValue("CorsSettings:PortalUrl", ""))
+    .AllowAnyMethod()
+    .AllowCredentials()));
+
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Dev
+if (app.Environment.IsDevelopment())
+{
+    _ = app.UseDeveloperExceptionPage();
+}
+
+// Prod
+if (app.Environment.IsProduction())
+{
+    _ = app.UseExceptionHandler("/Error");
+    _ = app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+app.UseCors(AppConstants.CorsPolicies.WebClient);
+app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseCustomResponseHeaders();
+
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.MapControllers();
 
 app.Run();
+
