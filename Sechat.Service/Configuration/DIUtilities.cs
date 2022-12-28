@@ -1,11 +1,15 @@
-﻿using System.Reflection;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Linq;
+using System.Reflection;
 
 namespace Sechat.Service.Configuration
 {
     public static class DIUtilities
     {
-        public static IServiceCollection InstallServices(
-            this IServiceCollection services,
+        public static WebApplicationBuilder InstallServices(
+            this WebApplicationBuilder webApplicationBuilder,
             IConfiguration configuration,
             params Assembly[] assemblies)
         {
@@ -17,10 +21,10 @@ namespace Sechat.Service.Configuration
 
             foreach (var serviceInstaller in serviceInstallers)
             {
-                serviceInstaller.Install(services, configuration);
+                serviceInstaller.Install(webApplicationBuilder, configuration);
             }
 
-            return services;
+            return webApplicationBuilder;
 
             static bool IsAssignableToType<T>(TypeInfo typeInfo) =>
                 typeof(T).IsAssignableFrom(typeInfo) &&

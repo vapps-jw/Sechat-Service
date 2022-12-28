@@ -1,5 +1,10 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Sechat.Service.Config;
 using Sechat.Service.Configuration;
 using Sechat.Service.Middleware;
@@ -29,7 +34,7 @@ if (builder.Environment.IsDevelopment())
 var configuration = builder.Configuration;
 
 // Data Related
-builder.Services.InstallServices(builder.Configuration, typeof(IServiceInstaller).Assembly);
+builder.InstallServices(builder.Configuration, typeof(IServiceInstaller).Assembly);
 
 // Options from Settings
 builder.Services.Configure<CorsSettings>(configuration.GetSection(nameof(CorsSettings)));
