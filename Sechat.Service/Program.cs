@@ -1,5 +1,3 @@
-using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 using Sechat.Service.Config;
 using Sechat.Service.Configuration;
 using Sechat.Service.Middleware;
-using Sechat.Service.Settings;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,16 +28,11 @@ if (builder.Environment.IsDevelopment())
     _ = builder.Host.UseSerilog((context, config) => { _ = config.WriteTo.Console(); });
 }
 
-var configuration = builder.Configuration;
-
-// Data Related
+// Install Services
 builder.InstallServices(builder.Configuration, typeof(IServiceInstaller).Assembly);
 
-// Options from Settings
-builder.Services.Configure<CorsSettings>(configuration.GetSection(nameof(CorsSettings)));
-
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+// Setup Options from Settings
+builder.Services.AddConfig(builder.Configuration);
 
 builder.Services.AddControllers();
 
