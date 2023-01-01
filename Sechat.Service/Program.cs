@@ -61,6 +61,7 @@ app.UseAuthorization();
 app.UseCustomResponseHeaders();
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
 app.MapControllers();
 
 app.Run();

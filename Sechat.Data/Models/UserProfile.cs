@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Sechat.Data.Models
+﻿namespace Sechat.Data.Models
 {
-    internal class UserProfile
+    public record UserProfile
     {
+        public string Id { get; set; } = string.Empty;
+
     }
 }
