@@ -7,10 +7,10 @@ namespace Sechat.Service.Configuration
 {
     public class CorsServiceInstaller : IServiceInstaller
     {
-        public void Install(WebApplicationBuilder webApplicationBuilder, IConfiguration configuration) =>
+        public void Install(WebApplicationBuilder webApplicationBuilder) =>
             webApplicationBuilder.Services.AddCors(options => options.AddPolicy(AppConstants.CorsPolicies.WebClient, build => build
                 .AllowAnyHeader()
-                .WithOrigins(origins: configuration.GetValue("CorsSettings:PortalUrl", ""))
+                .WithOrigins(origins: webApplicationBuilder.Configuration.GetValue("CorsSettings:PortalUrl", ""))
                 .AllowAnyMethod()
                 .AllowCredentials()));
     }

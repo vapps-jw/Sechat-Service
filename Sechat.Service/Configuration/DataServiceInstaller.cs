@@ -10,10 +10,10 @@ namespace Sechat.Service.Configuration
 {
     public class DataServiceInstaller : IServiceInstaller
     {
-        public void Install(WebApplicationBuilder webApplicationBuilder, IConfiguration configuration)
+        public void Install(WebApplicationBuilder webApplicationBuilder)
         {
             _ = webApplicationBuilder.Services.AddDbContext<SechatContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("Master"),
+                options.UseNpgsql(webApplicationBuilder.Configuration.GetConnectionString("Master"),
                 serverAction =>
                 {
                     _ = serverAction.EnableRetryOnFailure(3);

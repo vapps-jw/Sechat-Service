@@ -1,16 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Service.Settings;
 
 namespace Sechat.Service.Configuration
 {
-    public static class ConfigurationOptionsInstaller
+    public class ConfigurationOptionsInstaller : IServiceInstaller
     {
-        public static IServiceCollection AddConfig(this IServiceCollection services, IConfiguration config)
-        {
-            _ = services.Configure<CorsSettings>(config.GetSection(nameof(CorsSettings)));
-
-            return services;
-        }
+        public void Install(WebApplicationBuilder webApplicationBuilder) =>
+            _ = webApplicationBuilder.Services.Configure<CorsSettings>(webApplicationBuilder.Configuration.GetSection(nameof(CorsSettings)));
     }
 }

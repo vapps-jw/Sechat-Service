@@ -34,6 +34,10 @@ builder.InstallServices(builder.Configuration, typeof(IServiceInstaller).Assembl
 // Setup Options from Settings
 builder.Services.AddConfig(builder.Configuration);
 
+builder.Services.AddSignalR(options =>
+{
+    options.DisableImplicitFromServicesParameters = true;
+});
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -53,8 +57,9 @@ if (app.Environment.IsProduction())
 
 app.UseHttpsRedirection();
 
-app.UseRouting();
 app.UseCors(AppConstants.CorsPolicies.WebClient);
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -62,7 +67,10 @@ app.UseCustomResponseHeaders();
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    _ = endpoints.MapDefaultControllerRoute();
+});
 
 app.Run();
 
