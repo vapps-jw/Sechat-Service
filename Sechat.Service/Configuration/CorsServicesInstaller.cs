@@ -5,7 +5,7 @@ using Sechat.Service.Config;
 
 namespace Sechat.Service.Configuration;
 
-public class CorsServiceInstaller : IServiceInstaller
+public class CorsServicesInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder) =>
         webApplicationBuilder.Services.AddCors(options => options.AddPolicy(AppConstants.CorsPolicies.WebClient, build => build

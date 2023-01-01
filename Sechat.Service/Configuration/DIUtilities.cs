@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -8,10 +7,7 @@ namespace Sechat.Service.Configuration;
 
 public static class DIUtilities
 {
-    public static WebApplicationBuilder InstallServices(
-        this WebApplicationBuilder webApplicationBuilder,
-        IConfiguration configuration,
-        params Assembly[] assemblies)
+    public static WebApplicationBuilder InstallServices(this WebApplicationBuilder webApplicationBuilder, params Assembly[] assemblies)
     {
         var serviceInstallers = assemblies
                 .SelectMany(a => a.DefinedTypes)

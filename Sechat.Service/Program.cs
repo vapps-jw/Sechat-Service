@@ -29,7 +29,7 @@ if (builder.Environment.IsDevelopment())
 }
 
 // Install Services
-builder.InstallServices(builder.Configuration, typeof(IServiceInstaller).Assembly);
+builder.InstallServices(typeof(IServiceInstaller).Assembly);
 
 var app = builder.Build();
 

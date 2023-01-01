@@ -1,6 +1,8 @@
 ﻿namespace Sechat.Data.Models;
 
-public record UserProfile
+public record UserProfile : BaseModel<string>
 {
-    public string Id { get; set; } = string.Empty;
+    public DateTime LastActivity { get; set; } = DateTime.UtcNow;
+
+    public List<UserFeature> UserFeatures { get; set; } = new();
 }
