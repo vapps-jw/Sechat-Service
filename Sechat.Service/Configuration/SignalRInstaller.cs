@@ -1,15 +1,12 @@
 ﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Sechat.Service.Configuration
+namespace Sechat.Service.Configuration;
+
+public class SignalRInstaller : IServiceInstaller
 {
-    public class SignalRInstaller : IServiceInstaller
+    public void Install(WebApplicationBuilder webApplicationBuilder) => webApplicationBuilder.Services.AddSignalR(options =>
     {
-        public void Install(WebApplicationBuilder webApplicationBuilder, IConfiguration configuration)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Install(WebApplicationBuilder webApplicationBuilder) => throw new System.NotImplementedException();
-    }
+        options.DisableImplicitFromServicesParameters = true;
+    });
 }

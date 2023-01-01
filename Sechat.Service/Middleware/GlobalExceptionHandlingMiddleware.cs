@@ -7,38 +7,37 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Sechat.Service.Middleware
+namespace Sechat.Service.Middleware;
+
+public class GlobalExceptionHandlingMiddleware : IMiddleware
 {
-    public class GlobalExceptionHandlingMiddleware : IMiddleware
+    private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
+
+    public GlobalExceptionHandlingMiddleware(ILogger<GlobalExceptionHandlingMiddleware> logger) => _logger = logger;
+
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
-
-        public GlobalExceptionHandlingMiddleware(ILogger<GlobalExceptionHandlingMiddleware> logger) => _logger = logger;
-
-        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+        try
         {
-            try
+            await next(context);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
+            var problem = new ProblemDetails()
             {
-                await next(context);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
+                Status = (int)HttpStatusCode.InternalServerError,
+                Type = "Server error",
+                Title = "Server error",
+                Detail = "Server error occured - please contact Admin",
+            };
 
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-                var problem = new ProblemDetails()
-                {
-                    Status = (int)HttpStatusCode.InternalServerError,
-                    Type = "Server error",
-                    Title = "Server error",
-                    Detail = "Server error occured - please contact Admin",
-                };
-
-                var json = JsonSerializer.Serialize(problem);
-                context.Response.ContentType = AppConstants.ContentTypes.Json;
-                await context.Response.WriteAsync(json);
-            }
+            var json = JsonSerializer.Serialize(problem);
+            context.Response.ContentType = AppConstants.ContentTypes.Json;
+            await context.Response.WriteAsync(json);
         }
     }
 }

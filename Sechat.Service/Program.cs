@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sechat.Service.Config;
 using Sechat.Service.Configuration;
+using Sechat.Service.Hubs;
 using Sechat.Service.Middleware;
 using Serilog;
 
@@ -31,15 +31,6 @@ if (builder.Environment.IsDevelopment())
 // Install Services
 builder.InstallServices(builder.Configuration, typeof(IServiceInstaller).Assembly);
 
-// Setup Options from Settings
-builder.Services.AddConfig(builder.Configuration);
-
-builder.Services.AddSignalR(options =>
-{
-    options.DisableImplicitFromServicesParameters = true;
-});
-builder.Services.AddControllers();
-
 var app = builder.Build();
 
 // Dev
@@ -55,22 +46,17 @@ if (app.Environment.IsProduction())
     _ = app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-
 app.UseCors(AppConstants.CorsPolicies.WebClient);
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCustomResponseHeaders();
-
+app.UseMiddleware<CustomResponseHeadersMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
-app.UseEndpoints(endpoints =>
-{
-    _ = endpoints.MapDefaultControllerRoute();
-});
+app.MapDefaultControllerRoute();
+app.MapHub<ChatHub>("/Chat");
 
 app.Run();
 

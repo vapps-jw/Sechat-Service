@@ -1,25 +1,27 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Threading.Tasks;
 
-namespace Sechat.Service.Middleware
+namespace Sechat.Service.Middleware;
+
+public class CustomResponseHeadersMiddleware : IMiddleware
 {
-    public static class CustomResponseHeadersMiddlewareExtensions
+    private readonly ILogger<CustomResponseHeadersMiddleware> _logger;
+
+    public CustomResponseHeadersMiddleware(ILogger<CustomResponseHeadersMiddleware> logger) => _logger = logger;
+
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        public static IApplicationBuilder UseCustomResponseHeaders(this IApplicationBuilder builder) => builder.UseMiddleware<CustomResponseHeadersMiddleware>();
-    }
-
-    public class CustomResponseHeadersMiddleware
-    {
-        private readonly RequestDelegate _next;
-
-        public CustomResponseHeadersMiddleware(RequestDelegate next) => _next = next;
-
-        public async Task InvokeAsync(HttpContext context)
+        try
         {
             context.Response.Headers.Add("API-RES", "vapps-server-response");
             context.Response.Headers.Add("X-Developed-By", "JW");
-            await _next(context);
+            await next(context);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
         }
     }
 }

@@ -3,13 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sechat.Service", "Sechat.Service\Sechat.Service.csproj", "{7713768B-8D6D-44D8-ACE6-3D4641D753C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Service", "Sechat.Service\Sechat.Service.csproj", "{7713768B-8D6D-44D8-ACE6-3D4641D753C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sechat.Domain", "Sechat.Domain\Sechat.Domain.csproj", "{D54F3337-0D4A-4C77-B2DC-AE58159933DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Data", "Sechat.Data\Sechat.Data.csproj", "{FC31E2D9-2FDC-45D6-AFF4-03274B0A6974}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sechat.Data", "Sechat.Data\Sechat.Data.csproj", "{FC31E2D9-2FDC-45D6-AFF4-03274B0A6974}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sechat.Tests", "Sechat.Tests\Sechat.Tests.csproj", "{F8465491-F1EA-4152-AA94-2CB2209C8696}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Tests", "Sechat.Tests\Sechat.Tests.csproj", "{F8465491-F1EA-4152-AA94-2CB2209C8696}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +19,6 @@ Global
 		{7713768B-8D6D-44D8-ACE6-3D4641D753C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7713768B-8D6D-44D8-ACE6-3D4641D753C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7713768B-8D6D-44D8-ACE6-3D4641D753C8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D54F3337-0D4A-4C77-B2DC-AE58159933DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D54F3337-0D4A-4C77-B2DC-AE58159933DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D54F3337-0D4A-4C77-B2DC-AE58159933DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D54F3337-0D4A-4C77-B2DC-AE58159933DE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FC31E2D9-2FDC-45D6-AFF4-03274B0A6974}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FC31E2D9-2FDC-45D6-AFF4-03274B0A6974}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC31E2D9-2FDC-45D6-AFF4-03274B0A6974}.Release|Any CPU.ActiveCfg = Release|Any CPU
