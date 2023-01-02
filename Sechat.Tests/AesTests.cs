@@ -9,15 +9,15 @@ public class AesTests
     [Fact]
     public void GenerateAesKeyTest()
     {
-        var key = Hasher.GenerateKey();
+        var key = Crypto.GenerateKey();
         Assert.True(!string.IsNullOrEmpty(key));
     }
 
     [Fact]
     public void EncryptStringTest()
     {
-        var key = Hasher.GenerateKey();
-        var encryptedString = Hasher.EncryptString(Convert.FromBase64String(key), testString);
+        var key = Crypto.GenerateKey();
+        var encryptedString = Crypto.EncryptString(Convert.FromBase64String(key), testString);
 
         Assert.True(!string.IsNullOrEmpty(encryptedString));
     }
@@ -25,12 +25,12 @@ public class AesTests
     [Fact]
     public void DecryptStringTest()
     {
-        var key = Hasher.GenerateKey();
-        var encryptedString = Hasher.EncryptString(Convert.FromBase64String(key), testString);
+        var key = Crypto.GenerateKey();
+        var encryptedString = Crypto.EncryptString(Convert.FromBase64String(key), testString);
 
         Assert.True(!string.IsNullOrEmpty(encryptedString));
 
-        var decryptedString = Hasher.DecryptString(Convert.FromBase64String(key), encryptedString);
+        var decryptedString = Crypto.DecryptString(Convert.FromBase64String(key), encryptedString);
 
         Assert.Equal(testString, decryptedString);
     }

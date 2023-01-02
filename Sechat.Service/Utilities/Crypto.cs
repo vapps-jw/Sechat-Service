@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace Sechat.Service.Utilities;
 
-public static class Hasher
+public static class Crypto
 {
     public static string EncryptString(byte[] key, string plainText)
     {
