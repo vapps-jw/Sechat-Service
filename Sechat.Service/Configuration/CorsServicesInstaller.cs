@@ -1,16 +1,17 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Sechat.Service.Config;
+using Sechat.Service.Utilities;
 
 namespace Sechat.Service.Configuration;
 
 public class CorsServicesInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder) =>
-        webApplicationBuilder.Services.AddCors(options => options.AddPolicy(AppConstants.CorsPolicies.WebClient, build => build
+        _ = webApplicationBuilder.Services.AddCors(options => options
+            .AddPolicy(AppConstants.CorsPolicies.WebClient, build => build
+            .WithOrigins(webApplicationBuilder.Configuration.GetValue("CorsSettings:WebAppUrl", ""))
             .AllowAnyHeader()
-            .WithOrigins(webApplicationBuilder.Configuration.GetValue("CorsSettings:PortalUrl", ""))
             .AllowAnyMethod()
             .AllowCredentials()));
 }

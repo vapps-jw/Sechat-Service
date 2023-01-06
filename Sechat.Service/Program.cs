@@ -2,11 +2,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Sechat.Service.Config;
 using Sechat.Service.Configuration;
 using Sechat.Service.Hubs;
 using Sechat.Service.Middleware;
+using Sechat.Service.Utilities;
 using Serilog;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,12 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 if (builder.Environment.IsProduction())
 {
     _ = builder.Configuration.AddJsonFile(AppConstants.Paths.SecretSettings, true, true);
-}
-
-// Kestrel Settings
-if (builder.Environment.IsDevelopment())
-{
-    _ = builder.WebHost.ConfigureKestrel(options => options.ListenLocalhost(5000));
 }
 
 // Logging
@@ -57,6 +52,14 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 app.MapDefaultControllerRoute();
 app.MapHub<ChatHub>("/Chat");
+
+DbManager.PrepareDatabase(app);
+Console.WriteLine($"--> Master App Settings used: {app.Configuration.GetValue("ConfigSet", "No config Set")}");
+
+if (app.Environment.IsDevelopment())
+{
+    await DbManager.SeedData(app);
+}
 
 app.Run();
 

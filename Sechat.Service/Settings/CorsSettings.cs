@@ -2,6 +2,6 @@
 
 public class CorsSettings
 {
-    public string PortalUrl { get; set; } = string.Empty;
+    public string WebAppUrl { get; set; } = string.Empty;
     public string ApiUrl { get; set; } = string.Empty;
 }

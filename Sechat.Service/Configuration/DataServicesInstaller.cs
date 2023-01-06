@@ -14,13 +14,13 @@ public class DataServicesInstaller : IServiceInstaller
     {
         if (webApplicationBuilder.Environment.IsDevelopment())
         {
-            _ = webApplicationBuilder.Services.AddDbContext<SechatContext>(options =>
-                options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+            _ = webApplicationBuilder.Services.AddDbContextFactory<SechatContext>(options =>
+                 options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
         }
 
         if (webApplicationBuilder.Environment.IsProduction())
         {
-            _ = webApplicationBuilder.Services.AddDbContext<SechatContext>(options =>
+            _ = webApplicationBuilder.Services.AddDbContextFactory<SechatContext>(options =>
                 options.UseNpgsql(webApplicationBuilder.Configuration.GetConnectionString("Master"),
                 serverAction =>
                 {

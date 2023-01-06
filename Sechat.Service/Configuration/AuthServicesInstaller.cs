@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Sechat.Data;
 
 namespace Sechat.Service.Configuration;
@@ -15,13 +16,31 @@ public class AuthServicesInstaller : IServiceInstaller
         _ = webApplicationBuilder.Services.AddDataProtection()
                     .SetApplicationName(webApplicationBuilder.Configuration.GetValue("AppSettings:Name", ""))
                     .PersistKeysToDbContext<SechatContext>();
-        _ = webApplicationBuilder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+
+        if (webApplicationBuilder.Environment.IsProduction())
         {
-            options.User.RequireUniqueEmail = false;
-            options.Password.RequiredLength = 8;
-        })
-        .AddEntityFrameworkStores<SechatContext>()
-        .AddDefaultTokenProviders();
+            _ = webApplicationBuilder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+            {
+                options.User.RequireUniqueEmail = false;
+                options.Password.RequiredLength = 8;
+            })
+            .AddEntityFrameworkStores<SechatContext>()
+            .AddDefaultTokenProviders();
+        }
+
+        if (webApplicationBuilder.Environment.IsDevelopment())
+        {
+            _ = webApplicationBuilder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+            {
+                options.User.RequireUniqueEmail = false;
+                options.Password.RequiredLength = 1;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireDigit = false;
+                options.Password.RequireUppercase = false;
+            })
+            .AddEntityFrameworkStores<SechatContext>()
+            .AddDefaultTokenProviders();
+        }
 
         _ = webApplicationBuilder.Services.ConfigureApplicationCookie(config =>
         {

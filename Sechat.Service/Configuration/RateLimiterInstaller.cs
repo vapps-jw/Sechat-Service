@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.RateLimiting;
-using Sechat.Service.Config;
+using Sechat.Service.Utilities;
 using System;
 
 namespace Sechat.Service.Configuration;

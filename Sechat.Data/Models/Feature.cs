@@ -1,6 +1,6 @@
 ﻿namespace Sechat.Data.Models;
 
-public record UserFeature
+public record Feature : BaseModel<long>
 {
     public string Name { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-﻿namespace Sechat.Service.Config;
+﻿namespace Sechat.Service.Utilities;
 
 public class AppConstants
 {

@@ -10,7 +10,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<Message> Messages { get; set; } = null!;
     public DbSet<Room> Rooms { get; set; } = null!;
     public DbSet<UserProfile> UserProfiles { get; set; } = null!;
-    public DbSet<UserFeature> UserFeatures { get; set; } = null!;
+    public DbSet<Feature> Features { get; set; } = null!;
 
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
@@ -21,7 +21,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         _ = modelBuilder.Entity<UserProfile>()
-            .HasMany(x => x.UserFeatures)
+            .HasMany(x => x.Features)
             .WithMany(x => x.UserProfiles);
 
         _ = modelBuilder.Entity<UserProfile>()
@@ -33,5 +33,6 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
             .WithOne(x => x.Room)
             .OnDelete(DeleteBehavior.Cascade);
 
+        base.OnModelCreating(modelBuilder);
     }
 }
