@@ -2,14 +2,13 @@
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 
-namespace Sechat.Service.Configuration
+namespace Sechat.Service.Configuration;
+
+public class FluentValidationInstaller : IServiceInstaller
 {
-    public class FluentValidationInstaller : IServiceInstaller
+    public void Install(WebApplicationBuilder webApplicationBuilder)
     {
-        public void Install(WebApplicationBuilder webApplicationBuilder)
-        {
-            _ = webApplicationBuilder.Services.AddFluentValidationAutoValidation();
-            _ = webApplicationBuilder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
-        }
+        _ = webApplicationBuilder.Services.AddFluentValidationAutoValidation();
+        _ = webApplicationBuilder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
     }
 }
