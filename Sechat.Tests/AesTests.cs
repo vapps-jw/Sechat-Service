@@ -1,4 +1,4 @@
-using Sechat.Service.Utilities;
+using Sechat.Service.Services;
 
 namespace Sechat.Tests;
 
@@ -9,15 +9,17 @@ public class AesTests
     [Fact]
     public void GenerateAesKeyTest()
     {
-        var key = Crypto.GenerateKey();
+        var encryptor = new AesEncryptor();
+        var key = encryptor.GenerateKey();
         Assert.True(!string.IsNullOrEmpty(key));
     }
 
     [Fact]
     public void EncryptStringTest()
     {
-        var key = Crypto.GenerateKey();
-        var encryptedString = Crypto.EncryptString(Convert.FromBase64String(key), testString);
+        var encryptor = new AesEncryptor();
+        var key = encryptor.GenerateKey();
+        var encryptedString = encryptor.EncryptString(key, testString);
 
         Assert.True(!string.IsNullOrEmpty(encryptedString));
     }
@@ -25,12 +27,13 @@ public class AesTests
     [Fact]
     public void DecryptStringTest()
     {
-        var key = Crypto.GenerateKey();
-        var encryptedString = Crypto.EncryptString(Convert.FromBase64String(key), testString);
+        var encryptor = new AesEncryptor();
+        var key = encryptor.GenerateKey();
+        var encryptedString = encryptor.EncryptString(key, testString);
 
         Assert.True(!string.IsNullOrEmpty(encryptedString));
 
-        var decryptedString = Crypto.DecryptString(Convert.FromBase64String(key), encryptedString);
+        var decryptedString = encryptor.DecryptString(key, encryptedString);
 
         Assert.Equal(testString, decryptedString);
     }

@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sechat.Data;
+using Sechat.Data.Repositories;
+using Sechat.Service.Services;
 using System;
 
 namespace Sechat.Service.Configuration;
@@ -28,5 +30,10 @@ public class DataServicesInstaller : IServiceInstaller
                     _ = serverAction.CommandTimeout(20);
                 }));
         }
+
+        _ = webApplicationBuilder.Services.AddScoped<ChatRepository>();
+        _ = webApplicationBuilder.Services.AddScoped<UserRepository>();
+
+        _ = webApplicationBuilder.Services.AddTransient<IServerEncryptor, AesEncryptor>();
     }
 }
