@@ -4,6 +4,6 @@ public record Message : BaseModel<long>
 {
     public string Text { get; set; } = string.Empty;
 
-    public long RoonId { get; set; }
-    public Room? Room { get; set; }
+    public long RoomId { get; set; }
+    public Room Room { get; set; }
 }

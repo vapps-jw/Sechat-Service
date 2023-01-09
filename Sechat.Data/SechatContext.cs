@@ -28,6 +28,11 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
             .HasMany(x => x.Rooms)
             .WithMany(x => x.Members);
 
+        _ = modelBuilder.Entity<UserProfile>()
+            .HasMany(x => x.Tokens)
+            .WithOne(x => x.UserProfile)
+            .OnDelete(DeleteBehavior.Cascade);
+
         _ = modelBuilder.Entity<Room>()
             .HasMany(x => x.Messages)
             .WithOne(x => x.Room)
