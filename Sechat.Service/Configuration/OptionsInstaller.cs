@@ -11,5 +11,6 @@ public class OptionsInstaller : IServiceInstaller
         _ = webApplicationBuilder.Services.Configure<CorsSettings>(webApplicationBuilder.Configuration.GetSection(nameof(CorsSettings)));
         _ = webApplicationBuilder.Services.Configure<CryptographySettings>(webApplicationBuilder.Configuration.GetSection(nameof(CryptographySettings)));
         _ = webApplicationBuilder.Services.Configure<AppSettings>(webApplicationBuilder.Configuration.GetSection(nameof(AppSettings)));
+        _ = webApplicationBuilder.Services.Configure<EmailSenderSettings>(webApplicationBuilder.Configuration.GetSection(nameof(EmailSenderSettings)));
     }
 }
