@@ -92,43 +92,47 @@ public class AccountController : SechatControllerBase
         return Ok();
     }
 
-    [HttpGet("get-profile")]
-    public async Task<IActionResult> GetProfile()
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] PasswordForm passwordForm)
     {
-        if (!_userRepository.ProfileExists(UserId))
-        {
-            _userRepository.CreateUserProfile(UserId);
-            if (await _userRepository.SaveChanges() == 0)
-            {
-                return Problem("Profile creation failed");
-            }
-        }
-
-        return Ok(_mapper.Map<UserProfileProjection>(_userRepository.GetUserProfile(UserId)));
-    }
-
-    [HttpPut("update-email")]
-    public async Task<IActionResult> UpdateEmail(
-        IEmailClient emailClient,
-        IOptionsMonitor<CorsSettings> corsSettings,
-        [FromBody] EmailForm emailForm)
-    {
-        if (emailForm.Equals(UserEmail))
+        var currentUser = await _userManager.FindByIdAsync(UserId);
+        if (currentUser is null)
         {
             return BadRequest();
         }
 
-        var currentUser = await _userManager.FindByIdAsync(UserId);
-        var confirmationToken = await _userManager.GenerateChangeEmailTokenAsync(currentUser, emailForm.Email);
+        var changePasswordResult = await _userManager.ChangePasswordAsync(currentUser, passwordForm.OldPassword, passwordForm.NewPassword);
+        if (!changePasswordResult.Succeeded)
+        {
+            return Problem();
+        }
 
+        await _signInManager.RefreshSignInAsync(currentUser);
+        return Ok();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] EmailForm emailForm,
+        IEmailClient emailClient,
+        IOptionsMonitor<CorsSettings> corsSettings)
+    {
+        var currentUser = await _userManager.FindByEmailAsync(emailForm.Email);
+        if (currentUser is null)
+        {
+            return Ok();
+        }
+
+        var confirmationToken = await _userManager.GeneratePasswordResetTokenAsync(currentUser);
         var qb = new QueryBuilder
         {
             { "token", confirmationToken },
-            { "email", emailForm.Email }
+            { "userId", UserId },
         };
-        var callbackUrl = $@"{corsSettings.CurrentValue.ApiUrl}/account/confirm-email/{qb}";
+        var callbackUrl = $@"{corsSettings.CurrentValue.WebAppUrl}/account/reset-password/{qb}";
 
-        var sgResponse = await emailClient.SendEmailConfirmationAsync(emailForm.Email, callbackUrl);
+        var sgResponse = await emailClient.SendPasswordResetAsync(emailForm.Email, callbackUrl);
         if (sgResponse.StatusCode != HttpStatusCode.Accepted)
         {
             return Problem();
@@ -137,16 +141,12 @@ public class AccountController : SechatControllerBase
         return Ok();
     }
 
-    [HttpGet("confirm-email")]
-    public async Task<IActionResult> ConfirmEmailAsync(string token, string email)
+    [AllowAnonymous]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] PasswordResetForm passwordResetForm)
     {
-        if (string.IsNullOrEmpty(token))
-        {
-            return BadRequest();
-        }
-
-        var currentUser = await _userManager.FindByIdAsync(UserId);
-        var confirmResult = await _userManager.ChangeEmailAsync(currentUser, email, token);
+        var currentUser = await _userManager.FindByIdAsync(passwordResetForm.UserId);
+        var confirmResult = await _userManager.ResetPasswordAsync(currentUser, passwordResetForm.Token, passwordResetForm.NewPassword);
 
         if (!confirmResult.Succeeded)
         {
