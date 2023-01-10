@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sechat.Data;
+using System;
 
 namespace Sechat.Service.Configuration;
 
@@ -45,6 +47,9 @@ public class AuthServicesInstaller : IServiceInstaller
         _ = webApplicationBuilder.Services.ConfigureApplicationCookie(config =>
         {
             config.Cookie.Domain = webApplicationBuilder.Configuration.GetValue("CorsSettings:CookieDomain", "");
+            config.Cookie.Name = "sechat-id";
+            config.ExpireTimeSpan = TimeSpan.FromDays(30);
+            config.Cookie.SameSite = SameSiteMode.Lax;
         });
 
         _ = webApplicationBuilder.Services

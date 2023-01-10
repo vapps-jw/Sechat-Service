@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Data;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Utilities;
@@ -25,6 +26,12 @@ public static class DbManager
         Console.WriteLine("--> Attempting to apply migrations...");
         try
         {
+            if (!context.Database.GetPendingMigrations().Any())
+            {
+                Console.WriteLine("--> No new migrations...");
+                return;
+            }
+
             context.Database.Migrate();
         }
         catch (Exception ex)
@@ -40,10 +47,10 @@ public static class DbManager
 
         for (var i = 1; i < 11; i++)
         {
-            var text = $"u{i}";
-            var user = new IdentityUser(text);
-            var res = await userManager.CreateAsync(user, text);
-            Console.WriteLine($"--> Creating User: {text} - Success: {res.Succeeded}");
+            var name = $"u{i}";
+            var user = new IdentityUser(name);
+            var res = await userManager.CreateAsync(user, name);
+            Console.WriteLine($"--> Creating User: {name} - Success: {res.Succeeded}");
         }
     }
 }

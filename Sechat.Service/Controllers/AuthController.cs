@@ -5,10 +5,9 @@ using Sechat.Service.Dtos;
 
 namespace Sechat.Service.Controllers;
 
-[ApiController]
 [Authorize]
 [Route("[controller]")]
-public class AuthController : ControllerBase
+public class AuthController : SechatControllerBase
 {
     private readonly ILogger<AuthController> _logger;
 

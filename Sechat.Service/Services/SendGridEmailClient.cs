@@ -1,4 +1,5 @@
 ﻿
+using FluentValidation.Validators;
 using Microsoft.Extensions.Options;
 using Sechat.Service.Settings;
 using SendGrid;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Sechat.Service.Services;
 
-public class SendGridEmailClient
+public class SendGridEmailClient : IEmailClient
 {
     private readonly IOptionsMonitor<EmailSenderSettings> _optionsMonitor;
     private readonly SendGridClient _client;

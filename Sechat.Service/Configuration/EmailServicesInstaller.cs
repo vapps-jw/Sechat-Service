@@ -6,5 +6,5 @@ namespace Sechat.Service.Configuration;
 
 public class EmailServicesInstaller : IServiceInstaller
 {
-    public void Install(WebApplicationBuilder webApplicationBuilder) => webApplicationBuilder.Services.AddScoped<SendGridEmailClient>();
+    public void Install(WebApplicationBuilder webApplicationBuilder) => webApplicationBuilder.Services.AddScoped<IEmailClient, SendGridEmailClient>();
 }

@@ -53,8 +53,9 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.MapDefaultControllerRoute();
 app.MapHub<ChatHub>("/Chat");
 
-DbManager.PrepareDatabase(app);
 Console.WriteLine($"--> Master App Settings used: {app.Configuration.GetValue("ConfigSet", "No config Set")}");
+
+DbManager.PrepareDatabase(app);
 
 if (app.Environment.IsDevelopment())
 {

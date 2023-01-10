@@ -4,10 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Sechat.Service.Controllers;
 
-[ApiController]
 [Authorize]
 [Route("[controller]")]
-public class UserController : ControllerBase
+public class UserController : SechatControllerBase
 {
     private readonly ILogger<UserController> _logger;
 
