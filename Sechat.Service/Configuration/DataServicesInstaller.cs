@@ -41,7 +41,7 @@ public class DataServicesInstaller : IServiceInstaller
         _ = webApplicationBuilder.Services.AddScoped<ChatRepository>();
         _ = webApplicationBuilder.Services.AddScoped<UserRepository>();
 
-        _ = webApplicationBuilder.Services.AddTransient<IServerEncryptor, AesEncryptor>();
+        _ = webApplicationBuilder.Services.AddTransient<IEncryptor, AesEncryptor>();
         _ = webApplicationBuilder.Services.AddTransient<ITokenService, TokenService>();
 
         _ = webApplicationBuilder.Services.AddAutoMapper(typeof(DefaultProfile));

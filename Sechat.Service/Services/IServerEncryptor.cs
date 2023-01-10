@@ -1,6 +1,6 @@
 ﻿namespace Sechat.Service.Services;
 
-public interface IServerEncryptor
+public interface IEncryptor
 {
     string DecryptString(string key, string cipherText);
     string EncryptString(string key, string plainText);

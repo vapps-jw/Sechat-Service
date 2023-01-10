@@ -8,6 +8,13 @@ public class ChatRepository : RepositoryBase<SechatContext>
     {
     }
 
-    public void CreateRoom(Room room) => _context.Add(room);
+    public void CreateRoom(string creatorId, string roomKey)
+    {
+        var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(creatorId));
+        var newRoom = new Room() { RoomKey = roomKey };
+        newRoom.Members.Add(profile);
+
+        _ = _context.Add(newRoom);
+    }
 }
 

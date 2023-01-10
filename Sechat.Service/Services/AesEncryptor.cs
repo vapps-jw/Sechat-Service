@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace Sechat.Service.Services;
 
-public class AesEncryptor : IServerEncryptor
+public class AesEncryptor : IEncryptor
 {
     public string EncryptString(string key, string plainText)
     {
