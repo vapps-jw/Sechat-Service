@@ -9,6 +9,8 @@ public class UserRepository : RepositoryBase<SechatContext>
     {
     }
 
+    // Friends
+
     // Profile
 
     public UserProfile GetUserProfile(string id) => _context.UserProfiles

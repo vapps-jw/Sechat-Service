@@ -40,6 +40,9 @@ public class AccountController : SechatControllerBase
         _userRepository = userRepository;
     }
 
+    [HttpGet("test")]
+    public IActionResult AuthTest() => Ok("SECRET");
+
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] UserCredentials userCredentials)

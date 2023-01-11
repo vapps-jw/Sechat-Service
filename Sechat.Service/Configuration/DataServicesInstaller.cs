@@ -19,17 +19,6 @@ public class DataServicesInstaller : IServiceInstaller
         //         options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
         //}
 
-        //if (webApplicationBuilder.Environment.IsProduction())
-        //{
-        //    _ = webApplicationBuilder.Services.AddDbContextFactory<SechatContext>(options =>
-        //        options.UseNpgsql(webApplicationBuilder.Configuration.GetConnectionString("Master"),
-        //        serverAction =>
-        //        {
-        //            _ = serverAction.EnableRetryOnFailure(3);
-        //            _ = serverAction.CommandTimeout(20);
-        //        }));
-        //}
-
         _ = webApplicationBuilder.Services.AddDbContextFactory<SechatContext>(options =>
             options.UseNpgsql(webApplicationBuilder.Configuration.GetConnectionString("Master"),
             serverAction =>

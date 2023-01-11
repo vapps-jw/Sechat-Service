@@ -7,13 +7,13 @@ namespace Sechat.Data;
 
 public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
 {
-    public DbSet<Message> Messages { get; set; } = null!;
-    public DbSet<Room> Rooms { get; set; } = null!;
-    public DbSet<UserProfile> UserProfiles { get; set; } = null!;
-    public DbSet<Feature> Features { get; set; } = null!;
-    public DbSet<Key> Keys { get; set; } = null!;
-
-    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+    public DbSet<Message> Messages { get; set; }
+    public DbSet<Room> Rooms { get; set; }
+    public DbSet<UserProfile> UserProfiles { get; set; }
+    public DbSet<Feature> Features { get; set; }
+    public DbSet<Key> Keys { get; set; }
+    public DbSet<UserConnection> UserConnections { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -33,6 +33,11 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
             .HasMany(x => x.Keys)
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
+
+        _ = modelBuilder.Entity<UserConnection>()
+            .HasIndex(c => c.Inviter);
+        _ = modelBuilder.Entity<UserConnection>()
+            .HasIndex(c => c.Invited);
 
         _ = modelBuilder.Entity<Room>()
             .HasMany(x => x.Messages)

@@ -43,7 +43,12 @@ public class UserController : SechatControllerBase
             }
         }
 
-        return Ok(_mapper.Map<UserProfileProjection>(_userRepository.GetUserProfile(UserId)));
+        var profileProjection = _mapper.Map<UserProfileProjection>(_userRepository.GetUserProfile(UserId));
+        profileProjection.UserId = UserId;
+        profileProjection.UserName = UserName;
+        profileProjection.Email = UserEmail;
+
+        return Ok(profileProjection);
     }
 
     [HttpPut("update-email")]
