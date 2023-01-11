@@ -21,6 +21,13 @@ public static class DbManager
         }
     }
 
+    public static void EnsureCreatedDatabase(IApplicationBuilder app)
+    {
+        using var serviceScope = app.ApplicationServices.CreateScope();
+        var context = serviceScope.ServiceProvider.GetService<SechatContext>();
+        _ = (context?.Database.EnsureCreated());
+    }
+
     private static void ApplyMigrations(SechatContext context)
     {
         Console.WriteLine("--> Attempting to apply migrations...");

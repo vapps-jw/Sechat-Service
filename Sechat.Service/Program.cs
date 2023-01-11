@@ -55,10 +55,14 @@ app.MapHub<ChatHub>("/Chat");
 
 Console.WriteLine($"--> Master App Settings used: {app.Configuration.GetValue("ConfigSet", "No config Set")}");
 
-DbManager.PrepareDatabase(app);
+if (app.Environment.IsProduction())
+{
+    DbManager.PrepareDatabase(app);
+}
 
 if (app.Environment.IsDevelopment())
 {
+    DbManager.EnsureCreatedDatabase(app);
     await DbManager.SeedData(app);
 }
 
