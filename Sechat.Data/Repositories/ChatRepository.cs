@@ -58,7 +58,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
         Name = r.Name
     }).ToList();
 
-    public void InviteToRoom(long roomId, string inviterUserId, string invitedUserId)
+    public void AddToRoom(long roomId, string inviterUserId, string invitedUserId)
     {
         // todo: check connections
         var room = _context.Rooms

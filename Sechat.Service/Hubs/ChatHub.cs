@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using Sechat.Service.Dtos.SignalRDtos;
-using System;
-using System.Threading.Tasks;
 
 namespace Sechat.Service.Hubs;
 
@@ -19,11 +17,4 @@ public class ChatHub : SechatHubBase<IChatHub>
     public ChatHub(ILogger<ChatHub> logger) => _logger = logger;
 
     public void LogConnection(ConnectionEstablishedDto data) => _logger.LogWarning("Connection established for user Id: {0} Name: {1} Message: {2}", UserId, UserName, data.Message);
-
-    // Lifecycle hooks
-
-    public override Task OnConnectedAsync() => base.OnConnectedAsync();
-
-    public override Task OnDisconnectedAsync(Exception exception) => base.OnDisconnectedAsync(exception);
-
 }
