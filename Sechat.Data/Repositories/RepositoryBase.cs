@@ -9,5 +9,7 @@ public abstract class RepositoryBase<TContext> where TContext : DbContext
     protected RepositoryBase(TContext context) => _context = context;
 
     public Task<int> SaveChanges() => _context.SaveChangesAsync();
+
+    public void ClearTracker() => _context.ChangeTracker.Clear();
 }
 

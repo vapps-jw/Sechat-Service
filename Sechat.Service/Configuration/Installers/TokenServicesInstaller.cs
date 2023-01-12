@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Service.Services;
 
-namespace Sechat.Service.Configuration;
+namespace Sechat.Service.Configuration.Installers;
 
 public class TokenServicesInstaller : IServiceInstaller
 {

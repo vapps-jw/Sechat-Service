@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Service.BackgroundServices;
 
-namespace Sechat.Service.Configuration;
+namespace Sechat.Service.Configuration.Installers;
 
 public class BackgroundServicesInstaller : IServiceInstaller
 {

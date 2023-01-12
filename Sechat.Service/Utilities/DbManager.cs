@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Data;
+using Sechat.Data.Repositories;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -51,12 +52,18 @@ public static class DbManager
     {
         using var serviceScope = app.ApplicationServices.CreateScope();
         var userManager = serviceScope.ServiceProvider.GetService<UserManager<IdentityUser>>();
+        var repo = serviceScope.ServiceProvider.GetService<UserRepository>();
 
         for (var i = 1; i < 11; i++)
         {
             var name = $"u{i}";
             var user = new IdentityUser(name);
             var res = await userManager.CreateAsync(user, name);
+            if (res.Succeeded)
+            {
+                repo.CreateUserProfile(user.Id);
+            }
+
             Console.WriteLine($"--> Creating User: {name} - Success: {res.Succeeded}");
         }
     }

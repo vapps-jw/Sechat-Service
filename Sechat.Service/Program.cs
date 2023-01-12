@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Sechat.Service.Configuration;
+using Sechat.Service.Configuration.Installers;
 using Sechat.Service.Hubs;
 using Sechat.Service.Middleware;
 using Sechat.Service.Utilities;
@@ -51,7 +52,7 @@ app.UseMiddleware<CustomResponseHeadersMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 app.MapDefaultControllerRoute();
-app.MapHub<ChatHub>("/Chat");
+app.MapHub<ChatHub>("/chat-hub");
 
 Console.WriteLine($"--> Master App Settings used: {app.Configuration.GetValue("ConfigSet", "No config Set")}");
 
@@ -59,10 +60,12 @@ if (app.Environment.IsProduction())
 {
     DbManager.PrepareDatabase(app);
 }
-
 if (app.Environment.IsDevelopment())
 {
     DbManager.EnsureCreatedDatabase(app);
+}
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.TestEnv))
+{
     await DbManager.SeedData(app);
 }
 

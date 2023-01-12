@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Sechat.Service.Configuration;
+namespace Sechat.Service.Configuration.Installers;
 
 public class SignalRInstaller : IServiceInstaller
 {

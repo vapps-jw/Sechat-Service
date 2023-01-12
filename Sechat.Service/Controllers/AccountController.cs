@@ -72,6 +72,13 @@ public class AccountController : SechatControllerBase
         return Ok();
     }
 
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        return Ok();
+    }
+
     [HttpDelete("delete-account")]
     public async Task<IActionResult> DeleteAccount()
     {

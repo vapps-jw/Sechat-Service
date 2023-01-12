@@ -9,7 +9,25 @@ public class UserRepository : RepositoryBase<SechatContext>
     {
     }
 
-    // Friends
+    // Connections
+
+    public bool IsConnected(string user, string otherUser)
+    {
+        var connection = _context.UserConnections
+            .FirstOrDefault(c => (c.Invited.Equals(user) || c.Inviter.Equals(user)) && (c.Invited.Equals(otherUser) || c.Inviter.Equals(otherUser)));
+
+        if (connection is null)
+        {
+            return false;
+        }
+
+        if (!connection.Approved)
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     // Profile
 
@@ -24,6 +42,8 @@ public class UserRepository : RepositoryBase<SechatContext>
         {
             _ = _context.UserProfiles.Remove(profile);
         }
+
+        // todo: delete connections and do cleanup
     }
 
     public bool ProfileExists(string id) => _context.UserProfiles

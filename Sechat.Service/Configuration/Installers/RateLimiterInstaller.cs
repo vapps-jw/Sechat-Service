@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Sechat.Service.Utilities;
 using System;
 
-namespace Sechat.Service.Configuration;
+namespace Sechat.Service.Configuration.Installers;
 
 public class RateLimiterInstaller : IServiceInstaller
 {

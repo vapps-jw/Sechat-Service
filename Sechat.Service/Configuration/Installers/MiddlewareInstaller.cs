@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Service.Middleware;
 
-namespace Sechat.Service.Configuration;
+namespace Sechat.Service.Configuration.Installers;
 
 public class MiddlewareInstaller : IServiceInstaller
 {

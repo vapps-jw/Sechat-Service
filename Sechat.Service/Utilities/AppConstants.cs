@@ -6,6 +6,10 @@ public class AppConstants
     {
         public const string SecretSettings = @"secrets/appsettings.secrets.json";
     }
+    public struct CustomEnvironments
+    {
+        public const string TestEnv = nameof(TestEnv);
+    }
     public struct ContentTypes
     {
         public const string Json = "application/json";

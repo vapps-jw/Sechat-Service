@@ -7,9 +7,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sechat.Data;
+using Sechat.Service.Utilities;
 using System;
 
-namespace Sechat.Service.Configuration;
+namespace Sechat.Service.Configuration.Installers;
 
 public class AuthServicesInstaller : IServiceInstaller
 {
@@ -30,7 +31,7 @@ public class AuthServicesInstaller : IServiceInstaller
             .AddDefaultTokenProviders();
         }
 
-        if (webApplicationBuilder.Environment.IsDevelopment())
+        if (webApplicationBuilder.Environment.IsDevelopment() || webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.TestEnv))
         {
             _ = webApplicationBuilder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {

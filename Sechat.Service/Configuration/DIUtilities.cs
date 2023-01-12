@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Sechat.Service.Configuration.Installers;
 using System;
 using System.Linq;
 using System.Reflection;
