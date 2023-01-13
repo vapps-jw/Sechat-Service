@@ -10,6 +10,29 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     }
 
+    // Access
+
+    public bool IsRoomAllowed(string userId, string roomId)
+    {
+        var members = _context.Rooms.Where(r => r.Id.Equals(roomId)).SelectMany(r => r.Members.Select(rm => rm.Id)).ToList();
+        return members.Any(m => m.Equals(userId));
+    }
+
+    // Messages
+
+    public Message CreateMessage(string userId, string messageText, string roomId)
+    {
+        // todo: add encryption
+
+        var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
+        if (profile == null) return null;
+
+        var room = _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId));
+        var newMessage = new Message() { Text = messageText, IdSentBy = profile.Id, NameSentBy = profile.UserName };
+        room.Messages.Add(newMessage);
+        return newMessage;
+    }
+
     // Rooms
 
     public Room CreateRoom(string roomName, string creatorUserId, string roomKey)
@@ -17,17 +40,17 @@ public class ChatRepository : RepositoryBase<SechatContext>
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(creatorUserId));
         if (profile == null) return null;
 
-        var newRoom = new Room() { RoomKey = roomKey, CreatorId = creatorUserId, Name = roomName };
+        var newRoom = new Room() { Id = Guid.NewGuid().ToString(), RoomKey = roomKey, CreatorId = creatorUserId, Name = roomName };
         newRoom.Members.Add(profile);
 
         _ = _context.Rooms.Add(newRoom);
         return newRoom;
     }
 
-    public void RemoveRoom(long roomId) => _context.Rooms.Remove(_context.Rooms.FirstOrDefault(p => p.Id == roomId));
+    public void RemoveRoom(string roomId) => _context.Rooms.Remove(_context.Rooms.FirstOrDefault(p => p.Id.Equals(roomId)));
 
-    public Room GetRoom(long roomId) => _context.Rooms
-    .Where(r => r.Id == roomId).Select(r => new Room()
+    public Room GetRoom(string roomId) => _context.Rooms
+    .Where(r => r.Id.Equals(roomId)).Select(r => new Room()
     {
         LastActivity = r.LastActivity,
         Created = r.Created,
@@ -62,11 +85,11 @@ public class ChatRepository : RepositoryBase<SechatContext>
         Name = r.Name
     }).ToListAsync();
 
-    public void AddToRoom(long roomId, string inviterUserId, string invitedUserId)
+    public void AddToRoom(string roomId, string inviterUserId, string invitedUserId)
     {
         // todo: check connections
         var room = _context.Rooms
-            .Where(r => r.Id == roomId)
+            .Where(r => r.Id.Equals(roomId))
             .Include(r => r.Members)
             .FirstOrDefault();
 

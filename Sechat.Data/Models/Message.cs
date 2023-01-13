@@ -6,6 +6,6 @@ public record Message : BaseModel<long>
     public string NameSentBy { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
 
-    public long RoomId { get; set; }
+    public string RoomId { get; set; }
     public Room Room { get; set; }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Sechat.Data.Models;
 
-public record Room : BaseTrackedModel<long>
+public record Room : BaseTrackedModel<string>
 {
     public string CreatorId { get; set; } = string.Empty;
 
