@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sechat.Data.Models;
-using Sechat.Data.Projections;
 
 namespace Sechat.Data.Repositories;
 
@@ -8,55 +7,60 @@ public class ChatRepository : RepositoryBase<SechatContext>
 {
     public ChatRepository(SechatContext context) : base(context)
     {
+
     }
 
     // Rooms
 
-    public void CreateRoom(string roomName, string creatorUserId, string roomKey)
+    public Room CreateRoom(string roomName, string creatorUserId, string roomKey)
     {
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(creatorUserId));
-        if (profile == null) return;
+        if (profile == null) return null;
 
         var newRoom = new Room() { RoomKey = roomKey, CreatorId = creatorUserId, Name = roomName };
         newRoom.Members.Add(profile);
 
         _ = _context.Rooms.Add(newRoom);
+        return newRoom;
     }
 
     public void RemoveRoom(long roomId) => _context.Rooms.Remove(_context.Rooms.FirstOrDefault(p => p.Id == roomId));
 
-    public RoomProjection GetRoom(long roomId) => _context.Rooms
-    .Where(r => r.Id == roomId).Select(r => new RoomProjection()
+    public Room GetRoom(long roomId) => _context.Rooms
+    .Where(r => r.Id == roomId).Select(r => new Room()
     {
         LastActivity = r.LastActivity,
         Created = r.Created,
         CreatorId = r.CreatorId,
         Id = r.Id,
-        Members = r.Members.Select(m => m.Id).ToList(),
+        Members = r.Members,
+        Messages = r.Messages,
         Name = r.Name
     }).FirstOrDefault();
 
-    public List<RoomProjection> GetRooms(string memberUserId) => _context.Rooms
-    .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new RoomProjection()
+    public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
+    .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
     {
         LastActivity = r.LastActivity,
         Created = r.Created,
         CreatorId = r.CreatorId,
         Id = r.Id,
-        Members = r.Members.Select(m => m.Id).ToList(),
+        Members = r.Members,
+        Messages = r.Messages,
         Name = r.Name
-    }).ToList();
+    }).ToListAsync();
 
-    public List<RoomProjection> GetCreatedRooms(string creatorUserId) => _context.Rooms
-    .Where(r => r.CreatorId.Equals(creatorUserId)).Select(r => new RoomProjection()
+    public Task<List<Room>> GetCreatedRooms(string creatorUserId) => _context.Rooms
+    .Where(r => r.CreatorId.Equals(creatorUserId)).Select(r => new Room()
     {
         LastActivity = r.LastActivity,
         Created = r.Created,
         CreatorId = r.CreatorId,
         Id = r.Id,
-        Members = r.Members.Select(m => m.Id).ToList(),
+        Members = r.Members,
+        Messages = r.Messages,
         Name = r.Name
-    }).ToList();
+    }).ToListAsync();
 
     public void AddToRoom(long roomId, string inviterUserId, string invitedUserId)
     {

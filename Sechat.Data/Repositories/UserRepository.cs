@@ -33,8 +33,10 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     public UserProfile GetUserProfile(string id) => _context.UserProfiles
         .FirstOrDefault(p => p.Id.Equals(id));
-    public void CreateUserProfile(string id) => _context
-        .Add(new UserProfile() { Id = id });
+
+    public void CreateUserProfile(string id, string userName) => _context
+        .Add(new UserProfile() { Id = id, UserName = userName });
+
     public void DeleteUserProfile(string id)
     {
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(id));
@@ -49,15 +51,19 @@ public class UserRepository : RepositoryBase<SechatContext>
     public bool ProfileExists(string id) => _context.UserProfiles
         .Any(p => p.Id.Equals(id));
 
+    public int CountUserProfiles() => _context.UserProfiles.Count();
+
     // Keys
 
     public List<Key> GetUserKeys(string userId) => _context.Keys
         .Where(k => k.UserProfileId.Equals(userId))
         .ToList();
+
     public string GetUserKey(string userId, KeyType keyType) => _context.Keys
         .Where(k => k.UserProfileId.Equals(userId) && k.Type == keyType)
         .Select(k => k.Value)
         .FirstOrDefault();
+
     public void UpdateEmailConfirmationKey(string userId, string key)
     {
         var userProfile = _context.UserProfiles
@@ -68,3 +74,4 @@ public class UserRepository : RepositoryBase<SechatContext>
         userProfile.Keys.Add(new Key() { Type = KeyType.EmailUpdate, Value = key });
     }
 }
+

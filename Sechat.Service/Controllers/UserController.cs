@@ -36,7 +36,7 @@ public class UserController : SechatControllerBase
     {
         if (!_userRepository.ProfileExists(UserId))
         {
-            _userRepository.CreateUserProfile(UserId);
+            _userRepository.CreateUserProfile(UserId, UserName);
             if (await _userRepository.SaveChanges() == 0)
             {
                 return Problem("Profile creation failed");

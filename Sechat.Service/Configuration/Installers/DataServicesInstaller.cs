@@ -37,6 +37,6 @@ public class DataServicesInstaller : IServiceInstaller
         _ = webApplicationBuilder.Services.AddTransient<IEncryptor, AesEncryptor>();
         _ = webApplicationBuilder.Services.AddTransient<ITokenService, TokenService>();
 
-        _ = webApplicationBuilder.Services.AddAutoMapper(typeof(DefaultProfile));
+        _ = webApplicationBuilder.Services.AddAutoMapper(typeof(DefaultProfile), typeof(ChatModelsProfile));
     }
 }

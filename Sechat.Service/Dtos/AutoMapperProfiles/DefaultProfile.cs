@@ -9,5 +9,6 @@ public class DefaultProfile : Profile
     {
         _ = CreateMap<UserProfile, UserProfileProjection>();
         _ = CreateMap<UserProfileProjection, UserProfile>();
+
     }
 }

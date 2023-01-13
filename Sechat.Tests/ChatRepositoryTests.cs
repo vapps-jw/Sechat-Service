@@ -21,17 +21,17 @@ public class ChatRepositoryTests
         var newRoomKey = encryptor.GenerateKey();
 
         var inviter = await userManager.FindByNameAsync("u1");
-        sechatRepo.CreateRoom(newRoomName, inviter?.Id, newRoomKey);
+        _ = sechatRepo.CreateRoom(newRoomName, inviter?.Id, newRoomKey);
 
         _ = await sechatRepo.SaveChanges();
         sechatRepo.ClearTracker();
 
-        var res = sechatRepo.GetRooms(inviter?.Id).FirstOrDefault();
+        var res = (await sechatRepo.GetRooms(inviter?.Id)).FirstOrDefault();
         var member = res?.Members.FirstOrDefault();
 
         Assert.NotNull(res);
         Assert.NotNull(member);
         Assert.Equal(inviter?.Id, res.CreatorId);
-        Assert.Equal(inviter?.Id, member);
+        Assert.Equal(inviter?.Id, member.Id);
     }
 }

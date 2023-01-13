@@ -7,6 +7,8 @@ public class SignalRInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder) => webApplicationBuilder.Services.AddSignalR(options =>
     {
+        options.EnableDetailedErrors = true;
         options.DisableImplicitFromServicesParameters = true;
+        options.MaximumReceiveMessageSize = 128 * 1024;
     });
 }

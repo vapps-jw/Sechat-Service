@@ -54,6 +54,8 @@ public static class DbManager
         var userManager = serviceScope.ServiceProvider.GetService<UserManager<IdentityUser>>();
         var repo = serviceScope.ServiceProvider.GetService<UserRepository>();
 
+        if (repo.CountUserProfiles() > 0) return;
+
         for (var i = 1; i < 11; i++)
         {
             var name = $"u{i}";
@@ -61,7 +63,7 @@ public static class DbManager
             var res = await userManager.CreateAsync(user, name);
             if (res.Succeeded)
             {
-                repo.CreateUserProfile(user.Id);
+                repo.CreateUserProfile(user.Id, user.UserName);
             }
 
             Console.WriteLine($"--> Creating User: {name} - Success: {res.Succeeded}");

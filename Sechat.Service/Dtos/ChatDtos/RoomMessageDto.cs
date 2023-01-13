@@ -1,11 +1,12 @@
-﻿namespace Sechat.Data.Models;
+﻿using System;
 
-public record Message : BaseModel<long>
+namespace Sechat.Service.Dtos.ChatDtos;
+
+public class RoomMessageDto
 {
     public string IdSentBy { get; set; } = string.Empty;
     public string NameSentBy { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
 
-    public long RoomId { get; set; }
-    public Room Room { get; set; }
+    public DateTime Created { get; set; } = DateTime.UtcNow;
 }
