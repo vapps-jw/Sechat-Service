@@ -96,7 +96,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             _ = await _chatRepository.SaveChanges();
             var messageDto = _mapper.Map<RoomMessageDto>(res);
 
-            await Clients.GroupExcept(incomingMessageDto.RoomId, new[] { Context.ConnectionId }).MessageIncoming(messageDto);
+            await Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
         }
         catch (Exception ex)
         {
