@@ -47,8 +47,8 @@ public class AuthServicesInstaller : IServiceInstaller
 
         _ = webApplicationBuilder.Services.ConfigureApplicationCookie(config =>
         {
-            config.Cookie.Domain = webApplicationBuilder.Configuration.GetValue("CorsSettings:CookieDomain", "");
-            config.Cookie.Name = "sechat-id";
+            config.Cookie.Domain = webApplicationBuilder.Configuration.GetValue("CookieSettings:AuthCookieDomain", "");
+            config.Cookie.Name = webApplicationBuilder.Configuration.GetValue("CookieSettings:AuthCookieName", "");
             config.ExpireTimeSpan = TimeSpan.FromDays(30);
             config.Cookie.SameSite = SameSiteMode.Lax;
         });
