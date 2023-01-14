@@ -29,6 +29,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
         var room = _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId));
         room.LastActivity = DateTime.UtcNow;
+
         var newMessage = new Message() { Text = messageText, IdSentBy = profile.Id, NameSentBy = profile.UserName };
         room.Messages.Add(newMessage);
         return newMessage;
