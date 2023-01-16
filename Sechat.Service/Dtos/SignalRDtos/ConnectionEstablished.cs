@@ -1,6 +1,6 @@
 ﻿namespace Sechat.Service.Dtos.SignalRDtos;
 
-public class ConnectionEstablishedDto
+public class ConnectionEstablished
 {
     public string Message { get; set; }
 }

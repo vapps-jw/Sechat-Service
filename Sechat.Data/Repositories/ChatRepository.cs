@@ -30,7 +30,13 @@ public class ChatRepository : RepositoryBase<SechatContext>
         var room = _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId));
         room.LastActivity = DateTime.UtcNow;
 
-        var newMessage = new Message() { Text = messageText, IdSentBy = profile.Id, NameSentBy = profile.UserName };
+        var newMessage = new Message()
+        {
+            Text = messageText,
+            IdSentBy = profile.Id,
+            NameSentBy = profile.UserName,
+            RoomId = room.Id
+        };
         room.Messages.Add(newMessage);
         return newMessage;
     }
@@ -49,8 +55,6 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return newRoom;
     }
 
-    public void RemoveRoom(string roomId) => _context.Rooms.Remove(_context.Rooms.FirstOrDefault(p => p.Id.Equals(roomId)));
-
     public Room GetRoom(string roomId) => _context.Rooms
     .Where(r => r.Id.Equals(roomId)).Select(r => new Room()
     {
@@ -59,7 +63,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
         CreatorId = r.CreatorId,
         Id = r.Id,
         Members = r.Members,
-        Messages = r.Messages,
+        Messages = r.Messages.OrderBy(m => m.Created).ToList(),
         Name = r.Name
     }).FirstOrDefault();
 
@@ -71,7 +75,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
         CreatorId = r.CreatorId,
         Id = r.Id,
         Members = r.Members,
-        Messages = r.Messages,
+        Messages = r.Messages.OrderBy(m => m.Created).ToList(),
         Name = r.Name
     }).ToListAsync();
 
@@ -83,7 +87,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
         CreatorId = r.CreatorId,
         Id = r.Id,
         Members = r.Members,
-        Messages = r.Messages,
+        Messages = r.Messages.OrderBy(m => m.Created).ToList(),
         Name = r.Name
     }).ToListAsync();
 
@@ -100,6 +104,17 @@ public class ChatRepository : RepositoryBase<SechatContext>
         var newMemberProfile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(invitedUserId));
 
         room.Members.Add(newMemberProfile);
+    }
+
+    public void DeleteRoom(string roomId, string creatorUserId)
+    {
+        var room = _context.Rooms
+            .Where(r => r.Id.Equals(roomId) && r.CreatorId.Equals(creatorUserId))
+            .Include(r => r.Members)
+            .FirstOrDefault();
+
+        if (room is null) return;
+        _ = _context.Rooms.Remove(room);
     }
 }
 

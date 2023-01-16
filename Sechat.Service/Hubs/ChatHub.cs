@@ -7,6 +7,7 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Dtos.SignalRDtos;
 using Sechat.Service.Services;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Hubs;
@@ -14,6 +15,7 @@ namespace Sechat.Service.Hubs;
 public interface IChatHub
 {
     Task MessageIncoming(RoomMessageDto message);
+    Task RoomDeleted(RoomIdMessage message);
 }
 
 [Authorize]
@@ -36,10 +38,10 @@ public class ChatHub : SechatHubBase<IChatHub>
         _chatRepository = chatRepository;
     }
 
-    public void LogConnection(ConnectionEstablishedDto connectionEstablishedDto) =>
+    public void LogConnection(ConnectionEstablished connectionEstablishedDto) =>
         _logger.LogWarning("Connection established for user Id: {0} Name: {1} Message: {2}", UserId, UserName, connectionEstablishedDto.Message);
 
-    public async Task<RoomDto> CreateRoom(CreateRoomRequest request)
+    public async Task<RoomDto> CreateRoom(RoomNameMessage request)
     {
         try
         {
@@ -62,20 +64,20 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
-    public async Task<ConnectToRoomsResult> ConnectToRooms(ConnectToRoomsRequest connectToRoomsRequest)
+    public async Task<RoomIdsMessage> ConnectToRooms(RoomIdsMessage connectToRoomsRequest)
     {
         try
         {
-            var result = new ConnectToRoomsResult();
+            var result = new List<string>();
             foreach (var request in connectToRoomsRequest.RoomIds)
             {
                 if (_chatRepository.IsRoomAllowed(UserId, request))
                 {
                     await Groups.AddToGroupAsync(Context.ConnectionId, request);
-                    result.ConnectedRooms.Add(request);
+                    result.Add(request);
                 }
             }
-            return result;
+            return new RoomIdsMessage(result);
         }
         catch (Exception ex)
         {
@@ -83,7 +85,24 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
-    public async Task SendMessage(IncomingMessageDto incomingMessageDto)
+    public async Task<RoomIdMessage> ConnectToRoom(RoomIdMessage message)
+    {
+        try
+        {
+            if (_chatRepository.IsRoomAllowed(UserId, message.RoomId))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, message.RoomId);
+                return new RoomIdMessage(message.RoomId);
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
+    public async Task SendMessage(IncomingMessage incomingMessageDto)
     {
         try
         {
@@ -97,6 +116,18 @@ public class ChatHub : SechatHubBase<IChatHub>
             var messageDto = _mapper.Map<RoomMessageDto>(res);
 
             await Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
+    public async Task SendRoomDeleted(string roomId)
+    {
+        try
+        {
+            await Clients.Group(roomId).RoomDeleted(new RoomIdMessage(roomId));
         }
         catch (Exception ex)
         {

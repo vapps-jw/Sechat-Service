@@ -34,4 +34,28 @@ public class ChatRepositoryTests
         Assert.Equal(inviter?.Id, res.CreatorId);
         Assert.Equal(inviter?.Id, member.Id);
     }
+
+    [Fact]
+    public async Task IsRoomAllowedTest()
+    {
+        using var masterApp = new MockedApi();
+        using var scope = masterApp.Services.CreateScope();
+
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+        var sechatRepo = scope.ServiceProvider.GetRequiredService<ChatRepository>();
+        var encryptor = scope.ServiceProvider.GetRequiredService<IEncryptor>();
+
+        var newRoomName = Guid.NewGuid().ToString();
+        var newRoomKey = encryptor.GenerateKey();
+
+        var inviter = await userManager.FindByNameAsync("u1");
+        var roomId = sechatRepo.CreateRoom(newRoomName, inviter?.Id, newRoomKey).Id;
+
+        _ = await sechatRepo.SaveChanges();
+        sechatRepo.ClearTracker();
+
+        var res = sechatRepo.IsRoomAllowed(inviter?.Id, roomId);
+
+        Assert.True(res);
+    }
 }
