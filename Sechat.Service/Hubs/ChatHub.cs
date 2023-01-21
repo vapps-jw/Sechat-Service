@@ -134,4 +134,17 @@ public class ChatHub : SechatHubBase<IChatHub>
             throw new HubException(ex.Message);
         }
     }
+
+    public override async Task OnConnectedAsync()
+    {
+        try
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, UserId);
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+        _ = base.OnConnectedAsync();
+    }
 }
