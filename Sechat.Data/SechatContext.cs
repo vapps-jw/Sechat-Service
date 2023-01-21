@@ -14,6 +14,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<Feature> Features { get; set; }
     public DbSet<Key> Keys { get; set; }
     public DbSet<UserConnection> UserConnections { get; set; }
+    public DbSet<BlockedUser> BlockedUsers { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -31,6 +32,11 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
 
         _ = modelBuilder.Entity<UserProfile>()
             .HasMany(x => x.Keys)
+            .WithOne(x => x.UserProfile)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        _ = modelBuilder.Entity<UserProfile>()
+            .HasMany(x => x.BlockedUsers)
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
 
