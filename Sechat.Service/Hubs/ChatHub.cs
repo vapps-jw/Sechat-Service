@@ -17,6 +17,7 @@ public interface IChatHub
     Task MessageIncoming(RoomMessageDto message);
     Task RoomDeleted(RoomIdMessage message);
     Task ConnectionRequestReceived(UserConnectionDto message);
+    Task ConnectionDeleted(ResourceId message);
 }
 
 [Authorize]

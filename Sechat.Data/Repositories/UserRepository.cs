@@ -32,16 +32,16 @@ public class UserRepository : RepositoryBase<SechatContext>
     public void InviteUser(string inviter, string invited) =>
         _context.UserConnections.Add(new UserConnection() { InvitedId = invited, InviterId = inviter });
 
-    public bool ConnectionExists(string inviter, string invited) =>
+    public bool ConnectionExists(string userOne, string userTwo) =>
         _context.UserConnections.Any(uc =>
-            (uc.InvitedId.Equals(invited) && uc.InviterId.Equals(inviter)) ||
-            (uc.InviterId.Equals(invited) && uc.InvitedId.Equals(inviter)));
+            (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
+            (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
-    public void RemoveConnection(string inviter, string invited)
+    public void DeleteConnection(string userOne, string userTwo)
     {
         var connection = _context.UserConnections.FirstOrDefault(uc =>
-            (uc.InvitedId.Equals(invited) && uc.InviterId.Equals(inviter)) ||
-            (uc.InviterId.Equals(invited) && uc.InvitedId.Equals(inviter)));
+            (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
+            (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
         if (connection is not null)
         {
@@ -49,19 +49,45 @@ public class UserRepository : RepositoryBase<SechatContext>
         }
     }
 
+    public void DeleteConnection(long id)
+    {
+        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == id);
+        if (connection is not null)
+        {
+            _ = _context.UserConnections.Remove(connection);
+        }
+    }
+
+    public long GetConnectionId(string userOne, string userTwo)
+    {
+        var connection = _context.UserConnections.FirstOrDefault(uc =>
+            (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
+            (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
+
+        if (connection is not null)
+        {
+            return connection.Id;
+        }
+        return 0;
+    }
+
     public Task<List<UserConnection>> GetConnections(string userId) =>
         _context.UserConnections
-            .Where(uc => uc.InvitedId.Equals(userId) && uc.InviterId.Equals(userId))
+            .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
             .ToListAsync();
 
-    public void CreateConnection(string inviterId, string inviterName, string invitedId, string invitedName) =>
-        _context.UserConnections.Add(new UserConnection()
+    public UserConnection CreateConnection(string inviterId, string inviterName, string invitedId, string invitedName)
+    {
+        var newConnection = new UserConnection()
         {
             InvitedId = invitedId,
             InvitedName = invitedName,
             InviterId = inviterId,
             InviterName = inviterName
-        });
+        };
+        _ = _context.UserConnections.Add(newConnection);
+        return newConnection;
+    }
 
     // Profile
 

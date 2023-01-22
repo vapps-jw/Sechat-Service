@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
+using Sechat.Service.Dtos.SignalRDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
@@ -61,21 +62,43 @@ public class UserController : SechatControllerBase
     [HttpPost("connection-request")]
     public async Task<IActionResult> ConnectionRequest([FromBody] ConnectionRequestDto invitationDto)
     {
+        if (UserName.Equals(invitationDto.Username)) return BadRequest();
+
         var invitedUser = await _userManager.FindByNameAsync(invitationDto.Username);
-        if (invitedUser is null) return Ok();
+        if (invitedUser is null) return BadRequest();
 
         var connectionExists = _userRepository.ConnectionExists(UserId, invitedUser.Id);
-        if (connectionExists) return Ok();
+        if (connectionExists) return BadRequest();
 
-        _userRepository.CreateConnection(UserId, UserName, invitedUser.Id, invitedUser.UserName);
+        var newConnection = _userRepository.CreateConnection(UserId, UserName, invitedUser.Id, invitedUser.UserName);
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(new UserConnectionDto(UserName, invitationDto.Username, false));
+            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(_mapper.Map<UserConnectionDto>(newConnection));
+            await _chatHubContext.Clients.Group(UserId).ConnectionRequestReceived(_mapper.Map<UserConnectionDto>(newConnection));
             return Ok();
         }
 
         throw new Exception("Error when creating connection request");
+    }
+
+    [HttpDelete("connection-delete")]
+    public async Task<IActionResult> DeleteConnection(string userName)
+    {
+        var invitedUser = await _userManager.FindByNameAsync(userName);
+        if (invitedUser is null) return BadRequest();
+
+        var connId = _userRepository.GetConnectionId(UserId, invitedUser.Id);
+        if (connId != 0) _userRepository.DeleteConnection(connId);
+
+        if (await _userRepository.SaveChanges() > 0)
+        {
+            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionDeleted(new ResourceId(connId));
+            await _chatHubContext.Clients.Group(UserId).ConnectionDeleted(new ResourceId(connId));
+            return Ok();
+        }
+
+        return BadRequest();
     }
 
     [HttpPut("update-email")]
