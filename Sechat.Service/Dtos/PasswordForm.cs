@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Sechat.Service.Utilities;
 
 namespace Sechat.Service.Dtos;
 
@@ -12,7 +13,7 @@ public class PasswordFormValidation : AbstractValidator<PasswordForm>
 {
     public PasswordFormValidation()
     {
-        _ = RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(8).MaximumLength(30);
-        _ = RuleFor(x => x.OldPassword).NotEmpty().MinimumLength(8).MaximumLength(30);
+        _ = RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(AppConstants.StringLengths.PasswordMin).MaximumLength(AppConstants.StringLengths.PasswordMax);
+        _ = RuleFor(x => x.OldPassword).NotEmpty().MinimumLength(AppConstants.StringLengths.PasswordMin).MaximumLength(AppConstants.StringLengths.PasswordMax);
     }
 }

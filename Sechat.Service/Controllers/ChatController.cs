@@ -15,12 +15,18 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class ChatController : SechatControllerBase
 {
+    private readonly UserRepository _userRepository;
     private readonly ChatRepository _chatRepository;
     private readonly IMapper _mapper;
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
-    public ChatController(ChatRepository chatRepository, IMapper mapper, IHubContext<ChatHub, IChatHub> chatHubContext)
+    public ChatController(
+        UserRepository userRepository,
+        ChatRepository chatRepository,
+        IMapper mapper,
+        IHubContext<ChatHub, IChatHub> chatHubContext)
     {
+        _userRepository = userRepository;
         _chatRepository = chatRepository;
         _mapper = mapper;
         _chatHubContext = chatHubContext;
@@ -30,11 +36,15 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetState()
     {
         var rooms = await _chatRepository.GetRooms(UserId);
-        var responseDtos = _mapper.Map<List<RoomDto>>(rooms);
+        var connections = await _userRepository.GetConnections(UserId);
+
+        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+        var connectionDtos = _mapper.Map<List<UserConnectionDto>>(connections);
 
         var res = new StateDto
         {
-            Rooms = responseDtos
+            Rooms = roomDtos,
+            UserConnections = connectionDtos
         };
 
         return Ok(res);

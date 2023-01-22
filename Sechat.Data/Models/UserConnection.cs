@@ -5,7 +5,11 @@ public record UserConnection : BaseModel<long>
 {
     public bool Approved { get; set; }
     [Required]
-    public string Inviter { get; set; }
+    public string InviterId { get; set; }
     [Required]
-    public string Invited { get; set; }
+    public string InviterName { get; set; }
+    [Required]
+    public string InvitedId { get; set; }
+    [Required]
+    public string InvitedName { get; set; }
 }

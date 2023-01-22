@@ -22,4 +22,11 @@ public class AppConstants
     {
         public const string DefaultWindowPolicyName = nameof(DefaultWindowPolicyName);
     }
+    public struct StringLengths
+    {
+        public const int PasswordMax = 20;
+        public const int PasswordMin = 8;
+        public const int UsernameMax = 20;
+        public const int UsernameMin = 20;
+    }
 }

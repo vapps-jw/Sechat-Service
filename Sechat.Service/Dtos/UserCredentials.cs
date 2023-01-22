@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Sechat.Service.Utilities;
 
 namespace Sechat.Service.Dtos;
 
@@ -12,7 +13,7 @@ public class UserCredentialsFormValidation : AbstractValidator<UserCredentials>
 {
     public UserCredentialsFormValidation()
     {
-        _ = RuleFor(x => x.Username).NotEmpty().MinimumLength(5).MaximumLength(12);
-        _ = RuleFor(x => x.Password).NotEmpty().MinimumLength(8).MaximumLength(30);
+        _ = RuleFor(x => x.Username).NotEmpty().MinimumLength(AppConstants.StringLengths.UsernameMin).MaximumLength(AppConstants.StringLengths.UsernameMax);
+        _ = RuleFor(x => x.Password).NotEmpty().MinimumLength(AppConstants.StringLengths.PasswordMin).MaximumLength(AppConstants.StringLengths.PasswordMax);
     }
 }

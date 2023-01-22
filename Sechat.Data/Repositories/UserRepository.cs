@@ -14,7 +14,7 @@ public class UserRepository : RepositoryBase<SechatContext>
     public bool IsConnected(string user, string otherUser)
     {
         var connection = _context.UserConnections
-            .FirstOrDefault(c => (c.Invited.Equals(user) || c.Inviter.Equals(user)) && (c.Invited.Equals(otherUser) || c.Inviter.Equals(otherUser)));
+            .FirstOrDefault(c => (c.InvitedId.Equals(user) || c.InviterId.Equals(user)) && (c.InvitedId.Equals(otherUser) || c.InviterId.Equals(otherUser)));
 
         if (connection is null)
         {
@@ -30,12 +30,38 @@ public class UserRepository : RepositoryBase<SechatContext>
     }
 
     public void InviteUser(string inviter, string invited) =>
-        _context.UserConnections.Add(new UserConnection() { Invited = invited, Inviter = inviter });
+        _context.UserConnections.Add(new UserConnection() { InvitedId = invited, InviterId = inviter });
 
-    public void ConnectionExists(string inviter, string invited) =>
+    public bool ConnectionExists(string inviter, string invited) =>
         _context.UserConnections.Any(uc =>
-            (uc.Invited.Equals(invited) && uc.Inviter.Equals(inviter)) ||
-            (uc.Inviter.Equals(invited) && uc.Invited.Equals(inviter)));
+            (uc.InvitedId.Equals(invited) && uc.InviterId.Equals(inviter)) ||
+            (uc.InviterId.Equals(invited) && uc.InvitedId.Equals(inviter)));
+
+    public void RemoveConnection(string inviter, string invited)
+    {
+        var connection = _context.UserConnections.FirstOrDefault(uc =>
+            (uc.InvitedId.Equals(invited) && uc.InviterId.Equals(inviter)) ||
+            (uc.InviterId.Equals(invited) && uc.InvitedId.Equals(inviter)));
+
+        if (connection is not null)
+        {
+            _ = _context.UserConnections.Remove(connection);
+        }
+    }
+
+    public Task<List<UserConnection>> GetConnections(string userId) =>
+        _context.UserConnections
+            .Where(uc => uc.InvitedId.Equals(userId) && uc.InviterId.Equals(userId))
+            .ToListAsync();
+
+    public void CreateConnection(string inviterId, string inviterName, string invitedId, string invitedName) =>
+        _context.UserConnections.Add(new UserConnection()
+        {
+            InvitedId = invitedId,
+            InvitedName = invitedName,
+            InviterId = inviterId,
+            InviterName = inviterName
+        });
 
     // Profile
 

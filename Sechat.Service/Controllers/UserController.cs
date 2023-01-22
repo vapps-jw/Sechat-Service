@@ -3,12 +3,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
+using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
+using System;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -20,15 +23,18 @@ public class UserController : SechatControllerBase
 {
     private readonly IMapper _mapper;
     private readonly UserManager<IdentityUser> _userManager;
+    private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
     private readonly UserRepository _userRepository;
 
     public UserController(
         IMapper mapper,
         UserManager<IdentityUser> userManager,
+        IHubContext<ChatHub, IChatHub> chatHubContext,
         UserRepository userRepository)
     {
         _mapper = mapper;
         _userManager = userManager;
+        _chatHubContext = chatHubContext;
         _userRepository = userRepository;
     }
 
@@ -52,17 +58,24 @@ public class UserController : SechatControllerBase
         return Ok(profileProjection);
     }
 
-    [HttpPost("invite-user")]
-    public IActionResult InviteUser([FromBody] InvitationDto invitationDto)
+    [HttpPost("connection-request")]
+    public async Task<IActionResult> ConnectionRequest([FromBody] ConnectionRequestDto invitationDto)
     {
-        _ = _userManager.FindByNameAsync(invitationDto.Username);
+        var invitedUser = await _userManager.FindByNameAsync(invitationDto.Username);
+        if (invitedUser is null) return Ok();
 
-        var profileProjection = _mapper.Map<UserProfileProjection>(_userRepository.GetUserProfile(UserId));
-        profileProjection.UserId = UserId;
-        profileProjection.UserName = UserName;
-        profileProjection.Email = UserEmail;
+        var connectionExists = _userRepository.ConnectionExists(UserId, invitedUser.Id);
+        if (connectionExists) return Ok();
 
-        return Ok(profileProjection);
+        _userRepository.CreateConnection(UserId, UserName, invitedUser.Id, invitedUser.UserName);
+
+        if (await _userRepository.SaveChanges() > 0)
+        {
+            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(new UserConnectionDto(UserName, invitationDto.Username, false));
+            return Ok();
+        }
+
+        throw new Exception("Error when creating connection request");
     }
 
     [HttpPut("update-email")]

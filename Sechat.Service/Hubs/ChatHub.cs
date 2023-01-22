@@ -16,6 +16,7 @@ public interface IChatHub
 {
     Task MessageIncoming(RoomMessageDto message);
     Task RoomDeleted(RoomIdMessage message);
+    Task ConnectionRequestReceived(UserConnectionDto message);
 }
 
 [Authorize]
@@ -128,19 +129,6 @@ public class ChatHub : SechatHubBase<IChatHub>
         try
         {
             await Clients.Group(roomId).RoomDeleted(new RoomIdMessage(roomId));
-        }
-        catch (Exception ex)
-        {
-            throw new HubException(ex.Message);
-        }
-    }
-
-    public void SendInviteUser(string userName)
-    {
-        try
-        {
-
-
         }
         catch (Exception ex)
         {

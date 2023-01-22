@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Sechat.Service.Utilities;
 
 namespace Sechat.Service.Dtos;
 
@@ -13,7 +14,7 @@ public class PasswordResetFormValidation : AbstractValidator<PasswordResetForm>
 {
     public PasswordResetFormValidation()
     {
-        _ = RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(8).MaximumLength(30);
+        _ = RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(AppConstants.StringLengths.PasswordMin).MaximumLength(AppConstants.StringLengths.PasswordMax);
         _ = RuleFor(x => x.UserId).NotEmpty();
         _ = RuleFor(x => x.Token).NotEmpty();
     }
