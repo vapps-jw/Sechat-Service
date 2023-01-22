@@ -135,6 +135,19 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
+    public void SendInviteUser(string userName)
+    {
+        try
+        {
+
+
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
     public override async Task OnConnectedAsync()
     {
         try

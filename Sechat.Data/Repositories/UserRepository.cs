@@ -29,6 +29,14 @@ public class UserRepository : RepositoryBase<SechatContext>
         return true;
     }
 
+    public void InviteUser(string inviter, string invited) =>
+        _context.UserConnections.Add(new UserConnection() { Invited = invited, Inviter = inviter });
+
+    public void ConnectionExists(string inviter, string invited) =>
+        _context.UserConnections.Any(uc =>
+            (uc.Invited.Equals(invited) && uc.Inviter.Equals(inviter)) ||
+            (uc.Inviter.Equals(invited) && uc.Invited.Equals(inviter)));
+
     // Profile
 
     public UserProfile GetUserProfile(string id) => _context.UserProfiles

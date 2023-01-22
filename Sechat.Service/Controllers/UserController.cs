@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
+using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
 using System.Net;
@@ -42,6 +43,19 @@ public class UserController : SechatControllerBase
                 return Problem("Profile creation failed");
             }
         }
+
+        var profileProjection = _mapper.Map<UserProfileProjection>(_userRepository.GetUserProfile(UserId));
+        profileProjection.UserId = UserId;
+        profileProjection.UserName = UserName;
+        profileProjection.Email = UserEmail;
+
+        return Ok(profileProjection);
+    }
+
+    [HttpPost("invite-user")]
+    public IActionResult InviteUser([FromBody] InvitationDto invitationDto)
+    {
+        _ = _userManager.FindByNameAsync(invitationDto.Username);
 
         var profileProjection = _mapper.Map<UserProfileProjection>(_userRepository.GetUserProfile(UserId));
         profileProjection.UserId = UserId;

@@ -26,6 +26,20 @@ public class ChatController : SechatControllerBase
         _chatHubContext = chatHubContext;
     }
 
+    [HttpGet("get-state")]
+    public async Task<IActionResult> GetState()
+    {
+        var rooms = await _chatRepository.GetRooms(UserId);
+        var responseDtos = _mapper.Map<List<RoomDto>>(rooms);
+
+        var res = new StateDto
+        {
+            Rooms = responseDtos
+        };
+
+        return Ok(res);
+    }
+
     [HttpGet("get-my-rooms")]
     public async Task<IActionResult> GetRooms()
     {
