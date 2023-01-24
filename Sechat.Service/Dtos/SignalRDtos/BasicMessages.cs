@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace Sechat.Service.Dtos.SignalRDtos;
 
 public record ResourceId(long Id);
+public record ResourceGuid(string Id);
 
-public record RoomIdMessage(string RoomId);
 public record RoomIdsMessage(List<string> RoomIds);
 
 public record IncomingMessage(string Text, string RoomId);

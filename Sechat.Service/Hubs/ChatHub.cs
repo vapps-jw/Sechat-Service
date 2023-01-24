@@ -15,7 +15,7 @@ namespace Sechat.Service.Hubs;
 public interface IChatHub
 {
     Task MessageIncoming(RoomMessageDto message);
-    Task RoomDeleted(RoomIdMessage message);
+    Task RoomDeleted(ResourceGuid message);
     Task ConnectionRequestReceived(UserConnectionDto message);
     Task ConnectionDeleted(ResourceId message);
 }
@@ -87,14 +87,14 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
-    public async Task<RoomIdMessage> ConnectToRoom(RoomIdMessage message)
+    public async Task<ResourceGuid> ConnectToRoom(ResourceGuid message)
     {
         try
         {
-            if (_chatRepository.IsRoomAllowed(UserId, message.RoomId))
+            if (_chatRepository.IsRoomAllowed(UserId, message.Id))
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, message.RoomId);
-                return new RoomIdMessage(message.RoomId);
+                await Groups.AddToGroupAsync(Context.ConnectionId, message.Id);
+                return new ResourceGuid(message.Id);
             }
             return null;
         }
@@ -129,7 +129,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
-            await Clients.Group(roomId).RoomDeleted(new RoomIdMessage(roomId));
+            await Clients.Group(roomId).RoomDeleted(new ResourceGuid(roomId));
         }
         catch (Exception ex)
         {

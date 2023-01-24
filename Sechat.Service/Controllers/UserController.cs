@@ -83,18 +83,25 @@ public class UserController : SechatControllerBase
     }
 
     [HttpDelete("connection-delete")]
-    public async Task<IActionResult> DeleteConnection(string userName)
+    public async Task<IActionResult> DeleteConnection(long connectionId)
     {
-        var invitedUser = await _userManager.FindByNameAsync(userName);
-        if (invitedUser is null) return BadRequest();
+        var connection = await _userRepository.GetConnection(connectionId);
+        if (connection is null) return BadRequest();
 
-        var connId = _userRepository.GetConnectionId(UserId, invitedUser.Id);
-        if (connId != 0) _userRepository.DeleteConnection(connId);
+        if (!connection.InviterId.Equals(UserId) && !connection.InviterId.Equals(UserId))
+        {
+            return BadRequest();
+        }
+
+        var invited = connection.InvitedId;
+        var inviter = connection.InviterId;
+
+        _userRepository.DeleteConnection(connectionId);
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionDeleted(new ResourceId(connId));
-            await _chatHubContext.Clients.Group(UserId).ConnectionDeleted(new ResourceId(connId));
+            await _chatHubContext.Clients.Group(invited).ConnectionDeleted(new ResourceId(connectionId));
+            await _chatHubContext.Clients.Group(inviter).ConnectionDeleted(new ResourceId(connectionId));
             return Ok();
         }
 

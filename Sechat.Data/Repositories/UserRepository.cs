@@ -76,6 +76,9 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
             .ToListAsync();
 
+    public Task<UserConnection> GetConnection(long connectionId) =>
+        _context.UserConnections.FirstOrDefaultAsync(uc => uc.Id == connectionId);
+
     public UserConnection CreateConnection(string inviterId, string inviterName, string invitedId, string invitedName)
     {
         var newConnection = new UserConnection()

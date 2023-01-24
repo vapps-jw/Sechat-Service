@@ -66,7 +66,7 @@ public class ChatController : SechatControllerBase
 
         if (await _chatRepository.SaveChanges() > 0)
         {
-            await _chatHubContext.Clients.Group(roomId).RoomDeleted(new RoomIdMessage(roomId));
+            await _chatHubContext.Clients.Group(roomId).RoomDeleted(new ResourceGuid(roomId));
         }
 
         return Ok();
