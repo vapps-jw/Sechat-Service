@@ -88,7 +88,9 @@ public class UserController : SechatControllerBase
         var connection = await _userRepository.GetConnection(connectionId);
         if (connection is null) return BadRequest();
 
-        if (!connection.InviterId.Equals(UserId) && !connection.InviterId.Equals(UserId))
+        var connectionDto = _mapper.Map<UserConnectionDto>(connection);
+
+        if (!connectionDto.UserPresent(UserId))
         {
             return BadRequest();
         }
