@@ -88,7 +88,7 @@ public class UserController : SechatControllerBase
         var connection = await _userRepository.GetConnection(connectionId);
         if (connection is null) return BadRequest();
 
-        if (connection.Blocked && connection.BlockedById.Equals(UserId))
+        if (connection.Blocked && !connection.BlockedById.Equals(UserId))
         {
             return BadRequest();
         }

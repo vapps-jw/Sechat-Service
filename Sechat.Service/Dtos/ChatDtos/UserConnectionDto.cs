@@ -12,12 +12,5 @@ public class UserConnectionDto
     public bool Blocked { get; set; }
     public string BlockedByName { get; set; } = string.Empty;
 
-    public bool UserPresent(string userId)
-    {
-        if (InviterId.Equals(userId) || InvitedId.Equals(userId))
-        {
-            return true;
-        }
-        return false;
-    }
+    public bool UserPresent(string userId) => InviterId.Equals(userId) || InvitedId.Equals(userId);
 }
