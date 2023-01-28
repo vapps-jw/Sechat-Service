@@ -16,17 +16,7 @@ public class UserRepository : RepositoryBase<SechatContext>
         var connection = _context.UserConnections
             .FirstOrDefault(c => (c.InvitedId.Equals(user) || c.InviterId.Equals(user)) && (c.InvitedId.Equals(otherUser) || c.InviterId.Equals(otherUser)));
 
-        if (connection is null)
-        {
-            return false;
-        }
-
-        if (!connection.Approved)
-        {
-            return false;
-        }
-
-        return true;
+        return connection is not null && connection.Approved;
     }
 
     public void InviteUser(string inviter, string invited) =>
@@ -41,18 +31,6 @@ public class UserRepository : RepositoryBase<SechatContext>
         _context.UserConnections.FirstOrDefault(uc =>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
             (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
-
-    public void DeleteConnection(string userOne, string userTwo)
-    {
-        var connection = _context.UserConnections.FirstOrDefault(uc =>
-            (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
-            (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
-
-        if (connection is not null)
-        {
-            _ = _context.UserConnections.Remove(connection);
-        }
-    }
 
     public void DeleteConnection(long id)
     {
@@ -69,17 +47,28 @@ public class UserRepository : RepositoryBase<SechatContext>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
             (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
-        if (connection is not null)
-        {
-            return connection.Id;
-        }
-        return 0;
+        return connection is not null ? connection.Id : 0;
     }
 
     public Task<List<UserConnection>> GetConnections(string userId) =>
         _context.UserConnections
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
             .ToListAsync();
+
+    public void BlockConnection(long connectionId, string blockedBy)
+    {
+
+    }
+
+    public void UnBlockConnection(long connectionId, string blockedBy)
+    {
+
+    }
+
+    public void ApproveConnection(long connectionId, string blockedBy)
+    {
+
+    }
 
     public Task<UserConnection> GetConnection(long connectionId) =>
         _context.UserConnections.FirstOrDefaultAsync(uc => uc.Id == connectionId);

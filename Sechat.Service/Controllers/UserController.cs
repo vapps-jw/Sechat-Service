@@ -118,9 +118,7 @@ public class UserController : SechatControllerBase
     public async Task<IActionResult> BlockConnection(long connectionId)
     {
         var connection = await _userRepository.GetConnection(connectionId);
-        if (connection is null) return BadRequest();
-
-        return BadRequest();
+        return connection is null || connection.Blocked ? BadRequest() : (IActionResult)BadRequest();
     }
 
     [HttpPut("update-email")]
@@ -145,11 +143,7 @@ public class UserController : SechatControllerBase
         var callbackUrl = $@"{corsSettings.CurrentValue.ApiUrl}/account/confirm-email/{qb}";
 
         var sgResponse = await emailClient.SendEmailConfirmationAsync(emailForm.Email, callbackUrl);
-        if (sgResponse.StatusCode != HttpStatusCode.Accepted)
-        {
-            return Problem();
-        }
-        return Ok();
+        return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok();
     }
 
     [HttpGet("confirm-email")]
@@ -163,11 +157,6 @@ public class UserController : SechatControllerBase
         var currentUser = await _userManager.FindByIdAsync(UserId);
         var confirmResult = await _userManager.ChangeEmailAsync(currentUser, email, token);
 
-        if (!confirmResult.Succeeded)
-        {
-            return BadRequest();
-        }
-
-        return Ok();
+        return !confirmResult.Succeeded ? BadRequest() : Ok();
     }
 }

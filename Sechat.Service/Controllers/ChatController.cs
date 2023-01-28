@@ -67,12 +67,7 @@ public class ChatController : SechatControllerBase
 
         _chatRepository.AddToRoom(addToRoomRequest.RoomId, addToRoomRequest.UserId);
 
-        if (await _chatRepository.SaveChanges() > 0)
-        {
-            return Ok();
-        }
-
-        return BadRequest();
+        return await _chatRepository.SaveChanges() > 0 ? Ok() : BadRequest();
     }
 
     [HttpDelete("delete-room")]
