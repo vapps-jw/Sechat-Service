@@ -19,9 +19,6 @@ public class UserRepository : RepositoryBase<SechatContext>
         return connection is not null && connection.Approved;
     }
 
-    public void InviteUser(string inviter, string invited) =>
-        _context.UserConnections.Add(new UserConnection() { InvitedId = invited, InviterId = inviter });
-
     public bool ConnectionExists(string userOne, string userTwo) =>
         _context.UserConnections.Any(uc =>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
