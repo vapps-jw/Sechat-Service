@@ -59,6 +59,22 @@ public class ChatController : SechatControllerBase
         return Ok(responseDtos);
     }
 
+    [HttpPost("add-to-room")]
+    public async Task<IActionResult> AddToRoom([FromBody] AddToRoomRequest addToRoomRequest)
+    {
+        var connection = _userRepository.GetConnection(UserId, addToRoomRequest.UserId);
+        if (connection is null || connection.Blocked) return BadRequest();
+
+        _chatRepository.AddToRoom(addToRoomRequest.RoomId, addToRoomRequest.UserId);
+
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            return Ok();
+        }
+
+        return BadRequest();
+    }
+
     [HttpDelete("delete-room")]
     public async Task<IActionResult> DeleteRoom(string roomId)
     {

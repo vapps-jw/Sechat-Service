@@ -91,17 +91,15 @@ public class ChatRepository : RepositoryBase<SechatContext>
         Name = r.Name
     }).ToListAsync();
 
-    public void AddToRoom(string roomId, string inviterUserId, string invitedUserId)
+    public void AddToRoom(string roomId, string userId)
     {
-        // todo: check connections
         var room = _context.Rooms
             .Where(r => r.Id.Equals(roomId))
             .Include(r => r.Members)
             .FirstOrDefault();
 
         if (room is null) return;
-        if (!room.Members.Any(m => m.Id.Equals(inviterUserId))) return;
-        var newMemberProfile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(invitedUserId));
+        var newMemberProfile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
 
         room.Members.Add(newMemberProfile);
     }
