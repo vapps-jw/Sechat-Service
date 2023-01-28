@@ -94,7 +94,6 @@ public class UserController : SechatControllerBase
         }
 
         var connectionDto = _mapper.Map<UserConnectionDto>(connection);
-
         if (!connectionDto.UserPresent(UserId))
         {
             return BadRequest();
@@ -111,6 +110,15 @@ public class UserController : SechatControllerBase
             await _chatHubContext.Clients.Group(inviter).ConnectionDeleted(new ResourceId(connectionId));
             return Ok();
         }
+
+        return BadRequest();
+    }
+
+    [HttpPost("connection-block")]
+    public async Task<IActionResult> BlockConnection(long connectionId)
+    {
+        var connection = await _userRepository.GetConnection(connectionId);
+        if (connection is null) return BadRequest();
 
         return BadRequest();
     }
