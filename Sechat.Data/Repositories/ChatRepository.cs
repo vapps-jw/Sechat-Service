@@ -43,12 +43,12 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     // Rooms
 
-    public Room CreateRoom(string roomName, string creatorUserId, string roomKey)
+    public Room CreateRoom(string roomName, string creatorUserId, string creatorName, string roomKey)
     {
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(creatorUserId));
         if (profile == null) return null;
 
-        var newRoom = new Room() { Id = Guid.NewGuid().ToString(), RoomKey = roomKey, CreatorId = creatorUserId, Name = roomName };
+        var newRoom = new Room() { Id = Guid.NewGuid().ToString(), RoomKey = roomKey, CreatorId = creatorUserId, Name = roomName, CreatorName = creatorName };
         newRoom.Members.Add(profile);
 
         _ = _context.Rooms.Add(newRoom);

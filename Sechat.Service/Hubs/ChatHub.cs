@@ -48,7 +48,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
-            var newRoom = _chatRepository.CreateRoom(request.RoomName, UserId, _encryptor.GenerateKey());
+            var newRoom = _chatRepository.CreateRoom(request.RoomName, UserId, UserName, _encryptor.GenerateKey());
             if (await _chatRepository.SaveChanges() == 0)
             {
                 throw new Exception("Room creation failed");

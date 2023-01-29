@@ -59,10 +59,10 @@ public class UserController : SechatControllerBase
         return Ok(profileProjection);
     }
 
-    [HttpPost("connection-request")]
+    [HttpPost("request-connection")]
     public async Task<IActionResult> ConnectionRequest([FromBody] ConnectionRequestDto invitationDto)
     {
-        if (UserName.Equals(invitationDto.Username)) return BadRequest();
+        if (UserName.Equals(invitationDto.Username)) return BadRequest("You cant invite yourself :)");
 
         var invitedUser = await _userManager.FindByNameAsync(invitationDto.Username);
         if (invitedUser is null) return BadRequest();
@@ -82,7 +82,7 @@ public class UserController : SechatControllerBase
         throw new Exception("Error when creating connection request");
     }
 
-    [HttpDelete("connection-delete")]
+    [HttpDelete("delete-connection")]
     public async Task<IActionResult> DeleteConnection(long connectionId)
     {
         var connection = await _userRepository.GetConnection(connectionId);
@@ -99,15 +99,12 @@ public class UserController : SechatControllerBase
             return BadRequest();
         }
 
-        var invited = connection.InvitedId;
-        var inviter = connection.InviterId;
-
         _userRepository.DeleteConnection(connectionId);
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            await _chatHubContext.Clients.Group(invited).ConnectionDeleted(new ResourceId(connectionId));
-            await _chatHubContext.Clients.Group(inviter).ConnectionDeleted(new ResourceId(connectionId));
+            await _chatHubContext.Clients.Group(connection.InvitedId).ConnectionDeleted(new ResourceId(connectionId));
+            await _chatHubContext.Clients.Group(connection.InviterId).ConnectionDeleted(new ResourceId(connectionId));
             return Ok();
         }
 
@@ -117,28 +114,47 @@ public class UserController : SechatControllerBase
     [HttpPatch("block-connection")]
     public async Task<IActionResult> BlockConnection(long connectionId)
     {
-        _ = _userRepository.BlockConnection(connectionId, UserId, UserName);
+        var connection = _userRepository.BlockConnection(connectionId, UserId, UserName);
 
         if (await _userRepository.SaveChanges() > 0)
         {
-
+            var connectionDto = _mapper.Map<UserConnectionDto>(connection);
+            await _chatHubContext.Clients.Group(connectionDto.InvitedId).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(connectionDto.InviterId).ConnectionUpdated(connectionDto);
+            return Ok();
         }
 
-        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+        return BadRequest();
     }
 
     [HttpPatch("allow-connection")]
     public async Task<IActionResult> AllowConnection(long connectionId)
     {
-        _ = _userRepository.AllowConnection(connectionId, UserId);
-        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+        var connection = _userRepository.AllowConnection(connectionId, UserId);
+        if (await _userRepository.SaveChanges() > 0)
+        {
+            var connectionDto = _mapper.Map<UserConnectionDto>(connection);
+            await _chatHubContext.Clients.Group(connectionDto.InvitedId).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(connectionDto.InviterId).ConnectionUpdated(connectionDto);
+            return Ok();
+        }
+
+        return BadRequest();
     }
 
     [HttpPatch("approve-connection")]
     public async Task<IActionResult> ApproveConnection(long connectionId)
     {
-        _ = _userRepository.ApproveConnection(connectionId, UserId);
-        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+        var connection = _userRepository.ApproveConnection(connectionId, UserId);
+        if (await _userRepository.SaveChanges() > 0)
+        {
+            var connectionDto = _mapper.Map<UserConnectionDto>(connection);
+            await _chatHubContext.Clients.Group(connectionDto.InvitedId).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(connectionDto.InviterId).ConnectionUpdated(connectionDto);
+            return Ok();
+        }
+
+        return BadRequest();
     }
 
     [HttpPut("update-email")]

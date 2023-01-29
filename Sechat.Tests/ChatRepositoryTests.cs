@@ -21,7 +21,7 @@ public class ChatRepositoryTests
         var newRoomKey = encryptor.GenerateKey();
 
         var inviter = await userManager.FindByNameAsync("u1");
-        _ = sechatRepo.CreateRoom(newRoomName, inviter?.Id, newRoomKey);
+        _ = sechatRepo.CreateRoom(newRoomName, inviter?.Id, inviter?.UserName, newRoomKey);
 
         _ = await sechatRepo.SaveChanges();
         sechatRepo.ClearTracker();
@@ -49,7 +49,7 @@ public class ChatRepositoryTests
         var newRoomKey = encryptor.GenerateKey();
 
         var inviter = await userManager.FindByNameAsync("u1");
-        var roomId = sechatRepo.CreateRoom(newRoomName, inviter?.Id, newRoomKey).Id;
+        var roomId = sechatRepo.CreateRoom(newRoomName, inviter?.Id, inviter?.UserName, newRoomKey).Id;
 
         _ = await sechatRepo.SaveChanges();
         sechatRepo.ClearTracker();
