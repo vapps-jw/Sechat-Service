@@ -60,7 +60,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
     {
         LastActivity = r.LastActivity,
         Created = r.Created,
-        CreatorId = r.CreatorId,
+        CreatorName = r.CreatorName,
         Id = r.Id,
         Members = r.Members,
         Messages = r.Messages.OrderBy(m => m.Created).ToList(),
@@ -72,7 +72,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
     {
         LastActivity = r.LastActivity,
         Created = r.Created,
-        CreatorId = r.CreatorId,
+        CreatorName = r.CreatorName,
         Id = r.Id,
         Members = r.Members,
         Messages = r.Messages.OrderBy(m => m.Created).ToList(),
@@ -84,24 +84,25 @@ public class ChatRepository : RepositoryBase<SechatContext>
     {
         LastActivity = r.LastActivity,
         Created = r.Created,
-        CreatorId = r.CreatorId,
+        CreatorName = r.CreatorName,
         Id = r.Id,
         Members = r.Members,
         Messages = r.Messages.OrderBy(m => m.Created).ToList(),
         Name = r.Name
     }).ToListAsync();
 
-    public void AddToRoom(string roomId, string userId)
+    public Room AddToRoom(string roomId, string userId)
     {
         var room = _context.Rooms
             .Where(r => r.Id.Equals(roomId))
             .Include(r => r.Members)
             .FirstOrDefault();
 
-        if (room is null) return;
+        if (room is null) return null;
         var newMemberProfile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
 
         room.Members.Add(newMemberProfile);
+        return room;
     }
 
     public void DeleteRoom(string roomId, string creatorUserId)

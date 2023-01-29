@@ -39,6 +39,8 @@ public class UserController : SechatControllerBase
         _userRepository = userRepository;
     }
 
+    private async Task<string> GetUserId(string userName) => (await _userManager.FindByNameAsync(userName))?.Id;
+
     [HttpGet("get-profile")]
     public async Task<IActionResult> GetProfile()
     {
@@ -94,7 +96,7 @@ public class UserController : SechatControllerBase
         }
 
         var connectionDto = _mapper.Map<UserConnectionDto>(connection);
-        if (!connectionDto.UserPresent(UserId))
+        if (!connectionDto.UserPresent(UserName))
         {
             return BadRequest();
         }
@@ -119,8 +121,8 @@ public class UserController : SechatControllerBase
         if (await _userRepository.SaveChanges() > 0)
         {
             var connectionDto = _mapper.Map<UserConnectionDto>(connection);
-            await _chatHubContext.Clients.Group(connectionDto.InvitedId).ConnectionUpdated(connectionDto);
-            await _chatHubContext.Clients.Group(connectionDto.InviterId).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InvitedName)).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InviterName)).ConnectionUpdated(connectionDto);
             return Ok();
         }
 
@@ -134,8 +136,8 @@ public class UserController : SechatControllerBase
         if (await _userRepository.SaveChanges() > 0)
         {
             var connectionDto = _mapper.Map<UserConnectionDto>(connection);
-            await _chatHubContext.Clients.Group(connectionDto.InvitedId).ConnectionUpdated(connectionDto);
-            await _chatHubContext.Clients.Group(connectionDto.InviterId).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InvitedName)).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InviterName)).ConnectionUpdated(connectionDto);
             return Ok();
         }
 
@@ -149,8 +151,8 @@ public class UserController : SechatControllerBase
         if (await _userRepository.SaveChanges() > 0)
         {
             var connectionDto = _mapper.Map<UserConnectionDto>(connection);
-            await _chatHubContext.Clients.Group(connectionDto.InvitedId).ConnectionUpdated(connectionDto);
-            await _chatHubContext.Clients.Group(connectionDto.InviterId).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InvitedName)).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InviterName)).ConnectionUpdated(connectionDto);
             return Ok();
         }
 

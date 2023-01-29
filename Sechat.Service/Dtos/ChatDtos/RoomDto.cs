@@ -6,7 +6,7 @@ namespace Sechat.Service.Dtos.ChatDtos;
 public class RoomDto
 {
     public string Id { get; set; }
-    public string CreatorId { get; set; } = string.Empty;
+    public string CreatorName { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
 

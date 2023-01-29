@@ -19,6 +19,7 @@ public interface IChatHub
     Task ConnectionRequestReceived(UserConnectionDto message);
     Task ConnectionDeleted(ResourceId message);
     Task ConnectionUpdated(UserConnectionDto message);
+    Task RoomUpdated(RoomDto message);
 }
 
 [Authorize]
@@ -117,6 +118,8 @@ public class ChatHub : SechatHubBase<IChatHub>
             var res = _chatRepository.CreateMessage(UserId, incomingMessageDto.Text, incomingMessageDto.RoomId);
             _ = await _chatRepository.SaveChanges();
             var messageDto = _mapper.Map<RoomMessageDto>(res);
+
+            // todo: add decryption
 
             await Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
         }

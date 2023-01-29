@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Sechat.Data.Repositories;
@@ -15,17 +16,20 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class ChatController : SechatControllerBase
 {
+    private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
     private readonly ChatRepository _chatRepository;
     private readonly IMapper _mapper;
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public ChatController(
-        UserRepository userRepository,
+          UserManager<IdentityUser> userManager,
+    UserRepository userRepository,
         ChatRepository chatRepository,
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
+        _userManager = userManager;
         _userRepository = userRepository;
         _chatRepository = chatRepository;
         _mapper = mapper;
@@ -60,15 +64,28 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("add-to-room")]
-    public async Task<IActionResult> AddToRoom([FromBody] AddToRoomRequest addToRoomRequest)
+    public async Task<IActionResult> AddToRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
     {
-        var connection = _userRepository.GetConnection(UserId, addToRoomRequest.UserId);
+        var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
+        var connection = _userRepository.GetConnection(UserId, user.Id);
         if (connection is null || connection.Blocked) return BadRequest();
 
-        _chatRepository.AddToRoom(addToRoomRequest.RoomId, addToRoomRequest.UserId);
+        var room = _chatRepository.AddToRoom(roomMemberUpdate.RoomId, user.Id);
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            var roomDto = _mapper.Map<RoomDto>(room);
+            await _chatHubContext.Clients.Group(room.Id).RoomUpdated(roomDto);
+            return Ok();
+        }
 
-        return await _chatRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+        return BadRequest();
     }
+
+    [HttpPost("remove-from-room")]
+    public IActionResult RemoveFromRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate) => BadRequest();
+
+    [HttpPost("leave-room")]
+    public IActionResult LeaveRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate) => BadRequest();
 
     [HttpDelete("delete-room")]
     public async Task<IActionResult> DeleteRoom(string roomId)
