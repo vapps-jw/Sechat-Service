@@ -114,11 +114,31 @@ public class UserController : SechatControllerBase
         return BadRequest();
     }
 
-    [HttpPost("connection-block")]
+    [HttpPatch("block-connection")]
     public async Task<IActionResult> BlockConnection(long connectionId)
     {
-        var connection = await _userRepository.GetConnection(connectionId);
-        return connection is null || connection.Blocked ? BadRequest() : (IActionResult)BadRequest();
+        _ = _userRepository.BlockConnection(connectionId, UserId, UserName);
+
+        if (await _userRepository.SaveChanges() > 0)
+        {
+
+        }
+
+        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+    }
+
+    [HttpPatch("allow-connection")]
+    public async Task<IActionResult> AllowConnection(long connectionId)
+    {
+        _ = _userRepository.AllowConnection(connectionId, UserId);
+        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+    }
+
+    [HttpPatch("approve-connection")]
+    public async Task<IActionResult> ApproveConnection(long connectionId)
+    {
+        _ = _userRepository.ApproveConnection(connectionId, UserId);
+        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest();
     }
 
     [HttpPut("update-email")]

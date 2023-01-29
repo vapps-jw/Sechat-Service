@@ -52,19 +52,37 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
             .ToListAsync();
 
-    public void BlockConnection(long connectionId, string blockedBy)
+    public UserConnection BlockConnection(long connectionId, string blockedById, string blockedByName)
     {
+        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
+        if (connection is null || connection.Blocked) return null;
 
+        connection.Blocked = true;
+        connection.BlockedById = blockedById;
+        connection.BlockedByName = blockedByName;
+
+        return connection;
     }
 
-    public void UnBlockConnection(long connectionId, string blockedBy)
+    public UserConnection AllowConnection(long connectionId, string userId)
     {
+        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
+        if (connection is null || !connection.Blocked || !connection.BlockedById.Equals(userId)) return null;
 
+        connection.Blocked = false;
+        connection.BlockedById = string.Empty;
+        connection.BlockedByName = string.Empty;
+
+        return connection;
     }
 
-    public void ApproveConnection(long connectionId, string blockedBy)
+    public UserConnection ApproveConnection(long connectionId, string approverId)
     {
+        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
+        if (connection is null || connection.Approved || !connection.InvitedId.Equals(approverId)) return null;
+        connection.Approved = true;
 
+        return connection;
     }
 
     public Task<UserConnection> GetConnection(long connectionId) =>
