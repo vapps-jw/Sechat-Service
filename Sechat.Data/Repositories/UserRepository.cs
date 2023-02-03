@@ -117,7 +117,7 @@ public class UserRepository : RepositoryBase<SechatContext>
             _ = _context.UserProfiles.Remove(profile);
         }
 
-        // todo: delete connections and do cleanup
+        // todo: delete connections and do cleanup - ping rooms and connections that user deleted account
     }
 
     public bool ProfileExists(string id) => _context.UserProfiles

@@ -5,6 +5,7 @@ namespace Sechat.Service.Dtos.SignalRDtos;
 
 public record ResourceId(long Id);
 public record ResourceGuid(string Id);
+public record StringMessage(string Message);
 
 public record RoomIdsMessage(List<string> RoomIds);
 
