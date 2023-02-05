@@ -113,6 +113,8 @@ public class ChatRepository : RepositoryBase<SechatContext>
             .FirstOrDefault();
 
         if (room is null) return null;
+        if (room.CreatorId.Equals(userId)) throw new Exception("Cant remove creator of the room");
+
         var memberProfile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
 
         _ = room.Members.Remove(memberProfile);
@@ -123,7 +125,6 @@ public class ChatRepository : RepositoryBase<SechatContext>
     {
         var room = _context.Rooms
             .Where(r => r.Id.Equals(roomId) && r.CreatorId.Equals(creatorUserId))
-            .Include(r => r.Members)
             .FirstOrDefault();
 
         if (room is null) return;
