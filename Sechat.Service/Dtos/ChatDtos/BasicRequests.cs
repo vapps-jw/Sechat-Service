@@ -1,4 +1,4 @@
 ﻿namespace Sechat.Service.Dtos.ChatDtos;
 
-public record RoomMemberUpdateRequest(string UserName, string RoomId);
+public record RoomMemberUpdateRequest(string UserName, string RoomId, long connectionId);
 

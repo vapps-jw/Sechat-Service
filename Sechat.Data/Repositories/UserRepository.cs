@@ -24,6 +24,14 @@ public class UserRepository : RepositoryBase<SechatContext>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
             (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
+    public bool ConnectionExists(long connectionId, string userOne, string userTwo)
+    {
+        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
+        return connection is not null
+            && (connection.InvitedId.Equals(userOne) || connection.InviterId.Equals(userOne))
+            && (connection.InvitedId.Equals(userTwo) || connection.InviterId.Equals(userTwo));
+    }
+
     public UserConnection GetConnection(string userOne, string userTwo) =>
         _context.UserConnections.FirstOrDefault(uc =>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||

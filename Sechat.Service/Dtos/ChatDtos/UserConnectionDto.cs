@@ -1,4 +1,6 @@
-﻿namespace Sechat.Service.Dtos.ChatDtos;
+﻿using System.Linq;
+
+namespace Sechat.Service.Dtos.ChatDtos;
 
 public class UserConnectionDto
 {
@@ -11,4 +13,5 @@ public class UserConnectionDto
     public string BlockedByName { get; set; } = string.Empty;
 
     public bool UserPresent(string userName) => InviterName.Equals(userName) || InvitedName.Equals(userName);
+    public bool UserPresents(string[] userNames) => userNames.All(un => InviterName.Equals(un) || InvitedName.Equals(un));
 }

@@ -20,6 +20,8 @@ public interface IChatHub
     Task ConnectionDeleted(ResourceId message);
     Task ConnectionUpdated(UserConnectionDto message);
     Task RoomUpdated(RoomDto message);
+    Task UserAddedToRoom(RoomDto message);
+    Task UserRemovedFromRoom(UserRemovedFromRoom message);
 }
 
 [Authorize]
@@ -99,6 +101,19 @@ public class ChatHub : SechatHubBase<IChatHub>
                 return new ResourceGuid(message.Id);
             }
             return null;
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
+    public async Task<ResourceGuid> DisconnectFromRoom(ResourceGuid message)
+    {
+        try
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, message.Id);
+            return new ResourceGuid(message.Id);
         }
         catch (Exception ex)
         {

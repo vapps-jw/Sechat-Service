@@ -67,14 +67,17 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> AddToRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
     {
         var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
-        var connection = _userRepository.GetConnection(UserId, user.Id);
-        if (connection is null || connection.Blocked) return BadRequest();
+        if (!_userRepository.ConnectionExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest();
+
+        var connection = await _userRepository.GetConnection(roomMemberUpdate.connectionId);
+        if (connection.Blocked) return BadRequest();
 
         var room = _chatRepository.AddToRoom(roomMemberUpdate.RoomId, user.Id);
         if (await _chatRepository.SaveChanges() > 0)
         {
             var roomDto = _mapper.Map<RoomDto>(room);
-            await _chatHubContext.Clients.Group(room.Id).RoomUpdated(roomDto);
+            await _chatHubContext.Clients.Group(user.Id).UserAddedToRoom(roomDto);
+            await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).RoomUpdated(roomDto);
             return Ok();
         }
 
@@ -82,10 +85,21 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("remove-from-room")]
-    public IActionResult RemoveFromRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate) => BadRequest();
+    public async Task<IActionResult> RemoveFromRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
+    {
+        var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
+        if (!_userRepository.ConnectionExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest();
 
-    [HttpPost("leave-room")]
-    public IActionResult LeaveRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate) => BadRequest();
+        var room = _chatRepository.RemoveFromRoom(roomMemberUpdate.RoomId, user.Id);
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            var roomDto = _mapper.Map<RoomDto>(room);
+            await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new UserRemovedFromRoom(roomDto.Id, roomMemberUpdate.UserName));
+            return Ok();
+        }
+
+        return BadRequest();
+    }
 
     [HttpDelete("delete-room")]
     public async Task<IActionResult> DeleteRoom(string roomId)

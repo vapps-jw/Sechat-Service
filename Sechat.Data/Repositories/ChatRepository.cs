@@ -105,6 +105,20 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return room;
     }
 
+    public Room RemoveFromRoom(string roomId, string userId)
+    {
+        var room = _context.Rooms
+            .Where(r => r.Id.Equals(roomId))
+            .Include(r => r.Members)
+            .FirstOrDefault();
+
+        if (room is null) return null;
+        var memberProfile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
+
+        _ = room.Members.Remove(memberProfile);
+        return room;
+    }
+
     public void DeleteRoom(string roomId, string creatorUserId)
     {
         var room = _context.Rooms
