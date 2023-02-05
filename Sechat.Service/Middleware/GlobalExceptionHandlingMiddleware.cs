@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Sechat.Service.CustomExceptions;
 using Sechat.Service.Utilities;
 using System;
 using System.Net;
@@ -20,6 +21,22 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
         try
         {
             await next(context);
+        }
+        catch (ChatException ex)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
+            var problem = new ProblemDetails()
+            {
+                Status = (int)HttpStatusCode.InternalServerError,
+                Type = "Chat backend error",
+                Title = "Chat backend error",
+                Detail = ex.Message,
+            };
+
+            var json = JsonSerializer.Serialize(problem);
+            context.Response.ContentType = AppConstants.ContentTypes.Json;
+            await context.Response.WriteAsync(json);
         }
         catch (Exception ex)
         {
