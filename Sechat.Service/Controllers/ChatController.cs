@@ -67,10 +67,10 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> AddToRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
     {
         var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
-        if (!_userRepository.ConnectionExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest();
+        if (!_userRepository.ConnectionExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest("Can`t add this user");
 
         var connection = await _userRepository.GetConnection(roomMemberUpdate.connectionId);
-        if (connection.Blocked) return BadRequest();
+        if (connection.Blocked) return BadRequest("Can`t add this user");
 
         var room = _chatRepository.AddToRoom(roomMemberUpdate.RoomId, user.Id);
         if (await _chatRepository.SaveChanges() > 0)
