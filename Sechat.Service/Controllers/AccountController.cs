@@ -48,12 +48,7 @@ public class AccountController : SechatControllerBase
     public async Task<IActionResult> Login([FromBody] UserCredentials userCredentials)
     {
         var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, false);
-        if (!signInResult.Succeeded)
-        {
-            return BadRequest();
-        }
-
-        return Ok();
+        return !signInResult.Succeeded ? BadRequest() : Ok();
     }
 
     [AllowAnonymous]
@@ -143,12 +138,7 @@ public class AccountController : SechatControllerBase
         var callbackUrl = $@"{corsSettings.CurrentValue.WebAppUrl}/account/reset-password/{qb}";
 
         var sgResponse = await emailClient.SendPasswordResetAsync(emailForm.Email, callbackUrl);
-        if (sgResponse.StatusCode != HttpStatusCode.Accepted)
-        {
-            return Problem();
-        }
-
-        return Ok();
+        return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok();
     }
 
     [AllowAnonymous]
@@ -158,11 +148,6 @@ public class AccountController : SechatControllerBase
         var currentUser = await _userManager.FindByIdAsync(passwordResetForm.UserId);
         var confirmResult = await _userManager.ResetPasswordAsync(currentUser, passwordResetForm.Token, passwordResetForm.NewPassword);
 
-        if (!confirmResult.Succeeded)
-        {
-            return BadRequest();
-        }
-
-        return Ok();
+        return !confirmResult.Succeeded ? BadRequest() : Ok();
     }
 }
