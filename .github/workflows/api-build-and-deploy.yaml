@@ -1,0 +1,35 @@
+name: API Build and Deploy to Linode
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build our App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull Code
+        uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '7.0.x'
+      - name: Restore Dependencies
+        run: dotnet restore
+      - name: Create Production Build
+        run: dotnet publish -c Release --no-restore
+      - name: Inject Secrets
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: './Sechat.Service/bin/Release/net7.0/publish/appsettings.Production.json'
+        env:
+          ConnectionStrings.Default: ${{ secrets.POSTGRESQL_CONNECTION_STRING }}
+      - name: Push to Linode
+        run: |
+          echo "$ssh_key" > ~/ssh_key
+          chmod 600 ~/ssh_key
+          rsync -e "ssh -p "$target_port" -i ~/ssh_key -o StrictHostKeyChecking=no" -avzr ./Sechat.Service/bin/Release/net5.0/publish/ "$user"@"$target_ip":/var//api
+        env:
+          ssh_key: ${{ secrets.GIT_ACTIONS_SSH }}
+          user: ${{ secrets.GIT_ACTIONS_USER }}
+          target_port: ${{ secrets.LINODE_PORT }}
+          target_ip: ${{ secrets.LINODE_IP }}
