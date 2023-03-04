@@ -12,12 +12,6 @@ using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Secrets Injection
-if (builder.Environment.IsProduction())
-{
-    _ = builder.Configuration.AddJsonFile(AppConstants.Paths.SecretSettings, true, true);
-}
-
 // Logging
 if (builder.Environment.IsDevelopment())
 {
