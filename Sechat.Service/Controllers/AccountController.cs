@@ -40,7 +40,7 @@ public class AccountController : SechatControllerBase
         _userRepository = userRepository;
     }
 
-    [HttpGet("test")]
+    [HttpGet("test-secret")]
     public IActionResult AuthTest() => Ok("SECRET");
 
     [AllowAnonymous]
@@ -94,6 +94,7 @@ public class AccountController : SechatControllerBase
         }
 
         _logger.LogInformation($"User {UserName} has been removed");
+        await _signInManager.SignOutAsync();
         return Ok();
     }
 
