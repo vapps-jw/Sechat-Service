@@ -23,8 +23,8 @@ public class ChatController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public ChatController(
-          UserManager<IdentityUser> userManager,
-    UserRepository userRepository,
+        UserManager<IdentityUser> userManager,
+        UserRepository userRepository,
         ChatRepository chatRepository,
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)

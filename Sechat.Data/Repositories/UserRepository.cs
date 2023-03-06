@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sechat.Data.Models;
+using Sechat.Data.Projections;
 
 namespace Sechat.Data.Repositories;
 
@@ -117,15 +118,37 @@ public class UserRepository : RepositoryBase<SechatContext>
     public void CreateUserProfile(string id, string userName) => _context
         .Add(new UserProfile() { Id = id, UserName = userName });
 
-    public void DeleteUserProfile(string id)
+    public async Task<ProfileDeleteResult> DeleteUserProfile(string id)
     {
-        var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(id));
+        var deletedRooms = new List<string>();
+        var deletedConnections = new List<long>();
+
+        var profile = _context.UserProfiles
+            .Include(r => r.Rooms)
+            .FirstOrDefault(p => p.Id.Equals(id));
+
+        var ownedRooms = profile.Rooms
+            .Where(r => r.CreatorId.Equals(profile.Id))
+            .ToList();
+
+        var memberRooms = profile.Rooms
+            .Where(r => !r.CreatorId.Equals(profile.Id))
+            .ToList();
+
+        var connections = await GetConnections(profile.Id);
+
         if (profile is not null)
         {
             _ = _context.UserProfiles.Remove(profile);
         }
 
-        // todo: delete connections and do cleanup - ping rooms and connections that user deleted account
+        _context.Rooms.RemoveRange(ownedRooms);
+        _context.UserConnections.RemoveRange(connections);
+
+        return new ProfileDeleteResult(
+            ownedRooms.Select(r => r.Id).ToList(),
+            memberRooms.Select(r => r.Id).ToList(),
+            connections);
     }
 
     public bool ProfileExists(string id) => _context.UserProfiles

@@ -3,10 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
+using Sechat.Service.Dtos.SignalRDtos;
+using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
 using System.Linq;
@@ -25,19 +28,22 @@ public class AccountController : SechatControllerBase
     private readonly UserManager<IdentityUser> _userManager;
     private readonly SignInManager<IdentityUser> _signInManager;
     private readonly UserRepository _userRepository;
+    private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public AccountController(
         IMapper mapper,
         ILogger<AccountController> logger,
         UserManager<IdentityUser> userManager,
         SignInManager<IdentityUser> signInManager,
-        UserRepository userRepository)
+        UserRepository userRepository,
+        IHubContext<ChatHub, IChatHub> chatHubContext)
     {
         _mapper = mapper;
         _logger = logger;
         _userManager = userManager;
         _signInManager = signInManager;
         _userRepository = userRepository;
+        _chatHubContext = chatHubContext;
     }
 
     [HttpGet("test-secret")]
@@ -85,7 +91,26 @@ public class AccountController : SechatControllerBase
             return BadRequest("User not found");
         }
 
-        _userRepository.DeleteUserProfile(UserId);
+        var deleteResult = await _userRepository.DeleteUserProfile(UserId);
+
+        if (await _userRepository.SaveChanges() > 0)
+        {
+            foreach (var ownedRoom in deleteResult.OwnedRooms)
+            {
+                await _chatHubContext.Clients.Group(ownedRoom).RoomDeleted(new ResourceGuid(ownedRoom));
+            }
+
+            foreach (var memberRoom in deleteResult.MemberRooms)
+            {
+                await _chatHubContext.Clients.Group(memberRoom).UserRemovedFromRoom(new UserRemovedFromRoom(memberRoom, UserName));
+            }
+
+            foreach (var connection in deleteResult.Connections)
+            {
+                await _chatHubContext.Clients.Group(connection.InvitedId).ConnectionDeleted(new ResourceId(connection.Id));
+                await _chatHubContext.Clients.Group(connection.InviterId).ConnectionDeleted(new ResourceId(connection.Id));
+            }
+        }
 
         var result = await _userManager.DeleteAsync(user);
         if (!result.Succeeded)
