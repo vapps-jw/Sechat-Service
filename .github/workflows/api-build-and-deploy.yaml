@@ -1,4 +1,4 @@
-name: API Build and Deploy to Linode
+name: Sechat API Build and Deploy to Linode
 
 on:
   workflow_dispatch:
@@ -22,14 +22,20 @@ jobs:
         with:
           files: './Sechat.Service/bin/Release/net7.0/publish/appsettings.Production.json'
         env:
-          ConnectionStrings.Default: ${{ secrets.POSTGRESQL_CONNECTION_STRING }}
+          ConnectionStrings.Master: ${{ secrets.POSTGRESQL_CONNECTION_STRING }}
+          CorsSettings.WebAppUrl: ${{ secrets.WEB_APP_URL }}
+          CorsSettings.ApiUrl: ${{ secrets.API_URL }}
+          CookieSettings.AuthCookieDomain: ${{ secrets.AUTH_COOKIE_DOMAIN }}
+          CookieSettings.AuthCookieName: ${{ secrets.AUTH_COOKIE_NAME }}
       - name: Push to Linode
         run: |
           echo "$ssh_key" > ~/ssh_key
           chmod 600 ~/ssh_key
-          rsync -e "ssh -p "$target_port" -i ~/ssh_key -o StrictHostKeyChecking=no" -avzr ./Sechat.Service/bin/Release/net5.0/publish/ "$user"@"$target_ip":/var//api
+          rsync -e "ssh -p "$target_port" -i ~/ssh_key -o StrictHostKeyChecking=no" -avzr ./Sechat.Service/bin/Release/net7.0/publish/ "$user"@"$target_ip":/var/web-apps/sechat-web-app
         env:
           ssh_key: ${{ secrets.GIT_ACTIONS_SSH }}
           user: ${{ secrets.GIT_ACTIONS_USER }}
           target_port: ${{ secrets.LINODE_PORT }}
           target_ip: ${{ secrets.LINODE_IP }}
+
+
