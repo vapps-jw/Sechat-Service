@@ -130,11 +130,14 @@ public class ChatHub : SechatHubBase<IChatHub>
                 throw new Exception("You dont have access to this room");
             }
 
-            var res = _chatRepository.CreateMessage(UserId, incomingMessageDto.Text, incomingMessageDto.RoomId);
-            _ = await _chatRepository.SaveChanges();
-            var messageDto = _mapper.Map<RoomMessageDto>(res);
+            var roomKey = _chatRepository.GetRoomKey(incomingMessageDto.RoomId);
+            var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(roomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
 
-            // todo: add decryption
+            var res = _chatRepository.CreateMessage(UserId, encryptedMessage.Text, encryptedMessage.RoomId);
+            _ = await _chatRepository.SaveChanges();
+
+            res.Text = incomingMessageDto.Text;
+            var messageDto = _mapper.Map<RoomMessageDto>(res);
 
             await Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
         }

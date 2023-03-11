@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Sechat.Service.Configuration;
 using Sechat.Service.Configuration.Installers;
@@ -8,7 +7,6 @@ using Sechat.Service.Hubs;
 using Sechat.Service.Middleware;
 using Sechat.Service.Utilities;
 using Serilog;
-using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,8 +45,6 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 app.MapDefaultControllerRoute();
 app.MapHub<ChatHub>("/chat-hub");
-
-Console.WriteLine($"--> Master App Settings used: {app.Configuration.GetValue("ConfigSet", "No config Set")}");
 
 if (app.Environment.IsProduction())
 {

@@ -23,8 +23,6 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public Message CreateMessage(string userId, string messageText, string roomId)
     {
-        // todo: add encryption
-
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
         if (profile == null) return null;
 
@@ -68,9 +66,12 @@ public class ChatRepository : RepositoryBase<SechatContext>
         Name = r.Name
     }).FirstOrDefault();
 
+    public string GetRoomKey(string roomId) => _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId))?.RoomKey;
+
     public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
     .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
     {
+        RoomKey = r.RoomKey,
         LastActivity = r.LastActivity,
         Created = r.Created,
         CreatorName = r.CreatorName,

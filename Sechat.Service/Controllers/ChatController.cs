@@ -7,6 +7,7 @@ using Sechat.Data.Repositories;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Dtos.SignalRDtos;
 using Sechat.Service.Hubs;
+using Sechat.Service.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -19,6 +20,7 @@ public class ChatController : SechatControllerBase
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
     private readonly ChatRepository _chatRepository;
+    private readonly IEncryptor _encryptor;
     private readonly IMapper _mapper;
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
@@ -26,12 +28,14 @@ public class ChatController : SechatControllerBase
         UserManager<IdentityUser> userManager,
         UserRepository userRepository,
         ChatRepository chatRepository,
+        IEncryptor encryptor,
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
         _userManager = userManager;
         _userRepository = userRepository;
         _chatRepository = chatRepository;
+        _encryptor = encryptor;
         _mapper = mapper;
         _chatHubContext = chatHubContext;
     }
@@ -41,6 +45,14 @@ public class ChatController : SechatControllerBase
     {
         var rooms = await _chatRepository.GetRooms(UserId);
         var connections = await _userRepository.GetConnections(UserId);
+
+        foreach (var room in rooms)
+        {
+            foreach (var message in room.Messages)
+            {
+                message.Text = _encryptor.DecryptString(room.RoomKey, message.Text);
+            }
+        }
 
         var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
         var connectionDtos = _mapper.Map<List<UserConnectionDto>>(connections);
