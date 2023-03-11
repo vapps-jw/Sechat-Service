@@ -6,15 +6,8 @@ using Sechat.Service.Configuration.Installers;
 using Sechat.Service.Hubs;
 using Sechat.Service.Middleware;
 using Sechat.Service.Utilities;
-using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Logging
-if (builder.Environment.IsDevelopment())
-{
-    _ = builder.Host.UseSerilog((context, config) => { _ = config.WriteTo.Console(); });
-}
 
 // Install Services
 builder.InstallServices(typeof(IServiceInstaller).Assembly);
@@ -46,14 +39,8 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.MapDefaultControllerRoute();
 app.MapHub<ChatHub>("/chat-hub");
 
-if (app.Environment.IsProduction())
-{
-    DbManager.PrepareDatabase(app);
-}
-if (app.Environment.IsDevelopment())
-{
-    DbManager.EnsureCreatedDatabase(app);
-}
+DbManager.PrepareDatabase(app);
+
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.TestEnv))
 {
     await DbManager.SeedData(app);
