@@ -6,6 +6,7 @@ using Sechat.Service.Configuration.Installers;
 using Sechat.Service.Hubs;
 using Sechat.Service.Middleware;
 using Sechat.Service.Utilities;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,5 +47,6 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName.Equals(Ap
     await DbManager.SeedData(app);
 }
 
+Console.WriteLine("--> Running App...");
 app.Run();
 
