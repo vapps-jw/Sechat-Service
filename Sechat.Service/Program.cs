@@ -10,6 +10,8 @@ using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
+_ = builder.WebHost.ConfigureKestrel(options => options.ListenLocalhost(5000));
+
 // Install Services
 builder.InstallServices(typeof(IServiceInstaller).Assembly);
 
