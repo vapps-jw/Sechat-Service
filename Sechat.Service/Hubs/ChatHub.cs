@@ -147,18 +147,6 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
-    public async Task SendRoomDeleted(string roomId)
-    {
-        try
-        {
-            await Clients.Group(roomId).RoomDeleted(new ResourceGuid(roomId));
-        }
-        catch (Exception ex)
-        {
-            throw new HubException(ex.Message);
-        }
-    }
-
     public override async Task OnConnectedAsync()
     {
         try
