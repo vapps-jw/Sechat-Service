@@ -123,6 +123,15 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return room;
     }
 
+    public bool IsRoomMember(string userId, string roomId)
+    {
+        var room = _context.Rooms
+        .Include(r => r.Members)
+        .FirstOrDefault(r => r.Id.Equals(roomId));
+
+        return room is not null && room.Members.Any(r => r.Id.Equals(userId));
+    }
+
     public void DeleteRoom(string roomId, string creatorUserId)
     {
         var room = _context.Rooms

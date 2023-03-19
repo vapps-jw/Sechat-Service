@@ -113,6 +113,22 @@ public class ChatController : SechatControllerBase
         return BadRequest();
     }
 
+    [HttpPost("leave-room")]
+    public async Task<IActionResult> RemoveFromRoom([FromBody] LeaveRoomRequest roomMemberUpdate)
+    {
+        if (!_chatRepository.IsRoomMember(UserId, roomMemberUpdate.RoomId)) return BadRequest();
+
+        var room = _chatRepository.RemoveFromRoom(roomMemberUpdate.RoomId, UserId);
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            var roomDto = _mapper.Map<RoomDto>(room);
+            await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new UserRemovedFromRoom(roomDto.Id, UserName));
+            return Ok();
+        }
+
+        return BadRequest();
+    }
+
     [HttpDelete("delete-room")]
     public async Task<IActionResult> DeleteRoom(string roomId)
     {
