@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sechat.Data.Models;
-using Sechat.Service.CustomExceptions;
+using Sechat.Domain.CustomExceptions;
 
 namespace Sechat.Data.Repositories;
 

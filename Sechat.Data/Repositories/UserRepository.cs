@@ -176,5 +176,12 @@ public class UserRepository : RepositoryBase<SechatContext>
         _ = userProfile.Keys.RemoveAll(k => k.Type == KeyType.EmailUpdate);
         userProfile.Keys.Add(new Key() { Type = KeyType.EmailUpdate, Value = key });
     }
+
+    // Notifications
+
+    public void AddNotificationSubscription()
+    {
+
+    }
 }
 
