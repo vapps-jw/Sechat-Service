@@ -37,7 +37,7 @@ public class NotificationsController : SechatControllerBase
         return await _userRepository.SaveChanges() > 0 ? Ok() : Problem();
     }
 
-    [HttpPost("push-unubscribe"), ActionName(nameof(UnsubscribePush))]
+    [HttpDelete("push-unubscribe"), ActionName(nameof(UnsubscribePush))]
     public async Task<IActionResult> UnsubscribePush()
     {
         _userRepository.RemovePushNotificationSubscriptions(UserId);

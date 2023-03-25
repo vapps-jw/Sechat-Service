@@ -20,7 +20,7 @@ public class PushNotificationService
         _vapidKeys = vapidKeys;
     }
 
-    public async Task SendNotification(string userId)
+    public async Task IncomingMessageNotification(string userId)
     {
         var subs = _userRepository.GetSubscriptions(userId);
         if (!subs.Any()) return;

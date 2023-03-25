@@ -18,6 +18,7 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class ChatController : SechatControllerBase
 {
+    private readonly PushNotificationService _pushNotificationService;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
     private readonly ChatRepository _chatRepository;
@@ -26,6 +27,7 @@ public class ChatController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public ChatController(
+        PushNotificationService pushNotificationService,
         UserManager<IdentityUser> userManager,
         UserRepository userRepository,
         ChatRepository chatRepository,
@@ -33,6 +35,7 @@ public class ChatController : SechatControllerBase
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
+        _pushNotificationService = pushNotificationService;
         _userManager = userManager;
         _userRepository = userRepository;
         _chatRepository = chatRepository;
@@ -95,13 +98,17 @@ public class ChatController : SechatControllerBase
 
         res.Text = incomingMessageDto.Text;
         var messageDto = _mapper.Map<RoomMessageDto>(res);
+        var roomMembers = _chatRepository.GetRoomMembers(incomingMessageDto.RoomId);
+        _ = roomMembers.RemoveAll(m => m.Equals(UserId));
 
         await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
 
-        // todo: add notification
+        foreach (var member in roomMembers)
+        {
+            await _pushNotificationService.IncomingMessageNotification(member);
+        }
 
         return Ok();
-
     }
 
     [HttpPost("add-to-room")]
