@@ -8,6 +8,7 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Dtos.SignalRDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -73,6 +74,34 @@ public class ChatController : SechatControllerBase
         var responseDtos = _mapper.Map<List<RoomDto>>(rooms);
 
         return Ok(responseDtos);
+    }
+
+    [HttpGet("send-message")]
+    public async Task<IActionResult> SendMessage([FromBody] IncomingMessage incomingMessageDto)
+    {
+        if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
+        {
+            throw new Exception("You dont have access to this room");
+        }
+
+        var roomKey = _chatRepository.GetRoomKey(incomingMessageDto.RoomId);
+        var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(roomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
+
+        var res = _chatRepository.CreateMessage(UserId, encryptedMessage.Text, encryptedMessage.RoomId);
+        if (await _chatRepository.SaveChanges() == 0)
+        {
+            return BadRequest();
+        }
+
+        res.Text = incomingMessageDto.Text;
+        var messageDto = _mapper.Map<RoomMessageDto>(res);
+
+        await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
+
+        // todo: add notification
+
+        return Ok();
+
     }
 
     [HttpPost("add-to-room")]
