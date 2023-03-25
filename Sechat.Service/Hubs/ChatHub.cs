@@ -124,6 +124,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
+    [Obsolete]
     public async Task SendMessage(IncomingMessage incomingMessageDto)
     {
         try

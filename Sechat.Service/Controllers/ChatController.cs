@@ -80,7 +80,7 @@ public class ChatController : SechatControllerBase
         return Ok(responseDtos);
     }
 
-    [HttpGet("send-message")]
+    [HttpPost("send-message")]
     public async Task<IActionResult> SendMessage([FromBody] IncomingMessage incomingMessageDto)
     {
         if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
@@ -101,10 +101,9 @@ public class ChatController : SechatControllerBase
 
         res.Text = incomingMessageDto.Text;
         var messageDto = _mapper.Map<RoomMessageDto>(res);
+        await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
 
         if (!roomMembers.Any()) return Ok();
-
-        await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
 
         foreach (var member in roomMembers)
         {
