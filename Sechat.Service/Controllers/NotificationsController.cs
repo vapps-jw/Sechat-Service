@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Sechat.Data.Models;
+using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
-using System;
+using System.Threading.Tasks;
 
 namespace Sechat.Service.Controllers;
 
@@ -12,21 +13,34 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class NotificationsController : SechatControllerBase
 {
+    private readonly UserRepository _userRepository;
     private readonly ILogger<NotificationsController> _logger;
     private readonly IMapper _mapper;
 
-    public NotificationsController(ILogger<NotificationsController> logger, IMapper mapper)
+    public NotificationsController(
+        UserRepository userRepository,
+        ILogger<NotificationsController> logger,
+        IMapper mapper)
     {
+        _userRepository = userRepository;
         _logger = logger;
         _mapper = mapper;
     }
 
-    [HttpPost("push-subscribe"), ActionName(nameof(SubscribeToPush))]
-    public IActionResult SubscribeToPush([FromBody] PushSubscriptionDto pushSubscriptionDto)
+    [HttpPost("push-subscribe"), ActionName(nameof(SubscribePush))]
+    public async Task<IActionResult> SubscribePush([FromBody] PushSubscriptionDto pushSubscriptionDto)
     {
         var sub = _mapper.Map<NotificationSubscription>(pushSubscriptionDto);
         sub.UserProfileId = UserId;
-        Console.WriteLine(sub);
-        return Ok();
+        _userRepository.AddPushNotificationSubscription(sub);
+
+        return await _userRepository.SaveChanges() > 0 ? Ok() : Problem();
+    }
+
+    [HttpPost("push-unubscribe"), ActionName(nameof(UnsubscribePush))]
+    public async Task<IActionResult> UnsubscribePush()
+    {
+        _userRepository.RemovePushNotificationSubscriptions(UserId);
+        return await _userRepository.SaveChanges() > 0 ? Ok() : Problem();
     }
 }

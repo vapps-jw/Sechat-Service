@@ -27,17 +27,20 @@ public interface IChatHub
 [Authorize]
 public class ChatHub : SechatHubBase<IChatHub>
 {
+    private readonly PushNotificationService _pushNotificationService;
     private readonly ILogger<ChatHub> _logger;
     private readonly IMapper _mapper;
     private readonly IEncryptor _encryptor;
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
+        PushNotificationService pushNotificationService,
         ILogger<ChatHub> logger,
         IMapper mapper,
         IEncryptor encryptor,
         ChatRepository chatRepository)
     {
+        _pushNotificationService = pushNotificationService;
         _logger = logger;
         _mapper = mapper;
         _encryptor = encryptor;
@@ -125,6 +128,8 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
+            // todo: move this to controller
+
             if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
             {
                 throw new Exception("You dont have access to this room");
@@ -140,6 +145,9 @@ public class ChatHub : SechatHubBase<IChatHub>
             var messageDto = _mapper.Map<RoomMessageDto>(res);
 
             await Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
+
+            // todo: set up notifications
+
         }
         catch (Exception ex)
         {
