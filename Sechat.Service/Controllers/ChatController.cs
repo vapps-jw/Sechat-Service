@@ -10,6 +10,7 @@ using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Controllers;
@@ -89,6 +90,8 @@ public class ChatController : SechatControllerBase
 
         var roomKey = _chatRepository.GetRoomKey(incomingMessageDto.RoomId);
         var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(roomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
+        var roomMembers = _chatRepository.GetRoomMembers(incomingMessageDto.RoomId);
+        _ = roomMembers.RemoveAll(m => m.Equals(UserId));
 
         var res = _chatRepository.CreateMessage(UserId, encryptedMessage.Text, encryptedMessage.RoomId);
         if (await _chatRepository.SaveChanges() == 0)
@@ -98,8 +101,8 @@ public class ChatController : SechatControllerBase
 
         res.Text = incomingMessageDto.Text;
         var messageDto = _mapper.Map<RoomMessageDto>(res);
-        var roomMembers = _chatRepository.GetRoomMembers(incomingMessageDto.RoomId);
-        _ = roomMembers.RemoveAll(m => m.Equals(UserId));
+
+        if (!roomMembers.Any()) return Ok();
 
         await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
 

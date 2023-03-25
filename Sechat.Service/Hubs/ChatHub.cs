@@ -128,8 +128,6 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
-            // todo: move this to controller
-
             if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
             {
                 throw new Exception("You dont have access to this room");
@@ -145,9 +143,6 @@ public class ChatHub : SechatHubBase<IChatHub>
             var messageDto = _mapper.Map<RoomMessageDto>(res);
 
             await Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
-
-            // todo: set up notifications
-
         }
         catch (Exception ex)
         {
