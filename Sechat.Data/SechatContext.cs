@@ -14,6 +14,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<Feature> Features { get; set; }
     public DbSet<Key> Keys { get; set; }
     public DbSet<UserConnection> UserConnections { get; set; }
+    public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -21,6 +22,11 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        _ = modelBuilder.Entity<UserProfile>()
+            .HasMany(x => x.NotificationSubscriptions)
+            .WithOne(x => x.UserProfile)
+            .OnDelete(DeleteBehavior.Cascade);
+
         _ = modelBuilder.Entity<UserProfile>()
             .HasMany(x => x.Features)
             .WithMany(x => x.UserProfiles);

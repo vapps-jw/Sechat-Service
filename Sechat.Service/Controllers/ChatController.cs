@@ -8,7 +8,9 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Dtos.SignalRDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Controllers;
@@ -17,6 +19,7 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class ChatController : SechatControllerBase
 {
+    private readonly PushNotificationService _pushNotificationService;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
     private readonly ChatRepository _chatRepository;
@@ -25,6 +28,7 @@ public class ChatController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public ChatController(
+        PushNotificationService pushNotificationService,
         UserManager<IdentityUser> userManager,
         UserRepository userRepository,
         ChatRepository chatRepository,
@@ -32,6 +36,7 @@ public class ChatController : SechatControllerBase
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
+        _pushNotificationService = pushNotificationService;
         _userManager = userManager;
         _userRepository = userRepository;
         _chatRepository = chatRepository;
@@ -75,6 +80,39 @@ public class ChatController : SechatControllerBase
         return Ok(responseDtos);
     }
 
+    [HttpPost("send-message")]
+    public async Task<IActionResult> SendMessage([FromBody] IncomingMessage incomingMessageDto)
+    {
+        if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
+        {
+            throw new Exception("You dont have access to this room");
+        }
+
+        var room = _chatRepository.GetRoomWithoutRelations(incomingMessageDto.RoomId);
+        var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(room.RoomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
+        var roomMembers = _chatRepository.GetRoomMembers(incomingMessageDto.RoomId);
+        _ = roomMembers.RemoveAll(m => m.Equals(UserId));
+
+        var res = _chatRepository.CreateMessage(UserId, encryptedMessage.Text, encryptedMessage.RoomId);
+        if (await _chatRepository.SaveChanges() == 0)
+        {
+            return BadRequest();
+        }
+
+        res.Text = incomingMessageDto.Text;
+        var messageDto = _mapper.Map<RoomMessageDto>(res);
+        await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
+
+        if (!roomMembers.Any()) return Ok();
+
+        foreach (var member in roomMembers)
+        {
+            await _pushNotificationService.IncomingMessageNotification(member, room.Name);
+        }
+
+        return Ok();
+    }
+
     [HttpPost("add-to-room")]
     public async Task<IActionResult> AddToRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
     {
@@ -107,6 +145,22 @@ public class ChatController : SechatControllerBase
         {
             var roomDto = _mapper.Map<RoomDto>(room);
             await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new UserRemovedFromRoom(roomDto.Id, roomMemberUpdate.UserName));
+            return Ok();
+        }
+
+        return BadRequest();
+    }
+
+    [HttpPost("leave-room")]
+    public async Task<IActionResult> RemoveFromRoom([FromBody] LeaveRoomRequest roomMemberUpdate)
+    {
+        if (!_chatRepository.IsRoomMember(UserId, roomMemberUpdate.RoomId)) return BadRequest();
+
+        var room = _chatRepository.RemoveFromRoom(roomMemberUpdate.RoomId, UserId);
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            var roomDto = _mapper.Map<RoomDto>(room);
+            await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new UserRemovedFromRoom(roomDto.Id, UserName));
             return Ok();
         }
 

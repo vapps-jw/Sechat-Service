@@ -22,6 +22,8 @@ jobs:
         with:
           files: './Sechat.Service/bin/Release/net7.0/publish/appsettings.Production.json'
         env:
+          VapidKeys.PublicKey: ${{ secrets.VAPID_KEY_PUB }}
+          VapidKeys.PrivateKey: ${{ secrets.VAPID_KEY }}
           ConnectionStrings.Master: ${{ secrets.POSTGRESQL_CONNECTION_STRING }}
           CorsSettings.WebAppUrl: ${{ secrets.WEB_APP_URL }}
           CorsSettings.ApiUrl: ${{ secrets.API_URL }}

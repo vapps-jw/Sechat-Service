@@ -18,13 +18,6 @@ public static class DbManager
         using var serviceScope = app.ApplicationServices.CreateScope();
         var context = serviceScope.ServiceProvider.GetService<SechatContext>();
 
-        Console.WriteLine("--> Checking DB Connection...");
-        if (!context.Database.CanConnect())
-        {
-            Console.WriteLine("--> Cant connect to the DB...");
-            return;
-        }
-
         if (context is not null)
         {
             ApplyMigrations(context);
@@ -51,6 +44,7 @@ public static class DbManager
 
             Console.WriteLine("--> Applying migrations...");
             context.Database.Migrate();
+            Console.WriteLine("--> Migrations applied...");
         }
         catch (Exception ex)
         {

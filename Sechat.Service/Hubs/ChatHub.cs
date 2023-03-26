@@ -27,17 +27,20 @@ public interface IChatHub
 [Authorize]
 public class ChatHub : SechatHubBase<IChatHub>
 {
+    private readonly PushNotificationService _pushNotificationService;
     private readonly ILogger<ChatHub> _logger;
     private readonly IMapper _mapper;
     private readonly IEncryptor _encryptor;
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
+        PushNotificationService pushNotificationService,
         ILogger<ChatHub> logger,
         IMapper mapper,
         IEncryptor encryptor,
         ChatRepository chatRepository)
     {
+        _pushNotificationService = pushNotificationService;
         _logger = logger;
         _mapper = mapper;
         _encryptor = encryptor;
@@ -121,6 +124,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
+    [Obsolete]
     public async Task SendMessage(IncomingMessage incomingMessageDto)
     {
         try
@@ -140,18 +144,6 @@ public class ChatHub : SechatHubBase<IChatHub>
             var messageDto = _mapper.Map<RoomMessageDto>(res);
 
             await Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
-        }
-        catch (Exception ex)
-        {
-            throw new HubException(ex.Message);
-        }
-    }
-
-    public async Task SendRoomDeleted(string roomId)
-    {
-        try
-        {
-            await Clients.Group(roomId).RoomDeleted(new ResourceGuid(roomId));
         }
         catch (Exception ex)
         {

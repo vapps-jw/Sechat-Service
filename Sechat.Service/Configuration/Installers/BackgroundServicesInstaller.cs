@@ -6,5 +6,9 @@ namespace Sechat.Service.Configuration.Installers;
 
 public class BackgroundServicesInstaller : IServiceInstaller
 {
-    public void Install(WebApplicationBuilder webApplicationBuilder) => webApplicationBuilder.Services.AddHostedService<MessageCleaner>();
+    public void Install(WebApplicationBuilder webApplicationBuilder)
+    {
+        _ = webApplicationBuilder.Services.AddHostedService<AccountsCleaner>();
+        _ = webApplicationBuilder.Services.AddHostedService<MessageCleaner>();
+    }
 }

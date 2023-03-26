@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sechat.Data.Models;
-using Sechat.Service.CustomExceptions;
+using Sechat.Domain.CustomExceptions;
 
 namespace Sechat.Data.Repositories;
 
@@ -66,7 +66,11 @@ public class ChatRepository : RepositoryBase<SechatContext>
         Name = r.Name
     }).FirstOrDefault();
 
+    public Room GetRoomWithoutRelations(string roomId) => _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId));
+
     public string GetRoomKey(string roomId) => _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId))?.RoomKey;
+
+    public List<string> GetRoomMembers(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
 
     public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
     .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
@@ -121,6 +125,15 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
         _ = room.Members.Remove(memberProfile);
         return room;
+    }
+
+    public bool IsRoomMember(string userId, string roomId)
+    {
+        var room = _context.Rooms
+        .Include(r => r.Members)
+        .FirstOrDefault(r => r.Id.Equals(roomId));
+
+        return room is not null && room.Members.Any(r => r.Id.Equals(userId));
     }
 
     public void DeleteRoom(string roomId, string creatorUserId)
