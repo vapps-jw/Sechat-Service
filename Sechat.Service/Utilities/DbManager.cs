@@ -44,6 +44,7 @@ public static class DbManager
 
             Console.WriteLine("--> Applying migrations...");
             context.Database.Migrate();
+            Console.WriteLine("--> Migrations applied...");
         }
         catch (Exception ex)
         {
