@@ -179,8 +179,14 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     // Notifications
 
-    public void AddPushNotificationSubscription(NotificationSubscription notificationSubscription) =>
-        _context.NotificationSubscriptions.Add(notificationSubscription);
+    public void AddPushNotificationSubscription(NotificationSubscription notificationSubscription) => _context.NotificationSubscriptions.Add(notificationSubscription);
+
+    public bool AlreadySubscribed(NotificationSubscription notificationSubscription) => _context.NotificationSubscriptions
+        .Any(s =>
+            s.Endpoint.Equals(notificationSubscription.Endpoint) &&
+            s.Auth.Equals(notificationSubscription.Auth) &&
+            s.P256dh.Equals(notificationSubscription.P256dh) &&
+            s.UserProfileId.Equals(notificationSubscription.UserProfileId));
 
     public void RemovePushNotificationSubscriptions(string userId) =>
         _context.NotificationSubscriptions.RemoveRange(_context.NotificationSubscriptions.Where(s => s.UserProfileId.Equals(userId)));

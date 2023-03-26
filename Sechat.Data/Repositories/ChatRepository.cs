@@ -66,9 +66,11 @@ public class ChatRepository : RepositoryBase<SechatContext>
         Name = r.Name
     }).FirstOrDefault();
 
+    public Room GetRoomWithoutRelations(string roomId) => _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId));
+
     public string GetRoomKey(string roomId) => _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId))?.RoomKey;
 
-    public List<string> GetRoomMembers(string roomId) => _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
+    public List<string> GetRoomMembers(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
 
     public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
     .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()

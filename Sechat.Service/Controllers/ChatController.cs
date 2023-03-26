@@ -88,8 +88,8 @@ public class ChatController : SechatControllerBase
             throw new Exception("You dont have access to this room");
         }
 
-        var roomKey = _chatRepository.GetRoomKey(incomingMessageDto.RoomId);
-        var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(roomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
+        var room = _chatRepository.GetRoomWithoutRelations(incomingMessageDto.RoomId);
+        var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(room.RoomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
         var roomMembers = _chatRepository.GetRoomMembers(incomingMessageDto.RoomId);
         _ = roomMembers.RemoveAll(m => m.Equals(UserId));
 
@@ -107,7 +107,7 @@ public class ChatController : SechatControllerBase
 
         foreach (var member in roomMembers)
         {
-            await _pushNotificationService.IncomingMessageNotification(member);
+            await _pushNotificationService.IncomingMessageNotification(member, room.Name);
         }
 
         return Ok();

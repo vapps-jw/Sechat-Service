@@ -20,7 +20,7 @@ public class PushNotificationService
         _vapidKeys = vapidKeys;
     }
 
-    public async Task IncomingMessageNotification(string userId)
+    public async Task IncomingMessageNotification(string userId, string roomName)
     {
         var subs = _userRepository.GetSubscriptions(userId);
         if (!subs.Any()) return;
@@ -33,12 +33,16 @@ public class PushNotificationService
             var webPushClient = new WebPushClient();
             try
             {
-                var warningJSON = JsonSerializer.Serialize(new
+                var payload = JsonSerializer.Serialize(new
                 {
-                    warningMessage = "Push Test"
+                    title = roomName,
+                    options = new
+                    {
+                        body = "New Message"
+                    }
                 });
 
-                await webPushClient.SendNotificationAsync(subscription, warningJSON, vapidDetails);
+                await webPushClient.SendNotificationAsync(subscription, payload, vapidDetails);
             }
             catch (WebPushException exception)
             {

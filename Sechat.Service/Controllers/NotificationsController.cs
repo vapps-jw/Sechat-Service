@@ -32,6 +32,9 @@ public class NotificationsController : SechatControllerBase
     {
         var sub = _mapper.Map<NotificationSubscription>(pushSubscriptionDto);
         sub.UserProfileId = UserId;
+
+        if (_userRepository.AlreadySubscribed(sub)) return BadRequest("Already subscribed");
+
         _userRepository.AddPushNotificationSubscription(sub);
 
         return await _userRepository.SaveChanges() > 0 ? Ok() : Problem();
@@ -41,6 +44,7 @@ public class NotificationsController : SechatControllerBase
     public async Task<IActionResult> UnsubscribePush()
     {
         _userRepository.RemovePushNotificationSubscriptions(UserId);
-        return await _userRepository.SaveChanges() > 0 ? Ok() : Problem();
+        var res = await _userRepository.SaveChanges();
+        return Ok(res);
     }
 }
