@@ -14,6 +14,6 @@ public class UserCredentialsFormValidation : AbstractValidator<UserCredentials>
     public UserCredentialsFormValidation()
     {
         _ = RuleFor(x => x.Username).NotEmpty().MaximumLength(AppConstants.StringLengths.UserNameMax);
-        _ = RuleFor(x => x.Password).NotEmpty().MinimumLength(AppConstants.StringLengths.PasswordMin).MaximumLength(AppConstants.StringLengths.PasswordMax);
+        _ = RuleFor(x => x.Password).NotEmpty().MaximumLength(AppConstants.StringLengths.PasswordMax);
     }
 }
