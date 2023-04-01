@@ -80,6 +80,23 @@ public class ChatController : SechatControllerBase
         return Ok(responseDtos);
     }
 
+    [HttpGet("new-messages")]
+    public IActionResult GetNewMessages([FromBody] GetNewMessagesRequest getNewMessagesRequest)
+    {
+        if (!_chatRepository.IsRoomsMember(UserId, getNewMessagesRequest.LastMessageInTheRooms.Select(lm => lm.RoomId).ToList()))
+        {
+            return BadRequest("Not your room?");
+        }
+
+        var res = new List<RoomMessageDto>();
+        foreach (var lastMessageInTheRoom in getNewMessagesRequest.LastMessageInTheRooms)
+        {
+            res.Add(_mapper.Map<RoomMessageDto>(_chatRepository.GetNewMessages(lastMessageInTheRoom.RoomId, lastMessageInTheRoom.LastMessage)));
+        }
+
+        return Ok(res);
+    }
+
     [HttpPost("send-message")]
     public async Task<IActionResult> SendMessage([FromBody] IncomingMessage incomingMessageDto)
     {
