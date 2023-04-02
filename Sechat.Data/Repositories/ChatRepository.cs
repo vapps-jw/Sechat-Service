@@ -34,7 +34,8 @@ public class ChatRepository : RepositoryBase<SechatContext>
             Text = messageText,
             IdSentBy = profile.Id,
             NameSentBy = profile.UserName,
-            RoomId = room.Id
+            RoomId = room.Id,
+            MessageViewers = new List<MessageViewer>() { new MessageViewer() { UserId = userId } }
         };
         room.Messages.Add(newMessage);
         return newMessage;
