@@ -129,7 +129,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public bool IsRoomMember(string userId, string roomId)
     {
-        var res = _context.Rooms.FirstOrDefault(r => roomId.Equals(roomId))?.Members.Any(m => m.Id.Equals(userId));
+        var res = _context.Rooms.Include(r => r.Members).FirstOrDefault(r => roomId.Equals(roomId))?.Members.Any(m => m.Id.Equals(userId));
         return res ?? false;
     }
 
