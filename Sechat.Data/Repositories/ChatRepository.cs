@@ -151,5 +151,16 @@ public class ChatRepository : RepositoryBase<SechatContext>
         if (room is null) return;
         _ = _context.Rooms.Remove(room);
     }
+
+    public async Task MarkMessagesAsViewed(string userId, string roomId)
+    {
+        var messages = await _context.Rooms
+            .Where(r => r.Id.Equals(roomId))
+            .Include(r => r.Messages.Where(m => !m.MessageViewers.Any(mv => mv.UserId.Equals(userId))))
+            .SelectMany(r => r.Messages)
+            .ToListAsync();
+
+        messages.ForEach(m => m.MessageViewers.Add(new MessageViewer(userId)));
+    }
 }
 

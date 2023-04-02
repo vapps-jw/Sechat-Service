@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos.ChatDtos;
-using Sechat.Service.Dtos.SignalRDtos;
 using Sechat.Service.Services;
 using System;
 using System.Collections.Generic;
@@ -27,6 +27,7 @@ public interface IChatHub
 [Authorize]
 public class ChatHub : SechatHubBase<IChatHub>
 {
+    private readonly UserManager<IdentityUser> _userManager;
     private readonly PushNotificationService _pushNotificationService;
     private readonly ILogger<ChatHub> _logger;
     private readonly IMapper _mapper;
@@ -34,12 +35,14 @@ public class ChatHub : SechatHubBase<IChatHub>
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
+        UserManager<IdentityUser> userManager,
         PushNotificationService pushNotificationService,
         ILogger<ChatHub> logger,
         IMapper mapper,
         IEncryptor encryptor,
         ChatRepository chatRepository)
     {
+        _userManager = userManager;
         _pushNotificationService = pushNotificationService;
         _logger = logger;
         _mapper = mapper;
@@ -47,7 +50,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         _chatRepository = chatRepository;
     }
 
-    public void LogConnection(ConnectionEstablished connectionEstablishedDto) =>
+    public void LogConnection(StringMessage connectionEstablishedDto) =>
         _logger.LogWarning("Connection established for user Id: {0} Name: {1} Message: {2}", UserId, UserName, connectionEstablishedDto.Message);
 
     public async Task<RoomDto> CreateRoom(RoomNameMessage request)
@@ -117,33 +120,6 @@ public class ChatHub : SechatHubBase<IChatHub>
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, message.Id);
             return new ResourceGuid(message.Id);
-        }
-        catch (Exception ex)
-        {
-            throw new HubException(ex.Message);
-        }
-    }
-
-    [Obsolete]
-    public async Task SendMessage(IncomingMessage incomingMessageDto)
-    {
-        try
-        {
-            if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
-            {
-                throw new Exception("You dont have access to this room");
-            }
-
-            var roomKey = _chatRepository.GetRoomKey(incomingMessageDto.RoomId);
-            var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(roomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
-
-            var res = _chatRepository.CreateMessage(UserId, encryptedMessage.Text, encryptedMessage.RoomId);
-            _ = await _chatRepository.SaveChanges();
-
-            res.Text = incomingMessageDto.Text;
-            var messageDto = _mapper.Map<RoomMessageDto>(res);
-
-            await Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
         }
         catch (Exception ex)
         {
