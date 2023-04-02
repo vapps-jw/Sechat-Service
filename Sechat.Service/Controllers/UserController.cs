@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
-using Sechat.Service.Dtos.SignalRDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
