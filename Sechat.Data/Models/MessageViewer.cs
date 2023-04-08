@@ -12,10 +12,5 @@ public record MessageViewer
     public Message Message { get; set; }
     public long MessageId { get; set; }
 
-    public MessageViewer()
-    {
-
-    }
-
     public MessageViewer(string userId) => UserId = userId;
 }

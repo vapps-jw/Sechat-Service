@@ -9,5 +9,5 @@ public record Message : BaseModel<long>
     public string RoomId { get; set; }
     public Room Room { get; set; }
 
-    public List<MessageViewer> MessageViewers { get; set; }
+    public List<MessageViewer> MessageViewers { get; set; } = new();
 }

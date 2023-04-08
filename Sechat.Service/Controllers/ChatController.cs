@@ -55,6 +55,11 @@ public class ChatController : SechatControllerBase
             foreach (var message in room.Messages)
             {
                 message.Text = _encryptor.DecryptString(room.RoomKey, message.Text);
+
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
             }
         }
 
@@ -125,7 +130,7 @@ public class ChatController : SechatControllerBase
 
         foreach (var viewer in messageDto.MessageViewers)
         {
-            viewer.User = (await _userManager.FindByIdAsync(viewer.User)).UserName;
+            viewer.User = (await _userManager.FindByIdAsync(viewer.User))?.UserName;
         }
 
         await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
@@ -143,10 +148,11 @@ public class ChatController : SechatControllerBase
     [HttpPatch("message-viewed")]
     public async Task<IActionResult> MessagesViewed([FromBody] ResourceGuid resourceGuid)
     {
-        if (!_chatRepository.IsRoomMember(UserId, resourceGuid.Id)) return BadRequest();
+        if (!_chatRepository.IsRoomMember(UserId, resourceGuid.Id)) return BadRequest("Not your room");
 
-        await _chatRepository.MarkMessagesAsViewed(UserId, resourceGuid.Id);
-        return await _chatRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+        _chatRepository.MarkMessagesAsViewed(UserId, resourceGuid.Id);
+        _ = await _chatRepository.SaveChanges();
+        return Ok();
     }
 
     [HttpPost("add-to-room")]
