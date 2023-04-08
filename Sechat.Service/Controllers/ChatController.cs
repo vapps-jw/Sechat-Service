@@ -140,7 +140,7 @@ public class ChatController : SechatControllerBase
         return Ok();
     }
 
-    [HttpPost("message-viewed")]
+    [HttpPatch("message-viewed")]
     public async Task<IActionResult> MessagesViewed([FromBody] ResourceGuid resourceGuid)
     {
         if (!_chatRepository.IsRoomMember(UserId, resourceGuid.Id)) return BadRequest();
