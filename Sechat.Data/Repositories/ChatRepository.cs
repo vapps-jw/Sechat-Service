@@ -34,7 +34,8 @@ public class ChatRepository : RepositoryBase<SechatContext>
             Text = messageText,
             IdSentBy = profile.Id,
             NameSentBy = profile.UserName,
-            RoomId = room.Id
+            RoomId = room.Id,
+            MessageViewers = new List<MessageViewer>() { new MessageViewer(userId) }
         };
         room.Messages.Add(newMessage);
         return newMessage;
@@ -73,6 +74,8 @@ public class ChatRepository : RepositoryBase<SechatContext>
     public List<string> GetRoomMembers(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
 
     public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
+    .Include(r => r.Messages)
+        .ThenInclude(m => m.MessageViewers)
     .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
     {
         RoomKey = r.RoomKey,
@@ -127,11 +130,10 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return room;
     }
 
-    public bool IsRoomMember(string userId, string roomId)
-    {
-        var res = _context.Rooms.Include(r => r.Members).FirstOrDefault(r => roomId.Equals(roomId))?.Members.Any(m => m.Id.Equals(userId));
-        return res ?? false;
-    }
+    public bool IsRoomMember(string userId, string roomId) => _context.Rooms
+        .Where(r => r.Id.Equals(roomId))
+        .SelectMany(r => r.Members)
+        .Any(m => m.Id.Equals(userId));
 
     public bool IsRoomsMember(string userId, List<string> roomId) =>
         _context.Rooms.Where(r => roomId.Contains(r.Id)).All(r => r.Members.Any(m => m.Id.Equals(userId)));
@@ -149,6 +151,15 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
         if (room is null) return;
         _ = _context.Rooms.Remove(room);
+    }
+
+    public void MarkMessagesAsViewed(string userId, string roomId)
+    {
+        var messages = _context.Messages
+            .Where(m => m.RoomId.Equals(roomId) && !m.MessageViewers.Any(mv => mv.UserId.Equals(userId)))
+            .ToList();
+
+        messages.ForEach(m => m.MessageViewers.Add(new MessageViewer(userId)));
     }
 }
 

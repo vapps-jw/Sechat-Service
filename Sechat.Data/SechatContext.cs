@@ -15,6 +15,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<Key> Keys { get; set; }
     public DbSet<UserConnection> UserConnections { get; set; }
     public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; }
+    public DbSet<MessageViewer> MessageViewers { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -22,6 +23,17 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        _ = modelBuilder.Entity<Message>()
+            .HasIndex(c => c.Created);
+
+        _ = modelBuilder.Entity<MessageViewer>()
+            .HasIndex(c => c.UserId);
+
+        _ = modelBuilder.Entity<Message>()
+            .HasMany(x => x.MessageViewers)
+            .WithOne(x => x.Message)
+            .OnDelete(DeleteBehavior.Cascade);
+
         _ = modelBuilder.Entity<UserProfile>()
             .HasMany(x => x.NotificationSubscriptions)
             .WithOne(x => x.UserProfile)

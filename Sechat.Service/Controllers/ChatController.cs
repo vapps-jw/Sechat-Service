@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos.ChatDtos;
-using Sechat.Service.Dtos.SignalRDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using System;
@@ -56,6 +55,11 @@ public class ChatController : SechatControllerBase
             foreach (var message in room.Messages)
             {
                 message.Text = _encryptor.DecryptString(room.RoomKey, message.Text);
+
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
             }
         }
 
@@ -123,6 +127,12 @@ public class ChatController : SechatControllerBase
 
         res.Text = incomingMessageDto.Text;
         var messageDto = _mapper.Map<RoomMessageDto>(res);
+
+        foreach (var viewer in messageDto.MessageViewers)
+        {
+            viewer.User = (await _userManager.FindByIdAsync(viewer.User))?.UserName;
+        }
+
         await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
 
         if (!roomMembers.Any()) return Ok();
@@ -132,6 +142,16 @@ public class ChatController : SechatControllerBase
             await _pushNotificationService.IncomingMessageNotification(member, room.Name);
         }
 
+        return Ok();
+    }
+
+    [HttpPatch("message-viewed")]
+    public async Task<IActionResult> MessagesViewed([FromBody] ResourceGuid resourceGuid)
+    {
+        if (!_chatRepository.IsRoomMember(UserId, resourceGuid.Id)) return BadRequest("Not your room");
+
+        _chatRepository.MarkMessagesAsViewed(UserId, resourceGuid.Id);
+        _ = await _chatRepository.SaveChanges();
         return Ok();
     }
 
@@ -174,7 +194,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("leave-room")]
-    public async Task<IActionResult> RemoveFromRoom([FromBody] LeaveRoomRequest roomMemberUpdate)
+    public async Task<IActionResult> RemoveFromRoom([FromBody] RoomRequest roomMemberUpdate)
     {
         if (!_chatRepository.IsRoomMember(UserId, roomMemberUpdate.RoomId)) return BadRequest();
 
