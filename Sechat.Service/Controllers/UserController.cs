@@ -196,4 +196,6 @@ public class UserController : SechatControllerBase
 
         return !confirmResult.Succeeded ? BadRequest() : Ok();
     }
+
+    //todo: add change password endpoint
 }

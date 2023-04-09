@@ -55,7 +55,6 @@ public class ChatController : SechatControllerBase
             foreach (var message in room.Messages)
             {
                 message.Text = _encryptor.DecryptString(room.RoomKey, message.Text);
-
                 foreach (var viewer in message.MessageViewers)
                 {
                     viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
@@ -64,6 +63,22 @@ public class ChatController : SechatControllerBase
         }
 
         var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
+
         var connectionDtos = _mapper.Map<List<UserConnectionDto>>(connections);
 
         var res = new StateDto
