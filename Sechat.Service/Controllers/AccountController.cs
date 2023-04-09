@@ -129,13 +129,13 @@ public class AccountController : SechatControllerBase
         var currentUser = await _userManager.FindByIdAsync(UserId);
         if (currentUser is null)
         {
-            return BadRequest();
+            return BadRequest("User not found");
         }
 
         var changePasswordResult = await _userManager.ChangePasswordAsync(currentUser, passwordForm.OldPassword, passwordForm.NewPassword);
         if (!changePasswordResult.Succeeded)
         {
-            return Problem();
+            return BadRequest("Password change failed");
         }
 
         await _signInManager.RefreshSignInAsync(currentUser);
