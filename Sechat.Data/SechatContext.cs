@@ -40,6 +40,9 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
 
+        _ = modelBuilder.Entity<Message>()
+              .HasIndex(c => c.Created);
+
         _ = modelBuilder.Entity<UserConnection>()
             .HasIndex(c => c.InviterId);
         _ = modelBuilder.Entity<UserConnection>()

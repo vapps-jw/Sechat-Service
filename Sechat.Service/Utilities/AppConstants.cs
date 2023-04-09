@@ -26,7 +26,7 @@ public class AppConstants
     {
         public const int PasswordMax = 20;
         public const int PasswordMin = 8;
-        public const int UsernameMax = 10;
-        public const int UsernameMin = 3;
+        public const int UserNameMax = 10;
+        public const int UserNameMin = 3;
     }
 }

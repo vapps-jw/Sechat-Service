@@ -129,12 +129,17 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public bool IsRoomMember(string userId, string roomId)
     {
-        var room = _context.Rooms
-        .Include(r => r.Members)
-        .FirstOrDefault(r => r.Id.Equals(roomId));
-
-        return room is not null && room.Members.Any(r => r.Id.Equals(userId));
+        var res = _context.Rooms.Include(r => r.Members).FirstOrDefault(r => roomId.Equals(roomId))?.Members.Any(m => m.Id.Equals(userId));
+        return res ?? false;
     }
+
+    public bool IsRoomsMember(string userId, List<string> roomId) =>
+        _context.Rooms.Where(r => roomId.Contains(r.Id)).All(r => r.Members.Any(m => m.Id.Equals(userId)));
+
+    public Task<Room> GetRoomWithNewMessages(string roomId, DateTime lastMessage) => _context.Rooms
+        .Where(r => roomId.Contains(r.Id))
+        .Include(r => r.Messages.Where(m => m.Created > lastMessage))
+        .FirstOrDefaultAsync();
 
     public void DeleteRoom(string roomId, string creatorUserId)
     {

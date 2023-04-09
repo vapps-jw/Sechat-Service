@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sechat.Data;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,18 +26,20 @@ public class AccountsCleaner : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromSeconds(_cleanInterval), CancellationToken.None);
+            await Task.Delay(TimeSpan.FromMinutes(_cleanInterval), CancellationToken.None);
             try
             {
                 _logger.LogWarning("Accounts Cleanup Started");
-
+                using var ctx = await _contextFactory.CreateDbContextAsync(stoppingToken);
+                ctx.UserProfiles.RemoveRange(ctx.UserProfiles.Where(p => p.LastActivity <= DateTime.UtcNow.AddDays(-30)));
+                _ = await ctx.SaveChangesAsync(stoppingToken);
                 _cleanInterval = 60;
             }
             catch (Exception ex)
             {
-                _cleanInterval = 10;
+                _cleanInterval = 1;
                 _exceptionCount++;
-                _logger.LogError(ex, "Message Cleaner Exception no. {0}", _exceptionCount);
+                _logger.LogError(ex, "Message Cleaner Exception no. {exceptionCount}", _exceptionCount);
             }
         }
     }
