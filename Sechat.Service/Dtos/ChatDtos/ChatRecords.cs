@@ -28,3 +28,9 @@ public record RoomRequest(string RoomId);
 
 public record LastMessageInTheRoom(string RoomId, DateTime LastMessage);
 public record GetNewMessagesRequest(List<LastMessageInTheRoom> LastMessageInTheRooms);
+
+public record ConnectionRequestDto(string Username);
+public class ConnectionRequestDtoValidation : AbstractValidator<ConnectionRequestDto>
+{
+    public ConnectionRequestDtoValidation() => _ = RuleFor(x => x.Username).NotEmpty();
+}
