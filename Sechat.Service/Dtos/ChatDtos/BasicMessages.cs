@@ -20,7 +20,7 @@ public class IncomingMessageValidation : AbstractValidator<IncomingMessage>
 public record RoomNameMessage(string RoomName);
 public class RoomNameMessageValidation : AbstractValidator<RoomNameMessage>
 {
-    public RoomNameMessageValidation() => _ = RuleFor(x => x.RoomName).NotEmpty().MaximumLength(50);
+    public RoomNameMessageValidation() => _ = RuleFor(x => x.RoomName).NotEmpty().MaximumLength(25);
 }
 
 public record RoomMemberUpdateRequest(string UserName, string RoomId, long connectionId);
