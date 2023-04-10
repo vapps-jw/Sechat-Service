@@ -195,7 +195,7 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> RemoveFromRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
     {
         var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
-        if (!_userRepository.ConnectionExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest();
+        if (!_userRepository.ConnectionExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest("Not your friend");
 
         var room = _chatRepository.RemoveFromRoom(roomMemberUpdate.RoomId, user.Id);
         if (await _chatRepository.SaveChanges() > 0)
@@ -209,9 +209,9 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("leave-room")]
-    public async Task<IActionResult> RemoveFromRoom([FromBody] RoomRequest roomMemberUpdate)
+    public async Task<IActionResult> LeaveRoom([FromBody] RoomRequest roomMemberUpdate)
     {
-        if (!_chatRepository.IsRoomMember(UserId, roomMemberUpdate.RoomId)) return BadRequest();
+        if (!_chatRepository.IsRoomMember(UserId, roomMemberUpdate.RoomId)) return BadRequest("Not room member");
 
         var room = _chatRepository.RemoveFromRoom(roomMemberUpdate.RoomId, UserId);
         if (await _chatRepository.SaveChanges() > 0)

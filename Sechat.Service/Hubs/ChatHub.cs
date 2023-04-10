@@ -64,11 +64,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, newRoom.Id);
-            var responseDto = _mapper.Map<RoomDto>(newRoom);
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, responseDto.Id);
-
-            return responseDto;
+            return _mapper.Map<RoomDto>(newRoom);
         }
         catch (Exception ex)
         {
