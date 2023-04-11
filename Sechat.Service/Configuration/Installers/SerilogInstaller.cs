@@ -20,7 +20,7 @@ public class SerilogInstaller : IServiceInstaller
             var logger = new LoggerConfiguration().WriteTo.File(
                     path: "sechat_log.txt",
                     rollOnFileSizeLimit: true,
-                    rollingInterval: RollingInterval.Day,
+                    rollingInterval: RollingInterval.Month,
                     fileSizeLimitBytes: 10000000)
                 .CreateLogger();
 
