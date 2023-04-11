@@ -188,7 +188,7 @@ public class ChatController : SechatControllerBase
             return Ok();
         }
 
-        return BadRequest();
+        return BadRequest("Room not updated");
     }
 
     [HttpPost("remove-from-room")]
