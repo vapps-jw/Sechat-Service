@@ -14,7 +14,7 @@ public class AccountsCleaner : BackgroundService
     private readonly ILogger<AccountsCleaner> _logger;
     private readonly IDbContextFactory<SechatContext> _contextFactory;
     private int _exceptionCount;
-    private int _cleanInterval = 60;
+    private readonly int _cleanInterval = 1;
 
     public AccountsCleaner(ILogger<AccountsCleaner> logger, IDbContextFactory<SechatContext> contextFactory)
     {
@@ -26,18 +26,24 @@ public class AccountsCleaner : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromMinutes(_cleanInterval), CancellationToken.None);
+            await Task.Delay(TimeSpan.FromDays(_cleanInterval), CancellationToken.None);
             try
             {
                 _logger.LogWarning("Accounts Cleanup Started");
                 using var ctx = await _contextFactory.CreateDbContextAsync(stoppingToken);
-                ctx.UserProfiles.RemoveRange(ctx.UserProfiles.Where(p => p.LastActivity <= DateTime.UtcNow.AddDays(-30)));
+
+                var profilesToDelete = ctx.UserProfiles.Where(p => p.LastActivity <= DateTime.UtcNow.AddDays(-30)).ToList();
+                if (!profilesToDelete.Any()) continue;
+
+                var ids = profilesToDelete.Select(p => p.Id).ToList();
+                var roomsToDelete = ctx.Rooms.Where(r => ids.Contains(r.CreatorId)).ToList();
+
+                ctx.UserProfiles.RemoveRange(profilesToDelete);
+                ctx.Rooms.RemoveRange(roomsToDelete);
                 _ = await ctx.SaveChangesAsync(stoppingToken);
-                _cleanInterval = 60;
             }
             catch (Exception ex)
             {
-                _cleanInterval = 1;
                 _exceptionCount++;
                 _logger.LogError(ex, "Message Cleaner Exception no. {exceptionCount}", _exceptionCount);
             }

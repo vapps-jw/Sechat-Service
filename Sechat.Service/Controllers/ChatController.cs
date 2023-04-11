@@ -137,7 +137,7 @@ public class ChatController : SechatControllerBase
         var res = _chatRepository.CreateMessage(UserId, encryptedMessage.Text, encryptedMessage.RoomId);
         if (await _chatRepository.SaveChanges() == 0)
         {
-            return BadRequest();
+            return BadRequest("Message not sent");
         }
 
         res.Text = incomingMessageDto.Text;
