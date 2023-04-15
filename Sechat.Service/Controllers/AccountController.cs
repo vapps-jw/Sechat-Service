@@ -54,6 +54,7 @@ public class AccountController : SechatControllerBase
 
     [AllowAnonymous]
     [HttpPost("login")]
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> SignIn([FromBody] UserCredentials userCredentials)
     {
         var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, false);
@@ -62,6 +63,7 @@ public class AccountController : SechatControllerBase
 
     [AllowAnonymous]
     [HttpPost("register")]
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> SignUp([FromBody] UserCredentials userCredentials)
     {
         var user = new IdentityUser(userCredentials.Username);
@@ -147,6 +149,7 @@ public class AccountController : SechatControllerBase
 
     [AllowAnonymous]
     [HttpPost("forgot-password")]
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> ForgotPassword(
         [FromBody] EmailForm emailForm,
         IEmailClient emailClient,
@@ -172,6 +175,7 @@ public class AccountController : SechatControllerBase
 
     [AllowAnonymous]
     [HttpPost("reset-password")]
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> ResetPassword([FromBody] PasswordResetForm passwordResetForm)
     {
         var currentUser = await _userManager.FindByIdAsync(passwordResetForm.UserId);

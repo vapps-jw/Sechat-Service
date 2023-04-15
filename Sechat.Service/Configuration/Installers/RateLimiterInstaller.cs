@@ -43,6 +43,5 @@ public class RateLimiterInstaller : IServiceInstaller
         };
 
         _ = options.AddPolicy(AppConstants.RateLimiting.MinimalRateLimiterPolicy, new MinimalRateLimiterPolicy());
-
     });
 }

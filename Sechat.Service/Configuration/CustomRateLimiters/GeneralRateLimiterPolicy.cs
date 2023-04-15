@@ -27,7 +27,7 @@ public class MinimalRateLimiterPolicy : IRateLimiterPolicy<string>
             {
                 AutoReplenishment = true,
                 SegmentsPerWindow = 6,
-                PermitLimit = 3,
+                PermitLimit = 10,
                 Window = TimeSpan.FromMinutes(1),
             });
 
