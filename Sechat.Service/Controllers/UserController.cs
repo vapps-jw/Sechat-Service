@@ -24,17 +24,20 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class UserController : SechatControllerBase
 {
+    private readonly PushNotificationService _pushNotificationService;
     private readonly IMapper _mapper;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
     private readonly UserRepository _userRepository;
 
     public UserController(
+        PushNotificationService pushNotificationService,
         IMapper mapper,
         UserManager<IdentityUser> userManager,
         IHubContext<ChatHub, IChatHub> chatHubContext,
         UserRepository userRepository)
     {
+        _pushNotificationService = pushNotificationService;
         _mapper = mapper;
         _userManager = userManager;
         _chatHubContext = chatHubContext;
@@ -80,6 +83,7 @@ public class UserController : SechatControllerBase
         {
             await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(_mapper.Map<UserConnectionDto>(newConnection));
             await _chatHubContext.Clients.Group(UserId).ConnectionRequestReceived(_mapper.Map<UserConnectionDto>(newConnection));
+            await _pushNotificationService.IncomingContactRequestNotification(invitedUser.Id, UserName);
             return Ok();
         }
 

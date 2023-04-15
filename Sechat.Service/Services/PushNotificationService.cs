@@ -55,7 +55,7 @@ public class PushNotificationService
         }
     }
 
-    public async Task IncomingContactRequestNotification(string userId, string inviterId)
+    public async Task IncomingContactRequestNotification(string userId, string inviterName)
     {
         var subs = _userRepository.GetSubscriptions(userId);
         if (!subs.Any()) return;
@@ -70,10 +70,10 @@ public class PushNotificationService
             {
                 var payload = JsonSerializer.Serialize(new
                 {
-                    title = "inviter user name",
+                    title = "New Invitation",
                     options = new
                     {
-                        body = "New Message"
+                        body = $"Contact request from {inviterName}"
                     }
                 });
 
