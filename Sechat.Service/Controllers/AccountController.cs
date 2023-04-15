@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,6 +13,7 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
+using Sechat.Service.Utilities;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -20,6 +22,7 @@ using System.Threading.Tasks;
 namespace Sechat.Service.Controllers;
 
 [Authorize]
+[EnableRateLimiting(AppConstants.RateLimiting.DefaultWindowPolicyName)]
 [Route("[controller]")]
 public class AccountController : SechatControllerBase
 {
@@ -51,22 +54,22 @@ public class AccountController : SechatControllerBase
 
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] UserCredentials userCredentials)
+    public async Task<IActionResult> SignIn([FromBody] UserCredentials userCredentials)
     {
         var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, false);
-        return !signInResult.Succeeded ? BadRequest() : Ok();
+        return !signInResult.Succeeded ? BadRequest("Failed to Sign In") : Ok();
     }
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] UserCredentials userCredentials)
+    public async Task<IActionResult> SignUp([FromBody] UserCredentials userCredentials)
     {
         var user = new IdentityUser(userCredentials.Username);
         var createUserResult = await _userManager.CreateAsync(user, userCredentials.Password);
 
         if (!createUserResult.Succeeded)
         {
-            return BadRequest();
+            return BadRequest("Failed to Sign Up");
         }
 
         _logger.LogInformation($"User {userCredentials.Username} has been created");

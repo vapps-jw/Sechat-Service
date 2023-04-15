@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
@@ -11,6 +12,7 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
+using Sechat.Service.Utilities;
 using System;
 using System.Net;
 using System.Threading.Tasks;
@@ -18,6 +20,7 @@ using System.Threading.Tasks;
 namespace Sechat.Service.Controllers;
 
 [Authorize]
+[EnableRateLimiting(AppConstants.RateLimiting.DefaultWindowPolicyName)]
 [Route("[controller]")]
 public class UserController : SechatControllerBase
 {
@@ -68,10 +71,10 @@ public class UserController : SechatControllerBase
         var invitedUser = await _userManager.FindByNameAsync(invitationDto.Username);
         if (invitedUser is null) return BadRequest("No one was invited");
 
-        var connectionExists = _userRepository.ConnectionExists(UserId, invitedUser.Id);
+        var connectionExists = _userRepository.ContactExists(UserId, invitedUser.Id);
         if (connectionExists) return BadRequest("Contact exists");
 
-        var newConnection = _userRepository.CreateConnection(UserId, UserName, invitedUser.Id, invitedUser.UserName);
+        var newConnection = _userRepository.CreateContact(UserId, UserName, invitedUser.Id, invitedUser.UserName);
 
         if (await _userRepository.SaveChanges() > 0)
         {
@@ -86,7 +89,7 @@ public class UserController : SechatControllerBase
     [HttpDelete("delete-connection")]
     public async Task<IActionResult> DeleteConnection(long connectionId)
     {
-        var connection = await _userRepository.GetConnection(connectionId);
+        var connection = await _userRepository.GetContacts(connectionId);
         if (connection is null) return BadRequest("Not your contact");
 
         if (connection.Blocked && !connection.BlockedById.Equals(UserId))
@@ -100,7 +103,7 @@ public class UserController : SechatControllerBase
             return BadRequest("Not your contact");
         }
 
-        _userRepository.DeleteConnection(connectionId);
+        _userRepository.DeleteContact(connectionId);
 
         if (await _userRepository.SaveChanges() > 0)
         {
@@ -115,7 +118,7 @@ public class UserController : SechatControllerBase
     [HttpPatch("block-connection")]
     public async Task<IActionResult> BlockConnection(long connectionId)
     {
-        var connection = _userRepository.BlockConnection(connectionId, UserId, UserName);
+        var connection = _userRepository.BlockContact(connectionId, UserId, UserName);
         if (connection is null) return BadRequest("Can`t do that");
 
         if (await _userRepository.SaveChanges() > 0)
@@ -132,7 +135,7 @@ public class UserController : SechatControllerBase
     [HttpPatch("allow-connection")]
     public async Task<IActionResult> AllowConnection(long connectionId)
     {
-        var connection = _userRepository.AllowConnection(connectionId, UserId);
+        var connection = _userRepository.AllowContact(connectionId, UserId);
         if (connection is null) return BadRequest("Can`t do that");
 
         if (await _userRepository.SaveChanges() > 0)
@@ -149,7 +152,7 @@ public class UserController : SechatControllerBase
     [HttpPatch("approve-connection")]
     public async Task<IActionResult> ApproveConnection(long connectionId)
     {
-        var connection = _userRepository.ApproveConnection(connectionId, UserId);
+        var connection = _userRepository.ApproveContact(connectionId, UserId);
         if (connection is null) return BadRequest("Can`t do that");
 
         if (await _userRepository.SaveChanges() > 0)

@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
+using Sechat.Service.Utilities;
 
 namespace Sechat.Service.Controllers;
 
+[EnableRateLimiting(AppConstants.RateLimiting.DefaultWindowPolicyName)]
 [Route("[controller]")]
 public class StatusController : SechatControllerBase
 {
