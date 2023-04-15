@@ -19,7 +19,7 @@ public class MinimalRateLimiterPolicy : IRateLimiterPolicy<string>
                 {
                     AutoReplenishment = true,
                     SegmentsPerWindow = 6,
-                    PermitLimit = 3,
+                    PermitLimit = 60,
                     Window = TimeSpan.FromMinutes(1),
                 })
             : RateLimitPartition.GetSlidingWindowLimiter(httpContext.Request.Headers.Host.ToString(),
