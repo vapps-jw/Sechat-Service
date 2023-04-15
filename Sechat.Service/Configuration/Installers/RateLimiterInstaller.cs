@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Sechat.Service.Configuration.CustomRateLimiters;
 using Sechat.Service.Utilities;
 using System;
 using System.Threading.RateLimiting;
@@ -26,27 +29,19 @@ public class RateLimiterInstaller : IServiceInstaller
         options.OnRejected = async (context, token) =>
         {
             context.HttpContext.Response.StatusCode = 429;
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<RateLimiterInstaller>>();
+            logger.LogWarning("Server Overloaded by {user}", context.HttpContext.User.Identity?.Name ?? context.HttpContext.Request.Headers.Host.ToString());
             if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
             {
-                await context.HttpContext.Response.WriteAsync("Server Overloaded");
+                await context.HttpContext.Response.WriteAsync($"Server Overloaded. Try again after {retryAfter.TotalMinutes} minute(s)", cancellationToken: token);
             }
             else
             {
-                await context.HttpContext.Response.WriteAsync("Server Overloaded");
+                await context.HttpContext.Response.WriteAsync("Server Overloaded", cancellationToken: token);
             }
         };
 
-        //_ = options.AddPolicy(AppConstants.RateLimiting.GeneralCustomPolicy, new GeneralRateLimiterPolicy());
-
-        _ = options.AddPolicy(AppConstants.RateLimiting.DefaultWindowPolicyName, httpContext =>
-            RateLimitPartition.GetSlidingWindowLimiter(httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
-            partition => new SlidingWindowRateLimiterOptions
-            {
-                AutoReplenishment = true,
-                SegmentsPerWindow = 6,
-                PermitLimit = 3,
-                Window = TimeSpan.FromMinutes(1)
-            }));
+        _ = options.AddPolicy(AppConstants.RateLimiting.MinimalRateLimiterPolicy, new MinimalRateLimiterPolicy());
 
     });
 }

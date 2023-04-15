@@ -14,7 +14,7 @@ public class StatusController : SechatControllerBase
     public StatusController(ILogger<StatusController> logger) => _logger = logger;
 
     [HttpGet("ping-api")]
-    [EnableRateLimiting(AppConstants.RateLimiting.DefaultWindowPolicyName)]
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public IActionResult PingApi() => Ok();
 
     [HttpGet("ping-api-global")]
