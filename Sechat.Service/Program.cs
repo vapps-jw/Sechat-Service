@@ -30,6 +30,7 @@ if (app.Environment.IsProduction())
 
 app.UseCors(AppConstants.CorsPolicies.WebClient);
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
