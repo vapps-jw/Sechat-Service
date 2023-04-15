@@ -66,10 +66,10 @@ public class UserController : SechatControllerBase
         if (UserName.Equals(invitationDto.Username)) return BadRequest("You cant invite yourself :)");
 
         var invitedUser = await _userManager.FindByNameAsync(invitationDto.Username);
-        if (invitedUser is null) return BadRequest();
+        if (invitedUser is null) return BadRequest("No one was invited");
 
         var connectionExists = _userRepository.ConnectionExists(UserId, invitedUser.Id);
-        if (connectionExists) return BadRequest();
+        if (connectionExists) return BadRequest("Contact exists");
 
         var newConnection = _userRepository.CreateConnection(UserId, UserName, invitedUser.Id, invitedUser.UserName);
 
@@ -87,17 +87,17 @@ public class UserController : SechatControllerBase
     public async Task<IActionResult> DeleteConnection(long connectionId)
     {
         var connection = await _userRepository.GetConnection(connectionId);
-        if (connection is null) return BadRequest();
+        if (connection is null) return BadRequest("Not your contact");
 
         if (connection.Blocked && !connection.BlockedById.Equals(UserId))
         {
-            return BadRequest();
+            return BadRequest("You are blocked");
         }
 
         var connectionDto = _mapper.Map<UserConnectionDto>(connection);
         if (!connectionDto.UserPresent(UserName))
         {
-            return BadRequest();
+            return BadRequest("Not your contact");
         }
 
         _userRepository.DeleteConnection(connectionId);
@@ -109,13 +109,14 @@ public class UserController : SechatControllerBase
             return Ok();
         }
 
-        return BadRequest();
+        return BadRequest("Something went wrong");
     }
 
     [HttpPatch("block-connection")]
     public async Task<IActionResult> BlockConnection(long connectionId)
     {
         var connection = _userRepository.BlockConnection(connectionId, UserId, UserName);
+        if (connection is null) return BadRequest("Can`t do that");
 
         if (await _userRepository.SaveChanges() > 0)
         {
@@ -125,13 +126,15 @@ public class UserController : SechatControllerBase
             return Ok();
         }
 
-        return BadRequest();
+        return BadRequest("Cant do that");
     }
 
     [HttpPatch("allow-connection")]
     public async Task<IActionResult> AllowConnection(long connectionId)
     {
         var connection = _userRepository.AllowConnection(connectionId, UserId);
+        if (connection is null) return BadRequest("Can`t do that");
+
         if (await _userRepository.SaveChanges() > 0)
         {
             var connectionDto = _mapper.Map<UserConnectionDto>(connection);
@@ -140,13 +143,15 @@ public class UserController : SechatControllerBase
             return Ok();
         }
 
-        return BadRequest();
+        return BadRequest("Can`t do that");
     }
 
     [HttpPatch("approve-connection")]
     public async Task<IActionResult> ApproveConnection(long connectionId)
     {
         var connection = _userRepository.ApproveConnection(connectionId, UserId);
+        if (connection is null) return BadRequest("Can`t do that");
+
         if (await _userRepository.SaveChanges() > 0)
         {
             var connectionDto = _mapper.Map<UserConnectionDto>(connection);
@@ -155,7 +160,7 @@ public class UserController : SechatControllerBase
             return Ok();
         }
 
-        return BadRequest();
+        return BadRequest("Can`t do that");
     }
 
     [HttpPut("update-email")]
