@@ -22,7 +22,7 @@ public class MinimalRateLimiterPolicy : IRateLimiterPolicy<string>
                     PermitLimit = 60,
                     Window = TimeSpan.FromMinutes(1),
                 })
-            : RateLimitPartition.GetSlidingWindowLimiter(httpContext.Request.Headers.Host.ToString(),
+            : RateLimitPartition.GetSlidingWindowLimiter(httpContext.Connection.RemoteIpAddress.ToString() ?? httpContext.Request.Headers.Host.ToString(),
             partition => new SlidingWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
@@ -35,7 +35,8 @@ public class MinimalRateLimiterPolicy : IRateLimiterPolicy<string>
     {
         context.HttpContext.Response.StatusCode = 429;
         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<RateLimiterInstaller>>();
-        logger.LogWarning("Server Overloaded by {user}", context.HttpContext.User.Identity?.Name ?? context.HttpContext.Request.Headers.Host.ToString());
+        logger.LogWarning("Server Overloaded by {user}",
+            context.HttpContext.User.Identity?.Name ?? context.HttpContext.Connection.RemoteIpAddress.ToString() ?? context.HttpContext.Request.Headers.Host.ToString());
         if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
         {
 

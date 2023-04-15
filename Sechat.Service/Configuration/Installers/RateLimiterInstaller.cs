@@ -15,7 +15,7 @@ public class RateLimiterInstaller : IServiceInstaller
     {
         options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress.ToString() ?? httpContext.Request.Headers.Host.ToString(),
             factory: partition => new SlidingWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
@@ -30,7 +30,8 @@ public class RateLimiterInstaller : IServiceInstaller
         {
             context.HttpContext.Response.StatusCode = 429;
             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<RateLimiterInstaller>>();
-            logger.LogWarning("Server Overloaded by {user}", context.HttpContext.User.Identity?.Name ?? context.HttpContext.Request.Headers.Host.ToString());
+            logger.LogWarning("Server Overloaded by {user}",
+                context.HttpContext.User.Identity?.Name ?? context.HttpContext.Connection.RemoteIpAddress.ToString() ?? context.HttpContext.Request.Headers.Host.ToString());
             if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
             {
                 await context.HttpContext.Response.WriteAsync($"Server Overloaded. Try again after {retryAfter.TotalMinutes} minute(s)", cancellationToken: token);
