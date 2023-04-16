@@ -21,7 +21,7 @@ public class SerilogInstaller : IServiceInstaller
                     path: "sechat_log.txt",
                     rollOnFileSizeLimit: true,
                     rollingInterval: RollingInterval.Month,
-                    fileSizeLimitBytes: 10000000)
+                    fileSizeLimitBytes: 20971520)
                 .CreateLogger();
 
             _ = webApplicationBuilder.Services.AddLogging(opt =>

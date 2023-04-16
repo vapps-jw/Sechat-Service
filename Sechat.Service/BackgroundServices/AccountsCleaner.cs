@@ -29,7 +29,6 @@ public class AccountsCleaner : BackgroundService
             await Task.Delay(TimeSpan.FromDays(_cleanInterval), CancellationToken.None);
             try
             {
-                _logger.LogWarning("Accounts Cleanup Started");
                 using var ctx = await _contextFactory.CreateDbContextAsync(stoppingToken);
 
                 var profilesToDelete = ctx.UserProfiles.Where(p => p.LastActivity <= DateTime.UtcNow.AddDays(-30)).ToList();
@@ -40,7 +39,8 @@ public class AccountsCleaner : BackgroundService
 
                 ctx.UserProfiles.RemoveRange(profilesToDelete);
                 ctx.Rooms.RemoveRange(roomsToDelete);
-                _ = await ctx.SaveChangesAsync(stoppingToken);
+                var res = await ctx.SaveChangesAsync(stoppingToken);
+                _logger.LogWarning("Accounts cleanup, deleted records: {records}", res);
             }
             catch (Exception ex)
             {
