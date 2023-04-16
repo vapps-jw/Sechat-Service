@@ -6,6 +6,7 @@ using Sechat.Service.Configuration.Installers;
 using Sechat.Service.Hubs;
 using Sechat.Service.Middleware;
 using Sechat.Service.Utilities;
+using Serilog;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,7 @@ if (app.Environment.IsProduction())
 }
 
 app.UseCors(AppConstants.CorsPolicies.WebClient);
+app.UseSerilogRequestLogging();
 app.UseRouting();
 app.UseRateLimiter();
 
