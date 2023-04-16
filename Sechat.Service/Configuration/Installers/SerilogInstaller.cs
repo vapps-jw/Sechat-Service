@@ -27,6 +27,8 @@ public class SerilogInstaller : IServiceInstaller
                     fileSizeLimitBytes: 20971520)
                 .CreateLogger();
 
+            _ = webApplicationBuilder.Host.UseSerilog(logger);
+
             _ = webApplicationBuilder.Services.AddLogging(opt =>
             {
                 _ = opt.SetMinimumLevel(LogLevel.Warning);
