@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Events;
 
 namespace Sechat.Service.Configuration.Installers;
 
@@ -19,10 +18,6 @@ public class SerilogInstaller : IServiceInstaller
         if (webApplicationBuilder.Environment.IsProduction())
         {
             var logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-                .Enrich.FromLogContext()
                 .WriteTo.File(
                     path: "sechat_log.txt",
                     rollOnFileSizeLimit: true,
