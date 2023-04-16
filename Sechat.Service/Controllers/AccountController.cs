@@ -57,7 +57,15 @@ public class AccountController : SechatControllerBase
     public async Task<IActionResult> SignIn([FromBody] UserCredentials userCredentials)
     {
         var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, false);
-        return !signInResult.Succeeded ? BadRequest("Failed to Sign In") : Ok();
+
+        if (signInResult.Succeeded)
+        {
+            _logger.LogWarning("User Signed In: {Username}", userCredentials.Username);
+            return Ok();
+        }
+
+        _logger.LogWarning("User failed to Sign In: {Username}", userCredentials.Username);
+        return BadRequest("Failed to Sign In");
     }
 
     [AllowAnonymous]
