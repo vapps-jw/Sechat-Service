@@ -17,8 +17,7 @@ public class SerilogInstaller : IServiceInstaller
 
         if (webApplicationBuilder.Environment.IsProduction())
         {
-            var logger = new LoggerConfiguration()
-                .WriteTo.File(
+            var logger = new LoggerConfiguration().WriteTo.File(
                     path: "sechat_log.txt",
                     rollOnFileSizeLimit: true,
                     rollingInterval: RollingInterval.Month,
