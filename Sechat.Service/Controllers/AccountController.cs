@@ -22,7 +22,6 @@ using System.Threading.Tasks;
 namespace Sechat.Service.Controllers;
 
 [Authorize]
-[EnableRateLimiting(AppConstants.RateLimiting.DefaultWindowPolicyName)]
 [Route("[controller]")]
 public class AccountController : SechatControllerBase
 {

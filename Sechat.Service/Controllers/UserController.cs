@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
@@ -12,7 +11,6 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
-using Sechat.Service.Utilities;
 using System;
 using System.Net;
 using System.Threading.Tasks;
@@ -20,7 +18,6 @@ using System.Threading.Tasks;
 namespace Sechat.Service.Controllers;
 
 [Authorize]
-[EnableRateLimiting(AppConstants.RateLimiting.DefaultWindowPolicyName)]
 [Route("[controller]")]
 public class UserController : SechatControllerBase
 {

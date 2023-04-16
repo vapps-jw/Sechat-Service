@@ -20,8 +20,6 @@ public class AppConstants
     }
     public struct RateLimiting
     {
-        public const string DefaultWindowPolicyName = nameof(DefaultWindowPolicyName);
-        public const string GeneralCustomPolicy = nameof(GeneralCustomPolicy);
         public const string MinimalRateLimiterPolicy = nameof(MinimalRateLimiterPolicy);
     }
     public struct StringLengths
