@@ -39,6 +39,9 @@ public class UserRepository : RepositoryBase<SechatContext>
         }
     }
 
+    public void DeleteContactsFor(string userId) => _context.UserConnections.RemoveRange(_context.UserConnections
+            .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId)));
+
     public long GetContactId(string userOne, string userTwo)
     {
         var connection = _context.UserConnections.FirstOrDefault(uc =>
@@ -51,6 +54,12 @@ public class UserRepository : RepositoryBase<SechatContext>
     public Task<List<UserConnection>> GetContacts(string userId) =>
         _context.UserConnections
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
+            .ToListAsync();
+
+    public Task<List<string>> GetAllowedContactsIds(string userId) =>
+        _context.UserConnections
+            .Where(uc => uc.InvitedId.Equals(userId) || (uc.InviterId.Equals(userId) && !uc.Blocked && uc.Approved))
+            .Select(uc => uc.InvitedId.Equals(userId) ? uc.InviterId : uc.InvitedId)
             .ToListAsync();
 
     public UserConnection BlockContact(long connectionId, string blockedById, string blockedByName)

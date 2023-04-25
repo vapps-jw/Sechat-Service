@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Sechat.Data.Repositories;
+using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Hubs;
@@ -15,6 +17,8 @@ namespace Sechat.Service.Hubs;
 public interface IChatHub
 {
     Task MessageIncoming(RoomMessageDto message);
+    Task VideoCallDataIncoming(VideoData videoData);
+    Task VideoCallRequested(StringMessage message);
     Task RoomDeleted(ResourceGuid message);
     Task ConnectionRequestReceived(UserConnectionDto message);
     Task ConnectionDeleted(ResourceId message);
@@ -27,6 +31,7 @@ public interface IChatHub
 [Authorize]
 public class ChatHub : SechatHubBase<IChatHub>
 {
+    private readonly UserRepository _userRepository;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly PushNotificationService _pushNotificationService;
     private readonly ILogger<ChatHub> _logger;
@@ -35,6 +40,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
+        UserRepository userRepository,
         UserManager<IdentityUser> userManager,
         PushNotificationService pushNotificationService,
         ILogger<ChatHub> logger,
@@ -42,6 +48,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         IEncryptor encryptor,
         ChatRepository chatRepository)
     {
+        _userRepository = userRepository;
         _userManager = userManager;
         _pushNotificationService = pushNotificationService;
         _logger = logger;
@@ -52,6 +59,39 @@ public class ChatHub : SechatHubBase<IChatHub>
 
     public void LogConnection(StringMessage connectionEstablishedDto) =>
         _logger.LogWarning("Connection established for user Id: {0} Name: {1} Message: {2}", UserId, UserName, connectionEstablishedDto.Message);
+
+    public async Task SendVideoCallData(IAsyncEnumerable<VideoData> videoData)
+    {
+        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+        await foreach (var d in videoData)
+        {
+            var userId = await _userManager.FindByNameAsync(d.UserName);
+            if (userId is not null)
+            {
+                if (userContacts.Any(uc => uc.Equals(userId)))
+                {
+                    await Clients.Group(userId.Id).VideoCallDataIncoming(d);
+                }
+            }
+        }
+    }
+
+    public async Task VideoCallRequest(StringMessage message)
+    {
+        var contact = await _userManager.FindByNameAsync(message.Message);
+        if (contact is null)
+        {
+            return;
+        }
+
+        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+        if (!userContacts.Any(c => c.Equals(contact.Id)))
+        {
+            return;
+        }
+
+        await Clients.Group(contact.Id).VideoCallRequested(new StringMessage(UserName));
+    }
 
     public async Task<RoomDto> CreateRoom(RoomNameMessage request)
     {
@@ -135,4 +175,6 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
         _ = base.OnConnectedAsync();
     }
+
+    public override Task OnDisconnectedAsync(Exception exception) => base.OnDisconnectedAsync(exception);
 }
