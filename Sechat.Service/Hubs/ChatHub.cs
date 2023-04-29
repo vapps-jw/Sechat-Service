@@ -67,12 +67,12 @@ public class ChatHub : SechatHubBase<IChatHub>
         var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
         await foreach (var d in videoData)
         {
-            var userId = await _userManager.FindByNameAsync(d.UserName);
-            if (userId is not null)
+            var user = await _userManager.FindByNameAsync(d.UserName);
+            if (user is not null)
             {
-                if (userContacts.Any(uc => uc.Equals(userId)))
+                if (userContacts.Any(uc => uc.Equals(user.Id)))
                 {
-                    await Clients.Group(userId.Id).VideoCallDataIncoming(d);
+                    await Clients.Group(user.Id).VideoCallDataIncoming(d);
                 }
             }
         }
@@ -92,7 +92,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             return;
         }
 
-        await Clients.Group(contact.Id).VideoCallApproved(new StringMessage(UserName));
+        await Clients.Group(contact.Id).VideoCallRejected(new StringMessage(UserName));
     }
 
     public async Task ApproveVideoCall(StringMessage message)
