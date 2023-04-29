@@ -21,6 +21,7 @@ public interface IChatHub
     Task VideoCallRequested(StringMessage message);
     Task VideoCallApproved(StringMessage message);
     Task VideoCallRejected(StringMessage message);
+    Task VideoCallTerminated(StringMessage message);
     Task RoomDeleted(ResourceGuid message);
     Task ConnectionRequestReceived(UserConnectionDto message);
     Task ConnectionDeleted(ResourceId message);
@@ -95,6 +96,23 @@ public class ChatHub : SechatHubBase<IChatHub>
         await Clients.Group(contact.Id).VideoCallRejected(new StringMessage(UserName));
     }
 
+    public async Task TerminateVideoCall(StringMessage message)
+    {
+        var contact = await _userManager.FindByNameAsync(message.Message);
+        if (contact is null)
+        {
+            return;
+        }
+
+        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+        if (!userContacts.Any(c => c.Equals(contact.Id)))
+        {
+            return;
+        }
+
+        await Clients.Group(contact.Id).VideoCallTerminated(new StringMessage(UserName));
+    }
+
     public async Task ApproveVideoCall(StringMessage message)
     {
         var contact = await _userManager.FindByNameAsync(message.Message);
@@ -109,7 +127,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             return;
         }
 
-        await Clients.Group(contact.Id).VideoCallRejected(new StringMessage(UserName));
+        await Clients.Group(contact.Id).VideoCallApproved(new StringMessage(UserName));
     }
 
     public async Task VideoCallRequest(StringMessage message)
