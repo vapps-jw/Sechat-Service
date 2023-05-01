@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
 using Sechat.Service.Settings;
+using Sechat.Service.Utilities;
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -13,11 +15,45 @@ public class PushNotificationService
 {
     private readonly UserRepository _userRepository;
     private readonly IOptions<VapidKeys> _vapidKeys;
+    private readonly ILogger<PushNotificationService> _logger;
 
-    public PushNotificationService(UserRepository userRepository, IOptions<VapidKeys> vapidKeys)
+    public PushNotificationService(UserRepository userRepository, IOptions<VapidKeys> vapidKeys, ILogger<PushNotificationService> logger)
     {
         _userRepository = userRepository;
         _vapidKeys = vapidKeys;
+        _logger = logger;
+    }
+
+    public void IncomingVideoCallNotification(string userId)
+    {
+        //var subs = _userRepository.GetSubscriptions(userId);
+        //if (!subs.Any()) return;
+
+        //foreach (var sub in subs)
+        //{
+        //    var subscription = new PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
+        //    var vapidDetails = new VapidDetails("mailto:office@vapps.pl", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
+
+        //    var webPushClient = new WebPushClient();
+        //    try
+        //    {
+        //        var payload = JsonSerializer.Serialize(new
+        //        {
+        //            title = "New Message",
+        //            options = new
+        //            {
+        //                body = roomName
+        //            }
+        //        });
+
+        //        await webPushClient.SendNotificationAsync(subscription, payload, vapidDetails);
+        //    }
+        //    catch (WebPushException exception)
+        //    {
+        //        _logger.LogError(exception, exception.Message);
+        //        Console.WriteLine("Http STATUS code" + exception.StatusCode);
+        //    }
+        //}
     }
 
     public async Task IncomingMessageNotification(string userId, string roomName)
@@ -35,10 +71,10 @@ public class PushNotificationService
             {
                 var payload = JsonSerializer.Serialize(new
                 {
-                    title = roomName,
+                    title = AppConstants.PushNotificationTitles.NewMessage,
                     options = new
                     {
-                        body = "New Message"
+                        body = roomName
                     }
                 });
 
@@ -46,6 +82,39 @@ public class PushNotificationService
             }
             catch (WebPushException exception)
             {
+                _logger.LogError(exception, exception.Message);
+                Console.WriteLine("Http STATUS code" + exception.StatusCode);
+            }
+        }
+    }
+
+    public async Task IncomingContactRequestNotification(string userId, string inviterName)
+    {
+        var subs = _userRepository.GetSubscriptions(userId);
+        if (!subs.Any()) return;
+
+        foreach (var sub in subs)
+        {
+            var subscription = new PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
+            var vapidDetails = new VapidDetails("mailto:office@vapps.pl", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
+
+            var webPushClient = new WebPushClient();
+            try
+            {
+                var payload = JsonSerializer.Serialize(new
+                {
+                    title = AppConstants.PushNotificationTitles.NewInvitation,
+                    options = new
+                    {
+                        body = $"Contact request from {inviterName}"
+                    }
+                });
+
+                await webPushClient.SendNotificationAsync(subscription, payload, vapidDetails);
+            }
+            catch (WebPushException exception)
+            {
+                _logger.LogError(exception, exception.Message);
                 Console.WriteLine("Http STATUS code" + exception.StatusCode);
             }
         }

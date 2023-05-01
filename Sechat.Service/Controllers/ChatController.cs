@@ -48,14 +48,13 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetState()
     {
         var rooms = await _chatRepository.GetRooms(UserId);
-        var connections = await _userRepository.GetConnections(UserId);
+        var contacts = await _userRepository.GetContacts(UserId);
 
         foreach (var room in rooms)
         {
             foreach (var message in room.Messages)
             {
                 message.Text = _encryptor.DecryptString(room.RoomKey, message.Text);
-
                 foreach (var viewer in message.MessageViewers)
                 {
                     viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
@@ -64,12 +63,28 @@ public class ChatController : SechatControllerBase
         }
 
         var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
-        var connectionDtos = _mapper.Map<List<UserConnectionDto>>(connections);
+
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
 
         var res = new StateDto
         {
             Rooms = roomDtos,
-            UserConnections = connectionDtos
+            UserContacts = contactDtos
         };
 
         return Ok(res);
@@ -116,13 +131,13 @@ public class ChatController : SechatControllerBase
 
         var room = _chatRepository.GetRoomWithoutRelations(incomingMessageDto.RoomId);
         var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(room.RoomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
-        var roomMembers = _chatRepository.GetRoomMembers(incomingMessageDto.RoomId);
+        var roomMembers = _chatRepository.GetRoomMembersIds(incomingMessageDto.RoomId);
         _ = roomMembers.RemoveAll(m => m.Equals(UserId));
 
         var res = _chatRepository.CreateMessage(UserId, encryptedMessage.Text, encryptedMessage.RoomId);
         if (await _chatRepository.SaveChanges() == 0)
         {
-            return BadRequest();
+            return BadRequest("Message not sent");
         }
 
         res.Text = incomingMessageDto.Text;
@@ -145,13 +160,33 @@ public class ChatController : SechatControllerBase
         return Ok();
     }
 
-    [HttpPatch("message-viewed")]
+    [HttpPatch("messages-viewed")]
     public async Task<IActionResult> MessagesViewed([FromBody] ResourceGuid resourceGuid)
     {
         if (!_chatRepository.IsRoomMember(UserId, resourceGuid.Id)) return BadRequest("Not your room");
 
         _chatRepository.MarkMessagesAsViewed(UserId, resourceGuid.Id);
-        _ = await _chatRepository.SaveChanges();
+
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            await _chatHubContext.Clients.Group(resourceGuid.Id).MessagesWereViewed(new RoomUserActionMessage(resourceGuid.Id, UserName));
+        }
+
+        return Ok();
+    }
+
+    [HttpPatch("message-viewed/{roomId}/{messageId}")]
+    public async Task<IActionResult> MessageViewed(string roomId, long messageId)
+    {
+        if (!_chatRepository.IsRoomMember(UserId, roomId)) return BadRequest("Not your room");
+
+        _chatRepository.MarkMessageAsViewed(UserId, messageId);
+
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            await _chatHubContext.Clients.Group(roomId).MessageWasViewed(new RoomMessageUserActionMessage(roomId, messageId, UserName));
+        }
+
         return Ok();
     }
 
@@ -159,10 +194,10 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> AddToRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
     {
         var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
-        if (!_userRepository.ConnectionExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest("Can`t add this user");
+        if (!_userRepository.ContactExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest("This is not your friend");
 
-        var connection = await _userRepository.GetConnection(roomMemberUpdate.connectionId);
-        if (connection.Blocked) return BadRequest("Can`t add this user");
+        var contact = await _userRepository.GetContact(roomMemberUpdate.connectionId);
+        if (contact.Blocked) return BadRequest("User blocked");
 
         var room = _chatRepository.AddToRoom(roomMemberUpdate.RoomId, user.Id);
         if (await _chatRepository.SaveChanges() > 0)
@@ -173,20 +208,20 @@ public class ChatController : SechatControllerBase
             return Ok();
         }
 
-        return BadRequest();
+        return BadRequest("Room not updated");
     }
 
     [HttpPost("remove-from-room")]
     public async Task<IActionResult> RemoveFromRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
     {
         var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
-        if (!_userRepository.ConnectionExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest();
+        if (!_userRepository.ContactExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest("Not your friend");
 
         var room = _chatRepository.RemoveFromRoom(roomMemberUpdate.RoomId, user.Id);
         if (await _chatRepository.SaveChanges() > 0)
         {
             var roomDto = _mapper.Map<RoomDto>(room);
-            await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new UserRemovedFromRoom(roomDto.Id, roomMemberUpdate.UserName));
+            await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new RoomUserActionMessage(roomDto.Id, roomMemberUpdate.UserName));
             return Ok();
         }
 
@@ -194,15 +229,15 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("leave-room")]
-    public async Task<IActionResult> RemoveFromRoom([FromBody] RoomRequest roomMemberUpdate)
+    public async Task<IActionResult> LeaveRoom([FromBody] RoomRequest roomMemberUpdate)
     {
-        if (!_chatRepository.IsRoomMember(UserId, roomMemberUpdate.RoomId)) return BadRequest();
+        if (!_chatRepository.IsRoomMember(UserId, roomMemberUpdate.RoomId)) return BadRequest("Not room member");
 
         var room = _chatRepository.RemoveFromRoom(roomMemberUpdate.RoomId, UserId);
         if (await _chatRepository.SaveChanges() > 0)
         {
             var roomDto = _mapper.Map<RoomDto>(room);
-            await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new UserRemovedFromRoom(roomDto.Id, UserName));
+            await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new RoomUserActionMessage(roomDto.Id, UserName));
             return Ok();
         }
 

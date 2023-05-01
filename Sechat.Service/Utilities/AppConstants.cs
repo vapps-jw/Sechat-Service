@@ -10,6 +10,12 @@ public class AppConstants
     {
         public const string TestEnv = nameof(TestEnv);
     }
+    public struct PushNotificationTitles
+    {
+        public const string NewMessage = "New Message";
+        public const string NewInvitation = "New Invitation";
+        public const string NewVideoCall = "New Video Call";
+    }
     public struct ContentTypes
     {
         public const string Json = "application/json";
@@ -20,7 +26,7 @@ public class AppConstants
     }
     public struct RateLimiting
     {
-        public const string DefaultWindowPolicyName = nameof(DefaultWindowPolicyName);
+        public const string MinimalRateLimiterPolicy = nameof(MinimalRateLimiterPolicy);
     }
     public struct StringLengths
     {

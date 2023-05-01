@@ -16,6 +16,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<UserConnection> UserConnections { get; set; }
     public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; }
     public DbSet<MessageViewer> MessageViewers { get; set; }
+    //public DbSet<CallLog> CallLogs { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -51,6 +52,11 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
             .HasMany(x => x.Keys)
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
+
+        //_ = modelBuilder.Entity<UserProfile>()
+        //    .HasMany(x => x.CallLogs)
+        //    .WithOne(x => x.UserProfile)
+        //    .OnDelete(DeleteBehavior.Cascade);
 
         _ = modelBuilder.Entity<Message>()
               .HasIndex(c => c.Created);

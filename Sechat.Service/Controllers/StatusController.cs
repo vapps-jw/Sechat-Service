@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
+using Sechat.Service.Utilities;
 
 namespace Sechat.Service.Controllers;
 
@@ -12,6 +14,10 @@ public class StatusController : SechatControllerBase
     public StatusController(ILogger<StatusController> logger) => _logger = logger;
 
     [HttpGet("ping-api")]
-    public IActionResult Test() => Ok();
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
+    public IActionResult PingApi() => Ok();
+
+    [HttpGet("ping-api-global")]
+    public IActionResult PingApiGlobal() => Ok();
 
 }
