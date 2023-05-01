@@ -6,7 +6,8 @@ namespace Sechat.Service.Dtos.ChatDtos;
 
 public record ResourceId(long Id);
 public record ResourceGuid(string Id);
-public record UserRemovedFromRoom(string RoomId, string UserName);
+public record RoomUserActionMessage(string RoomId, string UserName);
+public record RoomMessageUserActionMessage(string RoomId, long MessageId, string UserName);
 public record StringMessage(string Message);
 
 public record RoomIdsMessage(List<string> RoomIds);

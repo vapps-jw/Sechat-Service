@@ -72,7 +72,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public string GetRoomKey(string roomId) => _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId))?.RoomKey;
 
-    public List<string> GetRoomMembers(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
+    public List<string> GetRoomMembersIds(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
 
     public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
     .Include(r => r.Messages)
@@ -161,6 +161,14 @@ public class ChatRepository : RepositoryBase<SechatContext>
             .ToList();
 
         messages.ForEach(m => m.MessageViewers.Add(new MessageViewer(userId)));
+    }
+
+    public void MarkMessageAsViewed(string userId, long messageId)
+    {
+        var message = _context.Messages
+            .FirstOrDefault(m => m.Id == messageId && !m.MessageViewers.Any(mv => mv.UserId.Equals(userId)));
+
+        message?.MessageViewers.Add(new MessageViewer(userId));
     }
 }
 

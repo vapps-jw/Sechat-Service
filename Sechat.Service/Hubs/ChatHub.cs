@@ -17,6 +17,8 @@ namespace Sechat.Service.Hubs;
 public interface IChatHub
 {
     Task MessageIncoming(RoomMessageDto message);
+    Task MessagesWereViewed(RoomUserActionMessage message);
+    Task MessageWasViewed(RoomMessageUserActionMessage message);
     Task VideoCallDataIncoming(VideoData videoData);
     Task VideoCallRequested(StringMessage message);
     Task VideoCallApproved(StringMessage message);
@@ -28,7 +30,7 @@ public interface IChatHub
     Task ConnectionUpdated(UserContactDto message);
     Task RoomUpdated(RoomDto message);
     Task UserAddedToRoom(RoomDto message);
-    Task UserRemovedFromRoom(UserRemovedFromRoom message);
+    Task UserRemovedFromRoom(RoomUserActionMessage message);
 }
 
 [Authorize]

@@ -114,7 +114,7 @@ public class AccountController : SechatControllerBase
 
             foreach (var memberRoom in deleteResult.MemberRooms)
             {
-                await _chatHubContext.Clients.Group(memberRoom).UserRemovedFromRoom(new UserRemovedFromRoom(memberRoom, UserName));
+                await _chatHubContext.Clients.Group(memberRoom).UserRemovedFromRoom(new RoomUserActionMessage(memberRoom, UserName));
             }
 
             foreach (var connection in deleteResult.Connections)
