@@ -48,7 +48,7 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetState()
     {
         var rooms = await _chatRepository.GetRooms(UserId);
-        var connections = await _userRepository.GetContacts(UserId);
+        var contacts = await _userRepository.GetContacts(UserId);
 
         foreach (var room in rooms)
         {
@@ -79,12 +79,12 @@ public class ChatController : SechatControllerBase
             }
         }
 
-        var connectionDtos = _mapper.Map<List<UserConnectionDto>>(connections);
+        var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
 
         var res = new StateDto
         {
             Rooms = roomDtos,
-            UserConnections = connectionDtos
+            UserContacts = contactDtos
         };
 
         return Ok(res);
@@ -176,8 +176,8 @@ public class ChatController : SechatControllerBase
         var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
         if (!_userRepository.ContactExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest("This is not your friend");
 
-        var connection = await _userRepository.GetContacts(roomMemberUpdate.connectionId);
-        if (connection.Blocked) return BadRequest("User blocked");
+        var contact = await _userRepository.GetContact(roomMemberUpdate.connectionId);
+        if (contact.Blocked) return BadRequest("User blocked");
 
         var room = _chatRepository.AddToRoom(roomMemberUpdate.RoomId, user.Id);
         if (await _chatRepository.SaveChanges() > 0)

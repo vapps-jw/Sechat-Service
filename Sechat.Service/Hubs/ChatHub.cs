@@ -23,9 +23,9 @@ public interface IChatHub
     Task VideoCallRejected(StringMessage message);
     Task VideoCallTerminated(StringMessage message);
     Task RoomDeleted(ResourceGuid message);
-    Task ConnectionRequestReceived(UserConnectionDto message);
+    Task ConnectionRequestReceived(UserContactDto message);
     Task ConnectionDeleted(ResourceId message);
-    Task ConnectionUpdated(UserConnectionDto message);
+    Task ConnectionUpdated(UserContactDto message);
     Task RoomUpdated(RoomDto message);
     Task UserAddedToRoom(RoomDto message);
     Task UserRemovedFromRoom(UserRemovedFromRoom message);

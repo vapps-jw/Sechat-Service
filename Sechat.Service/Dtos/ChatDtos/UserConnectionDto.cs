@@ -2,7 +2,7 @@
 
 namespace Sechat.Service.Dtos.ChatDtos;
 
-public class UserConnectionDto
+public class UserContactDto
 {
     public long Id { get; set; }
     public bool Approved { get; set; }

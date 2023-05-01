@@ -95,7 +95,7 @@ public class UserRepository : RepositoryBase<SechatContext>
         return connection;
     }
 
-    public Task<UserConnection> GetContacts(long connectionId) =>
+    public Task<UserConnection> GetContact(long connectionId) =>
         _context.UserConnections.FirstOrDefaultAsync(uc => uc.Id == connectionId);
 
     public UserConnection CreateContact(string inviterId, string inviterName, string invitedId, string invitedName)
