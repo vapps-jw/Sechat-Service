@@ -17,6 +17,7 @@ namespace Sechat.Service.Hubs;
 public interface IChatHub
 {
     Task MessageIncoming(RoomMessageDto message);
+    Task ICECandidate(ICECandidate message);
     Task MessagesWereViewed(RoomUserActionMessage message);
     Task MessageWasViewed(RoomMessageUserActionMessage message);
     Task VideoCallDataIncoming(VideoData videoData);
@@ -65,6 +66,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     public void LogConnection(StringMessage connectionEstablishedDto) =>
         _logger.LogWarning("Connection established for user Id: {0} Name: {1} Message: {2}", UserId, UserName, connectionEstablishedDto.Message);
 
+    [Obsolete]
     public async Task SendVideoCallData(IAsyncEnumerable<VideoData> videoData)
     {
         var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
@@ -79,6 +81,23 @@ public class ChatHub : SechatHubBase<IChatHub>
                 }
             }
         }
+    }
+
+    public async Task SendICECandidate(StringMessageForUser message)
+    {
+        var contact = await _userManager.FindByNameAsync(message.UserName);
+        if (contact is null)
+        {
+            return;
+        }
+
+        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+        if (!userContacts.Any(c => c.Equals(contact.Id)))
+        {
+            return;
+        }
+
+        await Clients.Group(contact.Id).VideoCallRejected(new StringMessage(UserName));
     }
 
     public async Task RejectVideoCall(StringMessage message)
@@ -217,6 +236,15 @@ public class ChatHub : SechatHubBase<IChatHub>
         {
             throw new HubException(ex.Message);
         }
+    }
+
+    private async Task<string> IsContactAllowed(string userName)
+    {
+        var contact = await _userManager.FindByNameAsync(userName);
+        if (contact is null) return string.Empty;
+
+        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+        return !userContacts.Any(c => c.Equals(contact.Id)) ? string.Empty : contact.Id;
     }
 
     public override async Task OnConnectedAsync()
