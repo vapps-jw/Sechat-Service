@@ -17,11 +17,12 @@ namespace Sechat.Service.Hubs;
 public interface IChatHub
 {
     Task MessageIncoming(RoomMessageDto message);
-    Task ICECandidate(ICECandidate message);
     Task MessagesWereViewed(RoomUserActionMessage message);
     Task MessageWasViewed(RoomMessageUserActionMessage message);
     Task VideoCallDataIncoming(VideoData videoData);
     Task VideoCallRequested(StringMessage message);
+    Task VideoCallOfferIncoming(StringMessage message);
+    Task ICECandidateIncoming(ICECandidate message);
     Task VideoCallApproved(StringMessage message);
     Task VideoCallRejected(StringMessage message);
     Task VideoCallTerminated(StringMessage message);
@@ -85,19 +86,18 @@ public class ChatHub : SechatHubBase<IChatHub>
 
     public async Task SendICECandidate(StringMessageForUser message)
     {
-        var contact = await _userManager.FindByNameAsync(message.UserName);
-        if (contact is null)
-        {
-            return;
-        }
+        var contactId = await IsContactAllowed(message.UserName);
+        if (string.IsNullOrEmpty(contactId)) return;
 
-        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-        if (!userContacts.Any(c => c.Equals(contact.Id)))
-        {
-            return;
-        }
+        await Clients.Group(contactId).VideoCallRejected(new StringMessage(UserName));
+    }
 
-        await Clients.Group(contact.Id).VideoCallRejected(new StringMessage(UserName));
+    public async Task SendVideoCallOffer(StringMessageForUser message)
+    {
+        var contactId = await IsContactAllowed(message.UserName);
+        if (string.IsNullOrEmpty(contactId)) return;
+
+        await Clients.Group(contactId).VideoCallRejected(new StringMessage(UserName));
     }
 
     public async Task RejectVideoCall(StringMessage message)
