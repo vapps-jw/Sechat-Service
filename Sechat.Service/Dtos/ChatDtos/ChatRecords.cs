@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 namespace Sechat.Service.Dtos.ChatDtos;
 
-public record ICECandidate(long Id);
 public record ResourceId(long Id);
 public record ResourceGuid(string Id);
 public record RoomUserActionMessage(string RoomId, string UserName);

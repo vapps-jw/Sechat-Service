@@ -21,8 +21,10 @@ public interface IChatHub
     Task MessageWasViewed(RoomMessageUserActionMessage message);
     Task VideoCallDataIncoming(VideoData videoData);
     Task VideoCallRequested(StringMessage message);
-    Task VideoCallOfferIncoming(StringMessage message);
-    Task ICECandidateIncoming(ICECandidate message);
+    Task ICECandidateIncoming(StringMessage message);
+    Task WebRTCOfferIncoming(StringMessageForUser message);
+    Task WebRTCAnswerIncoming(StringMessageForUser message);
+    Task WebRTCExchangeCompleted(StringMessage message);
     Task VideoCallApproved(StringMessage message);
     Task VideoCallRejected(StringMessage message);
     Task VideoCallTerminated(StringMessage message);
@@ -89,83 +91,61 @@ public class ChatHub : SechatHubBase<IChatHub>
         var contactId = await IsContactAllowed(message.UserName);
         if (string.IsNullOrEmpty(contactId)) return;
 
-        await Clients.Group(contactId).VideoCallRejected(new StringMessage(UserName));
+        await Clients.Group(contactId).ICECandidateIncoming(new StringMessage(message.Message));
     }
 
-    public async Task SendVideoCallOffer(StringMessageForUser message)
+    public async Task SendWebRTCOffer(StringMessageForUser message)
     {
         var contactId = await IsContactAllowed(message.UserName);
         if (string.IsNullOrEmpty(contactId)) return;
 
-        await Clients.Group(contactId).VideoCallRejected(new StringMessage(UserName));
+        await Clients.Group(contactId).WebRTCOfferIncoming(new StringMessageForUser(UserName, message.Message));
+    }
+
+    public async Task SendWebRTCExchangeCompleted(StringMessage message)
+    {
+        var contactId = await IsContactAllowed(message.Message);
+        if (string.IsNullOrEmpty(contactId)) return;
+
+        await Clients.Group(contactId).WebRTCExchangeCompleted(new StringMessage(UserName));
+    }
+
+    public async Task SendWebRTCAnswer(StringMessageForUser message)
+    {
+        var contactId = await IsContactAllowed(message.UserName);
+        if (string.IsNullOrEmpty(contactId)) return;
+
+        await Clients.Group(contactId).WebRTCAnswerIncoming(new StringMessageForUser(UserName, message.Message));
     }
 
     public async Task RejectVideoCall(StringMessage message)
     {
-        var contact = await _userManager.FindByNameAsync(message.Message);
-        if (contact is null)
-        {
-            return;
-        }
-
-        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-        if (!userContacts.Any(c => c.Equals(contact.Id)))
-        {
-            return;
-        }
-
-        await Clients.Group(contact.Id).VideoCallRejected(new StringMessage(UserName));
+        var contactId = await IsContactAllowed(message.Message);
+        if (string.IsNullOrEmpty(contactId)) return;
+        await Clients.Group(contactId).VideoCallRejected(new StringMessage(UserName));
     }
 
     public async Task TerminateVideoCall(StringMessage message)
     {
-        var contact = await _userManager.FindByNameAsync(message.Message);
-        if (contact is null)
-        {
-            return;
-        }
-
-        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-        if (!userContacts.Any(c => c.Equals(contact.Id)))
-        {
-            return;
-        }
-
-        await Clients.Group(contact.Id).VideoCallTerminated(new StringMessage(UserName));
+        var contactId = await IsContactAllowed(message.Message);
+        if (string.IsNullOrEmpty(contactId)) return;
+        await Clients.Group(contactId).VideoCallTerminated(new StringMessage(UserName));
     }
 
     public async Task ApproveVideoCall(StringMessage message)
     {
-        var contact = await _userManager.FindByNameAsync(message.Message);
-        if (contact is null)
-        {
-            return;
-        }
+        var contactId = await IsContactAllowed(message.Message);
+        if (string.IsNullOrEmpty(contactId)) return;
 
-        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-        if (!userContacts.Any(c => c.Equals(contact.Id)))
-        {
-            return;
-        }
-
-        await Clients.Group(contact.Id).VideoCallApproved(new StringMessage(UserName));
+        await Clients.Group(contactId).VideoCallApproved(new StringMessage(UserName));
     }
 
     public async Task VideoCallRequest(StringMessage message)
     {
-        var contact = await _userManager.FindByNameAsync(message.Message);
-        if (contact is null)
-        {
-            return;
-        }
+        var contactId = await IsContactAllowed(message.Message);
+        if (string.IsNullOrEmpty(contactId)) return;
 
-        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-        if (!userContacts.Any(c => c.Equals(contact.Id)))
-        {
-            return;
-        }
-
-        await Clients.Group(contact.Id).VideoCallRequested(new StringMessage(UserName));
+        await Clients.Group(contactId).VideoCallRequested(new StringMessage(UserName));
     }
 
     public async Task<RoomDto> CreateRoom(RoomNameMessage request)
