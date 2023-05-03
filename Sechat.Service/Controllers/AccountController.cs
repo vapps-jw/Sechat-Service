@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,6 +13,7 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
+using Sechat.Service.Utilities;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -51,22 +53,32 @@ public class AccountController : SechatControllerBase
 
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] UserCredentials userCredentials)
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
+    public async Task<IActionResult> SignIn([FromBody] UserCredentials userCredentials)
     {
         var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, false);
-        return !signInResult.Succeeded ? BadRequest() : Ok();
+
+        if (signInResult.Succeeded)
+        {
+            _logger.LogWarning("User Signed In: {Username}", userCredentials.Username);
+            return Ok();
+        }
+
+        _logger.LogWarning("User failed to Sign In: {Username}", userCredentials.Username);
+        return BadRequest("Failed to Sign In");
     }
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] UserCredentials userCredentials)
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
+    public async Task<IActionResult> SignUp([FromBody] UserCredentials userCredentials)
     {
         var user = new IdentityUser(userCredentials.Username);
         var createUserResult = await _userManager.CreateAsync(user, userCredentials.Password);
 
         if (!createUserResult.Succeeded)
         {
-            return BadRequest();
+            return BadRequest("Failed to Sign Up");
         }
 
         _logger.LogInformation($"User {userCredentials.Username} has been created");
@@ -102,7 +114,7 @@ public class AccountController : SechatControllerBase
 
             foreach (var memberRoom in deleteResult.MemberRooms)
             {
-                await _chatHubContext.Clients.Group(memberRoom).UserRemovedFromRoom(new UserRemovedFromRoom(memberRoom, UserName));
+                await _chatHubContext.Clients.Group(memberRoom).UserRemovedFromRoom(new RoomUserActionMessage(memberRoom, UserName));
             }
 
             foreach (var connection in deleteResult.Connections)
@@ -129,13 +141,13 @@ public class AccountController : SechatControllerBase
         var currentUser = await _userManager.FindByIdAsync(UserId);
         if (currentUser is null)
         {
-            return BadRequest();
+            return BadRequest("User not found");
         }
 
         var changePasswordResult = await _userManager.ChangePasswordAsync(currentUser, passwordForm.OldPassword, passwordForm.NewPassword);
         if (!changePasswordResult.Succeeded)
         {
-            return Problem();
+            return BadRequest("Password change failed");
         }
 
         await _signInManager.RefreshSignInAsync(currentUser);
@@ -144,6 +156,7 @@ public class AccountController : SechatControllerBase
 
     [AllowAnonymous]
     [HttpPost("forgot-password")]
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> ForgotPassword(
         [FromBody] EmailForm emailForm,
         IEmailClient emailClient,
@@ -169,6 +182,7 @@ public class AccountController : SechatControllerBase
 
     [AllowAnonymous]
     [HttpPost("reset-password")]
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> ResetPassword([FromBody] PasswordResetForm passwordResetForm)
     {
         var currentUser = await _userManager.FindByIdAsync(passwordResetForm.UserId);

@@ -11,9 +11,5 @@ public class PasswordForm
 
 public class PasswordFormValidation : AbstractValidator<PasswordForm>
 {
-    public PasswordFormValidation()
-    {
-        _ = RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(AppConstants.StringLengths.PasswordMin).MaximumLength(AppConstants.StringLengths.PasswordMax);
-        _ = RuleFor(x => x.OldPassword).NotEmpty().MinimumLength(AppConstants.StringLengths.PasswordMin).MaximumLength(AppConstants.StringLengths.PasswordMax);
-    }
+    public PasswordFormValidation() => _ = RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(AppConstants.StringLengths.PasswordMin).MaximumLength(AppConstants.StringLengths.PasswordMax);
 }

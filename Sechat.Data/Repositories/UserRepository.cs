@@ -10,22 +10,14 @@ public class UserRepository : RepositoryBase<SechatContext>
     {
     }
 
-    // Connections
+    // Contacts
 
-    public bool IsConnected(string user, string otherUser)
-    {
-        var connection = _context.UserConnections
-            .FirstOrDefault(c => (c.InvitedId.Equals(user) || c.InviterId.Equals(user)) && (c.InvitedId.Equals(otherUser) || c.InviterId.Equals(otherUser)));
-
-        return connection is not null && connection.Approved;
-    }
-
-    public bool ConnectionExists(string userOne, string userTwo) =>
+    public bool ContactExists(string userOne, string userTwo) =>
         _context.UserConnections.Any(uc =>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
             (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
-    public bool ConnectionExists(long connectionId, string userOne, string userTwo)
+    public bool ContactExists(long connectionId, string userOne, string userTwo)
     {
         var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
         return connection is not null
@@ -33,12 +25,12 @@ public class UserRepository : RepositoryBase<SechatContext>
             && (connection.InvitedId.Equals(userTwo) || connection.InviterId.Equals(userTwo));
     }
 
-    public UserConnection GetConnection(string userOne, string userTwo) =>
+    public UserConnection GetContact(string userOne, string userTwo) =>
         _context.UserConnections.FirstOrDefault(uc =>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
             (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
-    public void DeleteConnection(long id)
+    public void DeleteContact(long id)
     {
         var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == id);
         if (connection is not null)
@@ -47,7 +39,10 @@ public class UserRepository : RepositoryBase<SechatContext>
         }
     }
 
-    public long GetConnectionId(string userOne, string userTwo)
+    public void DeleteContactsFor(string userId) => _context.UserConnections.RemoveRange(_context.UserConnections
+            .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId)));
+
+    public long GetContactId(string userOne, string userTwo)
     {
         var connection = _context.UserConnections.FirstOrDefault(uc =>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
@@ -56,12 +51,18 @@ public class UserRepository : RepositoryBase<SechatContext>
         return connection is not null ? connection.Id : 0;
     }
 
-    public Task<List<UserConnection>> GetConnections(string userId) =>
+    public Task<List<UserConnection>> GetContacts(string userId) =>
         _context.UserConnections
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
             .ToListAsync();
 
-    public UserConnection BlockConnection(long connectionId, string blockedById, string blockedByName)
+    public Task<List<string>> GetAllowedContactsIds(string userId) =>
+        _context.UserConnections
+            .Where(uc => uc.InvitedId.Equals(userId) || (uc.InviterId.Equals(userId) && !uc.Blocked && uc.Approved))
+            .Select(uc => uc.InvitedId.Equals(userId) ? uc.InviterId : uc.InvitedId)
+            .ToListAsync();
+
+    public UserConnection BlockContact(long connectionId, string blockedById, string blockedByName)
     {
         var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
         if (connection is null || connection.Blocked) return null;
@@ -73,7 +74,7 @@ public class UserRepository : RepositoryBase<SechatContext>
         return connection;
     }
 
-    public UserConnection AllowConnection(long connectionId, string userId)
+    public UserConnection AllowContact(long connectionId, string userId)
     {
         var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
         if (connection is null || !connection.Blocked || !connection.BlockedById.Equals(userId)) return null;
@@ -85,7 +86,7 @@ public class UserRepository : RepositoryBase<SechatContext>
         return connection;
     }
 
-    public UserConnection ApproveConnection(long connectionId, string approverId)
+    public UserConnection ApproveContact(long connectionId, string approverId)
     {
         var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
         if (connection is null || connection.Approved || !connection.InvitedId.Equals(approverId)) return null;
@@ -94,10 +95,10 @@ public class UserRepository : RepositoryBase<SechatContext>
         return connection;
     }
 
-    public Task<UserConnection> GetConnection(long connectionId) =>
+    public Task<UserConnection> GetContact(long connectionId) =>
         _context.UserConnections.FirstOrDefaultAsync(uc => uc.Id == connectionId);
 
-    public UserConnection CreateConnection(string inviterId, string inviterName, string invitedId, string invitedName)
+    public UserConnection CreateContact(string inviterId, string inviterName, string invitedId, string invitedName)
     {
         var newConnection = new UserConnection()
         {
@@ -135,7 +136,7 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Where(r => !r.CreatorId.Equals(profile.Id))
             .ToList();
 
-        var connections = await GetConnections(profile.Id);
+        var connections = await GetContacts(profile.Id);
 
         if (profile is not null)
         {
