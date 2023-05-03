@@ -16,25 +16,39 @@ namespace Sechat.Service.Hubs;
 
 public interface IChatHub
 {
-    Task MessageIncoming(RoomMessageDto message);
-    Task MessagesWereViewed(RoomUserActionMessage message);
-    Task MessageWasViewed(RoomMessageUserActionMessage message);
+    // Video call connection
     Task VideoCallDataIncoming(VideoData videoData);
     Task VideoCallRequested(StringMessage message);
     Task ICECandidateIncoming(StringMessage message);
     Task WebRTCOfferIncoming(StringMessageForUser message);
     Task WebRTCAnswerIncoming(StringMessageForUser message);
     Task WebRTCExchangeCompleted(StringMessage message);
+
+    // Video call replies
     Task VideoCallApproved(StringMessage message);
+    Task VideoCallDeclined(StringMessage message);
     Task VideoCallRejected(StringMessage message);
     Task VideoCallTerminated(StringMessage message);
+
+    // Video call media
+    Task MicStateChanged(StringMessage message);
+    Task CamStateChanged(StringMessage message);
+
+    // Chat Messages
+    Task MessageIncoming(RoomMessageDto message);
+    Task MessagesWereViewed(RoomUserActionMessage message);
+    Task MessageWasViewed(RoomMessageUserActionMessage message);
+
+    // Chat Rooms
     Task RoomDeleted(ResourceGuid message);
-    Task ConnectionRequestReceived(UserContactDto message);
-    Task ConnectionDeleted(ResourceId message);
-    Task ConnectionUpdated(UserContactDto message);
     Task RoomUpdated(RoomDto message);
     Task UserAddedToRoom(RoomDto message);
     Task UserRemovedFromRoom(RoomUserActionMessage message);
+
+    // Chat Contacts
+    Task ConnectionRequestReceived(UserContactDto message);
+    Task ConnectionDeleted(ResourceId message);
+    Task ConnectionUpdated(UserContactDto message);
 }
 
 [Authorize]
@@ -84,6 +98,22 @@ public class ChatHub : SechatHubBase<IChatHub>
                 }
             }
         }
+    }
+
+    public async Task SendMicStateChange(StringMessageForUser message)
+    {
+        var contactId = await IsContactAllowed(message.UserName);
+        if (string.IsNullOrEmpty(contactId)) return;
+
+        await Clients.Group(contactId).MicStateChanged(new StringMessage(message.Message));
+    }
+
+    public async Task SendCamStateChange(StringMessageForUser message)
+    {
+        var contactId = await IsContactAllowed(message.UserName);
+        if (string.IsNullOrEmpty(contactId)) return;
+
+        await Clients.Group(contactId).CamStateChanged(new StringMessage(message.Message));
     }
 
     public async Task SendICECandidate(StringMessageForUser message)
