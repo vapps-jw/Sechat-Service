@@ -27,7 +27,6 @@ jobs:
           ConnectionStrings.Master: ${{ secrets.POSTGRESQL_CONNECTION_STRING }}
           CorsSettings.WebAppUrl: ${{ secrets.WEB_APP_URL }}
           CorsSettings.ApiUrl: ${{ secrets.API_URL }}
-          CorsSettings.WebAppDomainUrl: ${{ secrets.WEB_APP_DOMAIN_URL }}   
           CookieSettings.AuthCookieDomain: ${{ secrets.AUTH_COOKIE_DOMAIN }}
           CookieSettings.AuthCookieName: ${{ secrets.AUTH_COOKIE_NAME }}
       - name: Push to Linode
