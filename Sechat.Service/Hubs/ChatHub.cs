@@ -268,6 +268,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, UserId);
+            _signalRConnectionsMonitor.ConnectedUsers.Add(UserId);
             _ = base.OnConnectedAsync();
         }
         catch (Exception ex)
@@ -284,6 +285,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             await Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Offline));
         }
 
+        _ = _signalRConnectionsMonitor.ConnectedUsers.Remove(UserId);
         _ = base.OnDisconnectedAsync(exception);
     }
 }
