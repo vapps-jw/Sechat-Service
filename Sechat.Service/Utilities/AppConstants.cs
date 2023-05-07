@@ -14,7 +14,12 @@ public class AppConstants
     {
         public const string NewMessage = "New Message";
         public const string NewInvitation = "New Invitation";
-        public const string NewVideoCall = "New Video Call";
+        public const string VideoCall = "Video Call";
+    }
+    public struct ContactState
+    {
+        public const string Online = "Online";
+        public const string Offline = "Offline";
     }
     public struct ContentTypes
     {

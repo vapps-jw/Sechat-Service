@@ -1,7 +1,7 @@
 ﻿namespace Sechat.Data.Models;
 public record CallLog : BaseModel<long>
 {
-    public string CallerId { get; set; }
+    public string CalleeId { get; set; }
     public VideoCallType VideoCallType { get; set; }
     public VideoCallResult VideoCallResult { get; set; }
 

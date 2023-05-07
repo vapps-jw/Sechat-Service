@@ -9,7 +9,7 @@ public record ResourceGuid(string Id);
 public record RoomUserActionMessage(string RoomId, string UserName);
 public record RoomMessageUserActionMessage(string RoomId, long MessageId, string UserName);
 public record StringMessage(string Message);
-public record StringMessageForUser(string UserName, string Message);
+public record StringUserMessage(string UserName, string Message);
 
 public record RoomIdsMessage(List<string> RoomIds);
 
