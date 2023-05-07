@@ -268,12 +268,12 @@ public class ChatHub : SechatHubBase<IChatHub>
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, UserId);
+            _ = base.OnConnectedAsync();
         }
         catch (Exception ex)
         {
             throw new HubException(ex.Message);
         }
-        _ = base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception exception)
@@ -284,6 +284,6 @@ public class ChatHub : SechatHubBase<IChatHub>
             await Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Offline));
         }
 
-        return base.OnDisconnectedAsync(exception);
+        _ = base.OnDisconnectedAsync(exception);
     }
 }
