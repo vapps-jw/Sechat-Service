@@ -7,6 +7,7 @@ using Sechat.Data.Repositories;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
+using Sechat.Service.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class ChatController : SechatControllerBase
 {
+    private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
     private readonly PushNotificationService _pushNotificationService;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
@@ -27,6 +29,7 @@ public class ChatController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public ChatController(
+        SignalRConnectionsMonitor signalRConnectionsMonitor,
         PushNotificationService pushNotificationService,
         UserManager<IdentityUser> userManager,
         UserRepository userRepository,
@@ -35,6 +38,7 @@ public class ChatController : SechatControllerBase
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
+        _signalRConnectionsMonitor = signalRConnectionsMonitor;
         _pushNotificationService = pushNotificationService;
         _userManager = userManager;
         _userRepository = userRepository;
@@ -80,6 +84,17 @@ public class ChatController : SechatControllerBase
         }
 
         var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
+        var connectedContacts = contacts
+            .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
+                        _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
+            .Select(c => c.Id)
+            .ToList();
+
+        foreach (var contactDto in contactDtos)
+        {
+            contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
+                AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+        }
 
         var res = new StateDto
         {

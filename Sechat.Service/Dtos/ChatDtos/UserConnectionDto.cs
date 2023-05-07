@@ -6,6 +6,7 @@ public class UserContactDto
 {
     public long Id { get; set; }
     public bool Approved { get; set; }
+    public string ContactState { get; set; } = Utilities.AppConstants.ContactState.Unknown;
     public string InviterName { get; set; } = string.Empty;
     public string InvitedName { get; set; } = string.Empty;
 
