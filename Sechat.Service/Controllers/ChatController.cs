@@ -247,9 +247,7 @@ public class ChatController : SechatControllerBase
     [HttpDelete("delete-room")]
     public async Task<IActionResult> DeleteRoom(string roomId)
     {
-        _chatRepository.DeleteRoom(roomId, UserId);
-
-        if (await _chatRepository.SaveChanges() > 0)
+        if (await _chatRepository.DeleteRoom(roomId, UserId) > 0)
         {
             await _chatHubContext.Clients.Group(roomId).RoomDeleted(new ResourceGuid(roomId));
         }

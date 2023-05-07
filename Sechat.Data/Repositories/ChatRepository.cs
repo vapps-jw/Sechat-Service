@@ -144,15 +144,9 @@ public class ChatRepository : RepositoryBase<SechatContext>
         .Include(r => r.Messages.Where(m => m.Created > lastMessage))
         .FirstOrDefaultAsync();
 
-    public void DeleteRoom(string roomId, string creatorUserId)
-    {
-        var room = _context.Rooms
-            .Where(r => r.Id.Equals(roomId) && r.CreatorId.Equals(creatorUserId))
-            .FirstOrDefault();
-
-        if (room is null) return;
-        _ = _context.Rooms.Remove(room);
-    }
+    public Task<int> DeleteRoom(string roomId, string creatorUserId) => _context.Rooms
+        .Where(r => r.Id.Equals(roomId) && r.CreatorId.Equals(creatorUserId))
+        .ExecuteDeleteAsync();
 
     public void MarkMessagesAsViewed(string userId, string roomId)
     {

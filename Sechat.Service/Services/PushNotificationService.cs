@@ -24,36 +24,36 @@ public class PushNotificationService
         _logger = logger;
     }
 
-    public void IncomingVideoCallNotification(string userId)
+    public async Task IncomingVideoCallNotification(string userId, string callerName)
     {
-        //var subs = _userRepository.GetSubscriptions(userId);
-        //if (!subs.Any()) return;
+        var subs = _userRepository.GetSubscriptions(userId);
+        if (!subs.Any()) return;
 
-        //foreach (var sub in subs)
-        //{
-        //    var subscription = new PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
-        //    var vapidDetails = new VapidDetails("mailto:office@vapps.pl", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
+        foreach (var sub in subs)
+        {
+            var subscription = new PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
+            var vapidDetails = new VapidDetails("mailto:office@vapps.pl", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
 
-        //    var webPushClient = new WebPushClient();
-        //    try
-        //    {
-        //        var payload = JsonSerializer.Serialize(new
-        //        {
-        //            title = "New Message",
-        //            options = new
-        //            {
-        //                body = roomName
-        //            }
-        //        });
+            var webPushClient = new WebPushClient();
+            try
+            {
+                var payload = JsonSerializer.Serialize(new
+                {
+                    title = AppConstants.PushNotificationTitles.VideoCall,
+                    options = new
+                    {
+                        body = $"Call from {callerName}"
+                    }
+                });
 
-        //        await webPushClient.SendNotificationAsync(subscription, payload, vapidDetails);
-        //    }
-        //    catch (WebPushException exception)
-        //    {
-        //        _logger.LogError(exception, exception.Message);
-        //        Console.WriteLine("Http STATUS code" + exception.StatusCode);
-        //    }
-        //}
+                await webPushClient.SendNotificationAsync(subscription, payload, vapidDetails);
+            }
+            catch (WebPushException exception)
+            {
+                _logger.LogError(exception, exception.Message);
+                Console.WriteLine("Http STATUS code" + exception.StatusCode);
+            }
+        }
     }
 
     public async Task IncomingMessageNotification(string userId, string roomName)

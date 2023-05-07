@@ -2,16 +2,21 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Service.Hubs.Filters;
+using Sechat.Service.Services;
 
 namespace Sechat.Service.Configuration.Installers;
 
 public class SignalRInstaller : IServiceInstaller
 {
-    public void Install(WebApplicationBuilder webApplicationBuilder) => webApplicationBuilder.Services.AddSignalR(options =>
+    public void Install(WebApplicationBuilder webApplicationBuilder)
     {
-        options.EnableDetailedErrors = true;
-        options.DisableImplicitFromServicesParameters = true;
-        options.MaximumReceiveMessageSize = 128 * 1024;
-        options.AddFilter<AuthHubFilter>();
-    });
+        _ = webApplicationBuilder.Services.AddSingleton<SignalRConnectionsMonitor>();
+        _ = webApplicationBuilder.Services.AddSignalR(options =>
+        {
+            options.EnableDetailedErrors = true;
+            options.DisableImplicitFromServicesParameters = true;
+            options.MaximumReceiveMessageSize = 128 * 1024;
+            options.AddFilter<AuthHubFilter>();
+        });
+    }
 }

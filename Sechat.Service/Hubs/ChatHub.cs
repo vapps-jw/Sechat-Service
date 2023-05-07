@@ -4,24 +4,23 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Sechat.Data.Repositories;
-using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Sechat.Service.Utilities.AppConstants;
 
 namespace Sechat.Service.Hubs;
 
 public interface IChatHub
 {
     // Video call connection
-    Task VideoCallDataIncoming(VideoData videoData);
     Task VideoCallRequested(StringMessage message);
     Task ICECandidateIncoming(StringMessage message);
-    Task WebRTCOfferIncoming(StringMessageForUser message);
-    Task WebRTCAnswerIncoming(StringMessageForUser message);
+    Task WebRTCOfferIncoming(StringUserMessage message);
+    Task WebRTCAnswerIncoming(StringUserMessage message);
     Task WebRTCExchangeCompleted(StringMessage message);
 
     // Video call replies
@@ -49,11 +48,13 @@ public interface IChatHub
     Task ConnectionRequestReceived(UserContactDto message);
     Task ConnectionDeleted(ResourceId message);
     Task ConnectionUpdated(UserContactDto message);
+    Task ContactStateChanged(StringUserMessage message);
 }
 
 [Authorize]
 public class ChatHub : SechatHubBase<IChatHub>
 {
+    private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
     private readonly UserRepository _userRepository;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly PushNotificationService _pushNotificationService;
@@ -63,6 +64,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
+        SignalRConnectionsMonitor signalRConnectionsMonitor,
         UserRepository userRepository,
         UserManager<IdentityUser> userManager,
         PushNotificationService pushNotificationService,
@@ -71,6 +73,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         IEncryptor encryptor,
         ChatRepository chatRepository)
     {
+        _signalRConnectionsMonitor = signalRConnectionsMonitor;
         _userRepository = userRepository;
         _userManager = userManager;
         _pushNotificationService = pushNotificationService;
@@ -83,24 +86,21 @@ public class ChatHub : SechatHubBase<IChatHub>
     public void LogConnection(StringMessage connectionEstablishedDto) =>
         _logger.LogWarning("Connection established for user Id: {0} Name: {1} Message: {2}", UserId, UserName, connectionEstablishedDto.Message);
 
-    [Obsolete]
-    public async Task SendVideoCallData(IAsyncEnumerable<VideoData> videoData)
+    // todo: check if this is reasonable
+    public async Task<StringMessage> CheckOnlineState(StringMessage message)
     {
-        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-        await foreach (var d in videoData)
+        try
         {
-            var user = await _userManager.FindByNameAsync(d.UserName);
-            if (user is not null)
-            {
-                if (userContacts.Any(uc => uc.Equals(user.Id)))
-                {
-                    await Clients.Group(user.Id).VideoCallDataIncoming(d);
-                }
-            }
+            var contactId = await IsContactAllowed(message.Message);
+            return string.IsNullOrEmpty(contactId) ? null : new StringMessage(ContactState.Online);
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
         }
     }
 
-    public async Task SendMicStateChange(StringMessageForUser message)
+    public async Task SendMicStateChange(StringUserMessage message)
     {
         var contactId = await IsContactAllowed(message.UserName);
         if (string.IsNullOrEmpty(contactId)) return;
@@ -108,7 +108,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         await Clients.Group(contactId).MicStateChanged(new StringMessage(message.Message));
     }
 
-    public async Task SendCamStateChange(StringMessageForUser message)
+    public async Task SendCamStateChange(StringUserMessage message)
     {
         var contactId = await IsContactAllowed(message.UserName);
         if (string.IsNullOrEmpty(contactId)) return;
@@ -116,7 +116,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         await Clients.Group(contactId).CamStateChanged(new StringMessage(message.Message));
     }
 
-    public async Task SendICECandidate(StringMessageForUser message)
+    public async Task SendICECandidate(StringUserMessage message)
     {
         var contactId = await IsContactAllowed(message.UserName);
         if (string.IsNullOrEmpty(contactId)) return;
@@ -124,12 +124,12 @@ public class ChatHub : SechatHubBase<IChatHub>
         await Clients.Group(contactId).ICECandidateIncoming(new StringMessage(message.Message));
     }
 
-    public async Task SendWebRTCOffer(StringMessageForUser message)
+    public async Task SendWebRTCOffer(StringUserMessage message)
     {
         var contactId = await IsContactAllowed(message.UserName);
         if (string.IsNullOrEmpty(contactId)) return;
 
-        await Clients.Group(contactId).WebRTCOfferIncoming(new StringMessageForUser(UserName, message.Message));
+        await Clients.Group(contactId).WebRTCOfferIncoming(new StringUserMessage(UserName, message.Message));
     }
 
     public async Task SendWebRTCExchangeCompleted(StringMessage message)
@@ -140,12 +140,12 @@ public class ChatHub : SechatHubBase<IChatHub>
         await Clients.Group(contactId).WebRTCExchangeCompleted(new StringMessage(UserName));
     }
 
-    public async Task SendWebRTCAnswer(StringMessageForUser message)
+    public async Task SendWebRTCAnswer(StringUserMessage message)
     {
         var contactId = await IsContactAllowed(message.UserName);
         if (string.IsNullOrEmpty(contactId)) return;
 
-        await Clients.Group(contactId).WebRTCAnswerIncoming(new StringMessageForUser(UserName, message.Message));
+        await Clients.Group(contactId).WebRTCAnswerIncoming(new StringUserMessage(UserName, message.Message));
     }
 
     public async Task RejectVideoCall(StringMessage message)
@@ -261,6 +261,12 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
+            var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+            foreach (var userContact in userContacts)
+            {
+                await Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Online));
+            }
+
             await Groups.AddToGroupAsync(Context.ConnectionId, UserId);
         }
         catch (Exception ex)
@@ -270,5 +276,14 @@ public class ChatHub : SechatHubBase<IChatHub>
         _ = base.OnConnectedAsync();
     }
 
-    public override Task OnDisconnectedAsync(Exception exception) => base.OnDisconnectedAsync(exception);
+    public override async Task OnDisconnectedAsync(Exception exception)
+    {
+        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+        foreach (var userContact in userContacts)
+        {
+            await Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Offline));
+        }
+
+        return base.OnDisconnectedAsync(exception);
+    }
 }
