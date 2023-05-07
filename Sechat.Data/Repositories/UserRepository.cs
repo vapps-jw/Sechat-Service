@@ -113,6 +113,13 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     // Profile
 
+    public void UpdateUserActivity(string userId)
+    {
+        var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
+        if (profile == null) return;
+        profile.LastActivity = DateTime.UtcNow;
+    }
+
     public UserProfile GetUserProfile(string id) => _context.UserProfiles
         .FirstOrDefault(p => p.Id.Equals(id));
 

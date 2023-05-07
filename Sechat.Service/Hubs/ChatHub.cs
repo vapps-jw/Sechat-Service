@@ -86,7 +86,6 @@ public class ChatHub : SechatHubBase<IChatHub>
     public void LogConnection(StringMessage connectionEstablishedDto) =>
         _logger.LogWarning("Connection established for user Id: {0} Name: {1} Message: {2}", UserId, UserName, connectionEstablishedDto.Message);
 
-    // todo: check if this is reasonable
     public async Task<StringMessage> CheckOnlineState(StringMessage message)
     {
         try

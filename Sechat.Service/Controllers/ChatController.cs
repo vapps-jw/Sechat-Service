@@ -54,6 +54,9 @@ public class ChatController : SechatControllerBase
         var rooms = await _chatRepository.GetRooms(UserId);
         var contacts = await _userRepository.GetContacts(UserId);
 
+        _userRepository.UpdateUserActivity(UserId);
+        _ = await _userRepository.SaveChanges();
+
         foreach (var room in rooms)
         {
             foreach (var message in room.Messages)
@@ -104,6 +107,9 @@ public class ChatController : SechatControllerBase
 
         return Ok(res);
     }
+
+    [HttpGet("get-state-updates")]
+    public IActionResult GetStateUpdates() => Ok();
 
     [HttpGet("get-my-rooms")]
     public async Task<IActionResult> GetRooms()
