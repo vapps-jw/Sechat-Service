@@ -176,7 +176,7 @@ public class AccountController : SechatControllerBase
             { "token", confirmationToken },
             { "userId", emailForm.Email },
         };
-        var callbackUrl = $@"{_corsSettings.CurrentValue.WebAppUrl}/account/reset-password/{qb}";
+        var callbackUrl = $@"{_corsSettings.CurrentValue.WebAppUrl}/user/resetPassword/{qb}";
 
         var sgResponse = await emailClient.SendPasswordResetAsync(emailForm.Email, callbackUrl);
         return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok();
@@ -193,14 +193,14 @@ public class AccountController : SechatControllerBase
         return !confirmResult.Succeeded ? BadRequest() : Ok();
     }
 
-    [HttpPut("update-email")]
+    [HttpPost("update-email")]
     public async Task<IActionResult> UpdateEmail(
     IEmailClient emailClient,
     [FromBody] EmailForm emailForm)
     {
         if (emailForm.Equals(UserEmail))
         {
-            return BadRequest();
+            return Ok();
         }
 
         var currentUser = await _userManager.FindByIdAsync(UserId);
@@ -211,24 +211,19 @@ public class AccountController : SechatControllerBase
             { "token", confirmationToken },
             { "email", emailForm.Email }
         };
-        var callbackUrl = $@"{_corsSettings.CurrentValue.ApiUrl}/account/confirm-email/{qb}";
+        var callbackUrl = $@"{_corsSettings.CurrentValue.WebAppUrl}/user/confirmEmail/{qb}";
 
         var sgResponse = await emailClient.SendEmailConfirmationAsync(emailForm.Email, callbackUrl);
         return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok();
     }
 
-    [HttpGet("confirm-email")]
-    public async Task<IActionResult> ConfirmEmailAsync(string token, string email)
+    [AllowAnonymous]
+    [HttpPost("confirm-email")]
+    public async Task<IActionResult> ConfirmEmailAsync([FromBody] ConfirmEmailForm confirmEmailForm)
     {
-        if (string.IsNullOrEmpty(token) ||
-            string.IsNullOrEmpty(email))
-        {
-            return BadRequest();
-        }
+        var currentUser = await _userManager.FindByEmailAsync(confirmEmailForm.Email);
+        var confirmResult = await _userManager.ChangeEmailAsync(currentUser, confirmEmailForm.Email, confirmEmailForm.Token);
 
-        var currentUser = await _userManager.FindByIdAsync(UserId);
-        var confirmResult = await _userManager.ChangeEmailAsync(currentUser, email, token);
-
-        return !confirmResult.Succeeded ? BadRequest() : Ok();
+        return !confirmResult.Succeeded ? BadRequest("Email has not been confirmed") : Ok("Email confirmed");
     }
 }
