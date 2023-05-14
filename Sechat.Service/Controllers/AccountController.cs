@@ -198,9 +198,10 @@ public class AccountController : SechatControllerBase
     IEmailClient emailClient,
     [FromBody] EmailForm emailForm)
     {
-        if (emailForm.Equals(UserEmail))
+        var user = await _userManager.FindByNameAsync(UserName);
+        if (emailForm.Email.Equals(user.Email))
         {
-            return Ok();
+            return BadRequest("Email is the same");
         }
 
         var currentUser = await _userManager.FindByIdAsync(UserId);
@@ -209,6 +210,7 @@ public class AccountController : SechatControllerBase
         var qb = new QueryBuilder
         {
             { "token", confirmationToken },
+            { "userName", UserName },
             { "email", emailForm.Email }
         };
         var callbackUrl = $@"{_corsSettings.CurrentValue.WebAppUrl}/user/confirmEmail/{qb}";
@@ -221,7 +223,7 @@ public class AccountController : SechatControllerBase
     [HttpPost("confirm-email")]
     public async Task<IActionResult> ConfirmEmailAsync([FromBody] ConfirmEmailForm confirmEmailForm)
     {
-        var currentUser = await _userManager.FindByEmailAsync(confirmEmailForm.Email);
+        var currentUser = await _userManager.FindByNameAsync(confirmEmailForm.UserName);
         var confirmResult = await _userManager.ChangeEmailAsync(currentUser, confirmEmailForm.Email, confirmEmailForm.Token);
 
         return !confirmResult.Succeeded ? BadRequest("Email has not been confirmed") : Ok("Email confirmed");

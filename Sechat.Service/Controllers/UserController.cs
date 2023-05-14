@@ -55,7 +55,7 @@ public class UserController : SechatControllerBase
         var profileProjection = _mapper.Map<UserProfileProjection>(_userRepository.GetUserProfile(UserId));
         profileProjection.UserId = UserId;
         profileProjection.UserName = UserName;
-        profileProjection.Email = UserEmail;
+        profileProjection.Email = user.Email;
         profileProjection.EmailConfirmed = user.EmailConfirmed;
 
         return Ok(profileProjection);
