@@ -25,6 +25,7 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class AccountController : SechatControllerBase
 {
+    private readonly IOptionsMonitor<CorsSettings> _corsSettings;
     private readonly IMapper _mapper;
     private readonly ILogger<AccountController> _logger;
     private readonly UserManager<IdentityUser> _userManager;
@@ -33,6 +34,7 @@ public class AccountController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public AccountController(
+        IOptionsMonitor<CorsSettings> corsSettings,
         IMapper mapper,
         ILogger<AccountController> logger,
         UserManager<IdentityUser> userManager,
@@ -40,6 +42,7 @@ public class AccountController : SechatControllerBase
         UserRepository userRepository,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
+        _corsSettings = corsSettings;
         _mapper = mapper;
         _logger = logger;
         _userManager = userManager;
@@ -187,6 +190,45 @@ public class AccountController : SechatControllerBase
     {
         var currentUser = await _userManager.FindByIdAsync(passwordResetForm.UserId);
         var confirmResult = await _userManager.ResetPasswordAsync(currentUser, passwordResetForm.Token, passwordResetForm.NewPassword);
+
+        return !confirmResult.Succeeded ? BadRequest() : Ok();
+    }
+
+    [HttpPut("update-email")]
+    public async Task<IActionResult> UpdateEmail(
+    IEmailClient emailClient,
+    [FromBody] EmailForm emailForm)
+    {
+        if (emailForm.Equals(UserEmail))
+        {
+            return BadRequest();
+        }
+
+        var currentUser = await _userManager.FindByIdAsync(UserId);
+        var confirmationToken = await _userManager.GenerateChangeEmailTokenAsync(currentUser, emailForm.Email);
+
+        var qb = new QueryBuilder
+        {
+            { "token", confirmationToken },
+            { "email", emailForm.Email }
+        };
+        var callbackUrl = $@"{_corsSettings.CurrentValue.ApiUrl}/account/confirm-email/{qb}";
+
+        var sgResponse = await emailClient.SendEmailConfirmationAsync(emailForm.Email, callbackUrl);
+        return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok();
+    }
+
+    [HttpGet("confirm-email")]
+    public async Task<IActionResult> ConfirmEmailAsync(string token, string email)
+    {
+        if (string.IsNullOrEmpty(token) ||
+            string.IsNullOrEmpty(email))
+        {
+            return BadRequest();
+        }
+
+        var currentUser = await _userManager.FindByIdAsync(UserId);
+        var confirmResult = await _userManager.ChangeEmailAsync(currentUser, email, token);
 
         return !confirmResult.Succeeded ? BadRequest() : Ok();
     }
