@@ -24,7 +24,7 @@ public class AuthServicesInstaller : IServiceInstaller
         {
             _ = webApplicationBuilder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
-                options.User.RequireUniqueEmail = false;
+                options.User.RequireUniqueEmail = true;
                 options.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<SechatContext>()
@@ -35,7 +35,7 @@ public class AuthServicesInstaller : IServiceInstaller
         {
             _ = webApplicationBuilder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
-                options.User.RequireUniqueEmail = false;
+                options.User.RequireUniqueEmail = true;
                 options.Password.RequiredLength = 1;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireDigit = false;
