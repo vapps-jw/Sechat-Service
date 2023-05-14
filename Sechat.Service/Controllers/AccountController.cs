@@ -162,8 +162,7 @@ public class AccountController : SechatControllerBase
     [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> ForgotPassword(
         [FromBody] EmailForm emailForm,
-        IEmailClient emailClient,
-        IOptionsMonitor<CorsSettings> corsSettings)
+        IEmailClient emailClient)
     {
         var currentUser = await _userManager.FindByEmailAsync(emailForm.Email);
         if (currentUser is null)
@@ -175,9 +174,9 @@ public class AccountController : SechatControllerBase
         var qb = new QueryBuilder
         {
             { "token", confirmationToken },
-            { "userId", UserId },
+            { "userId", emailForm.Email },
         };
-        var callbackUrl = $@"{corsSettings.CurrentValue.WebAppUrl}/account/reset-password/{qb}";
+        var callbackUrl = $@"{_corsSettings.CurrentValue.WebAppUrl}/account/reset-password/{qb}";
 
         var sgResponse = await emailClient.SendPasswordResetAsync(emailForm.Email, callbackUrl);
         return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok();
@@ -188,7 +187,7 @@ public class AccountController : SechatControllerBase
     [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> ResetPassword([FromBody] PasswordResetForm passwordResetForm)
     {
-        var currentUser = await _userManager.FindByIdAsync(passwordResetForm.UserId);
+        var currentUser = await _userManager.FindByIdAsync(passwordResetForm.Email);
         var confirmResult = await _userManager.ResetPasswordAsync(currentUser, passwordResetForm.Token, passwordResetForm.NewPassword);
 
         return !confirmResult.Succeeded ? BadRequest() : Ok();
