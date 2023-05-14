@@ -30,7 +30,6 @@ public class UserController : SechatControllerBase
         IHubContext<ChatHub, IChatHub> chatHubContext,
         UserRepository userRepository)
     {
-        _corsSettings = corsSettings;
         _pushNotificationService = pushNotificationService;
         _mapper = mapper;
         _userManager = userManager;
@@ -52,10 +51,12 @@ public class UserController : SechatControllerBase
             }
         }
 
+        var user = await _userManager.FindByNameAsync(UserName);
         var profileProjection = _mapper.Map<UserProfileProjection>(_userRepository.GetUserProfile(UserId));
         profileProjection.UserId = UserId;
         profileProjection.UserName = UserName;
         profileProjection.Email = UserEmail;
+        profileProjection.EmailConfirmed = user.EmailConfirmed;
 
         return Ok(profileProjection);
     }
