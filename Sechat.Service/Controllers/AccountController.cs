@@ -226,6 +226,6 @@ public class AccountController : SechatControllerBase
         var currentUser = await _userManager.FindByNameAsync(confirmEmailForm.UserName);
         var confirmResult = await _userManager.ChangeEmailAsync(currentUser, confirmEmailForm.Email, confirmEmailForm.Token);
 
-        return !confirmResult.Succeeded ? BadRequest("Email has not been confirmed") : Ok("Email confirmed");
+        return !confirmResult.Succeeded ? BadRequest("Email has not been confirmed") : Ok($"Email {confirmEmailForm.Email} confirmed");
     }
 }
