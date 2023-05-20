@@ -22,6 +22,7 @@ jobs:
         with:
           files: './Sechat.Service/bin/Release/net7.0/publish/appsettings.Production.json'
         env:
+          SechatEmails.Master: ${{ secrets.EMAIL_SECHAT_MASTER }}
           EmailSenderSettings.ApiKey: ${{ secrets.EMAIL_API_KEY }}
           EmailSenderSettings.From: ${{ secrets.EMAIL_FROM }}
           EmailSenderSettings.ResetPasswordTemplate: ${{ secrets.EMAIL_RESET_PASSWORD_TEMPLATE }}

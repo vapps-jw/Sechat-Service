@@ -174,6 +174,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         var contactId = await IsContactAllowed(message.Message);
         if (string.IsNullOrEmpty(contactId)) return;
 
+        await _pushNotificationService.IncomingVideoCallNotification(contactId, UserName);
         await Clients.Group(contactId).VideoCallRequested(new StringMessage(UserName));
     }
 

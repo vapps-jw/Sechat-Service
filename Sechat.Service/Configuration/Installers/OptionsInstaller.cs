@@ -14,5 +14,6 @@ public class OptionsInstaller : IServiceInstaller
         _ = webApplicationBuilder.Services.Configure<EmailSenderSettings>(webApplicationBuilder.Configuration.GetSection(nameof(EmailSenderSettings)));
         _ = webApplicationBuilder.Services.Configure<CookieSettings>(webApplicationBuilder.Configuration.GetSection(nameof(CookieSettings)));
         _ = webApplicationBuilder.Services.Configure<VapidKeys>(webApplicationBuilder.Configuration.GetSection(nameof(VapidKeys)));
+        _ = webApplicationBuilder.Services.Configure<SechatEmails>(webApplicationBuilder.Configuration.GetSection(nameof(SechatEmails)));
     }
 }
