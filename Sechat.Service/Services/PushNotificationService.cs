@@ -15,12 +15,18 @@ public class PushNotificationService
 {
     private readonly UserRepository _userRepository;
     private readonly IOptions<VapidKeys> _vapidKeys;
+    private readonly IOptions<SechatEmails> _sechatEmails;
     private readonly ILogger<PushNotificationService> _logger;
 
-    public PushNotificationService(UserRepository userRepository, IOptions<VapidKeys> vapidKeys, ILogger<PushNotificationService> logger)
+    public PushNotificationService(
+        UserRepository userRepository,
+        IOptions<VapidKeys> vapidKeys,
+        IOptions<SechatEmails> sechatEmails,
+        ILogger<PushNotificationService> logger)
     {
         _userRepository = userRepository;
         _vapidKeys = vapidKeys;
+        _sechatEmails = sechatEmails;
         _logger = logger;
     }
 
@@ -32,7 +38,7 @@ public class PushNotificationService
         foreach (var sub in subs)
         {
             var subscription = new PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
-            var vapidDetails = new VapidDetails("mailto:office@vapps.pl", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
+            var vapidDetails = new VapidDetails($"mailto:{_sechatEmails.Value.Master}", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
 
             var webPushClient = new WebPushClient();
             try
@@ -64,7 +70,7 @@ public class PushNotificationService
         foreach (var sub in subs)
         {
             var subscription = new PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
-            var vapidDetails = new VapidDetails("mailto:office@vapps.pl", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
+            var vapidDetails = new VapidDetails($"mailto:{_sechatEmails.Value.Master}", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
 
             var webPushClient = new WebPushClient();
             try
@@ -96,7 +102,7 @@ public class PushNotificationService
         foreach (var sub in subs)
         {
             var subscription = new PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
-            var vapidDetails = new VapidDetails("mailto:office@vapps.pl", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
+            var vapidDetails = new VapidDetails($"mailto:{_sechatEmails.Value.Master}", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
 
             var webPushClient = new WebPushClient();
             try
