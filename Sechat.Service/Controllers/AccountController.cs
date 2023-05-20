@@ -167,19 +167,19 @@ public class AccountController : SechatControllerBase
         var currentUser = await _userManager.FindByEmailAsync(emailForm.Email);
         if (currentUser is null)
         {
-            return Ok();
+            return Ok($"Email sent to {emailForm.Email}");
         }
 
         var confirmationToken = await _userManager.GeneratePasswordResetTokenAsync(currentUser);
         var qb = new QueryBuilder
         {
             { "token", confirmationToken },
-            { "userId", emailForm.Email },
+            { "email", emailForm.Email },
         };
         var callbackUrl = $@"{_corsSettings.CurrentValue.WebAppUrl}/user/resetPassword/{qb}";
 
         var sgResponse = await emailClient.SendPasswordResetAsync(emailForm.Email, callbackUrl);
-        return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok();
+        return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok($"Email sent to {emailForm.Email}");
     }
 
     [AllowAnonymous]
@@ -187,10 +187,14 @@ public class AccountController : SechatControllerBase
     [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> ResetPassword([FromBody] PasswordResetForm passwordResetForm)
     {
-        var currentUser = await _userManager.FindByIdAsync(passwordResetForm.Email);
+        var currentUser = await _userManager.FindByEmailAsync(passwordResetForm.Email);
+        if (currentUser is null)
+        {
+            return BadRequest("Something went wrong");
+        }
         var confirmResult = await _userManager.ResetPasswordAsync(currentUser, passwordResetForm.Token, passwordResetForm.NewPassword);
 
-        return !confirmResult.Succeeded ? BadRequest() : Ok();
+        return !confirmResult.Succeeded ? BadRequest("Something went wrong") : Ok("Password has been changed");
     }
 
     [HttpPost("update-email")]
@@ -216,7 +220,7 @@ public class AccountController : SechatControllerBase
         var callbackUrl = $@"{_corsSettings.CurrentValue.WebAppUrl}/user/confirmEmail/{qb}";
 
         var sgResponse = await emailClient.SendEmailConfirmationAsync(emailForm.Email, callbackUrl);
-        return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok();
+        return sgResponse.StatusCode != HttpStatusCode.Accepted ? Problem() : Ok($"Email sent to {emailForm.Email}");
     }
 
     [AllowAnonymous]
