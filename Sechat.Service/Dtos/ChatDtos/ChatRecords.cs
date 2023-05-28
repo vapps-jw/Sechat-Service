@@ -16,7 +16,7 @@ public record RoomIdsMessage(List<string> RoomIds);
 public record IncomingMessage(string Text, string RoomId);
 public class IncomingMessageValidation : AbstractValidator<IncomingMessage>
 {
-    public IncomingMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(1000);
+    public IncomingMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(5000);
 }
 
 public record RoomNameMessage(string RoomName);
