@@ -4,7 +4,7 @@ namespace Sechat.Tests;
 
 public class AesTests
 {
-    private const string testString = "testString";
+    private const string _testString = "testString";
 
     [Fact]
     public void GenerateAesKeyTest()
@@ -19,7 +19,7 @@ public class AesTests
     {
         var encryptor = new AesEncryptor();
         var key = encryptor.GenerateKey();
-        var encryptedString = encryptor.EncryptString(key, testString);
+        var encryptedString = encryptor.EncryptString(key, _testString);
 
         Assert.True(!string.IsNullOrEmpty(encryptedString));
     }
@@ -29,12 +29,18 @@ public class AesTests
     {
         var encryptor = new AesEncryptor();
         var key = encryptor.GenerateKey();
-        var encryptedString = encryptor.EncryptString(key, testString);
+        var encryptedString = encryptor.EncryptString(key, _testString);
 
         Assert.True(!string.IsNullOrEmpty(encryptedString));
 
         var decryptedString = encryptor.DecryptString(key, encryptedString);
 
-        Assert.Equal(testString, decryptedString);
+        Assert.Equal(_testString, decryptedString);
+    }
+
+    [Fact]
+    public void EncryptionWithPassword()
+    {
+
     }
 }

@@ -51,7 +51,7 @@ public class ChatController : SechatControllerBase
     [HttpGet("get-state")]
     public async Task<IActionResult> GetState()
     {
-        var rooms = await _chatRepository.GetRooms(UserId);
+        var rooms = await _chatRepository.GetStandardRooms(UserId);
         var contacts = await _userRepository.GetContacts(UserId);
 
         _userRepository.UpdateUserActivity(UserId);
@@ -114,11 +114,14 @@ public class ChatController : SechatControllerBase
     [HttpGet("get-my-rooms")]
     public async Task<IActionResult> GetRooms()
     {
-        var rooms = await _chatRepository.GetRooms(UserId);
+        var rooms = await _chatRepository.GetStandardRooms(UserId);
         var responseDtos = _mapper.Map<List<RoomDto>>(rooms);
 
         return Ok(responseDtos);
     }
+
+    [HttpGet("generate-aes-key")]
+    public IActionResult GenerateAesKey() => Ok(_encryptor.GenerateKey());
 
     [HttpGet("new-messages")]
     public async Task<IActionResult> GetNewMessages([FromBody] GetNewMessagesRequest getNewMessagesRequest)

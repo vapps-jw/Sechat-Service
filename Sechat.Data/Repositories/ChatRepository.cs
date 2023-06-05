@@ -74,20 +74,37 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public List<string> GetRoomMembersIds(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
 
-    public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
-    .Include(r => r.Messages)
-        .ThenInclude(m => m.MessageViewers)
-    .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
-    {
-        RoomKey = r.RoomKey,
-        LastActivity = r.LastActivity,
-        Created = r.Created,
-        CreatorName = r.CreatorName,
-        Id = r.Id,
-        Members = r.Members,
-        Messages = r.Messages.OrderBy(m => m.Created).ToList(),
-        Name = r.Name
-    }).ToListAsync();
+    public Task<List<Room>> GetStandardRooms(string memberUserId) => _context.Rooms
+        .Where(r => !string.IsNullOrEmpty(r.RoomKey))
+        .Include(r => r.Messages)
+            .ThenInclude(m => m.MessageViewers)
+        .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
+        {
+            RoomKey = r.RoomKey,
+            LastActivity = r.LastActivity,
+            Created = r.Created,
+            CreatorName = r.CreatorName,
+            Id = r.Id,
+            Members = r.Members,
+            Messages = r.Messages.OrderBy(m => m.Created).ToList(),
+            Name = r.Name
+        }).ToListAsync();
+
+    public Task<List<Room>> GetLockedRooms(string memberUserId) => _context.Rooms
+        .Where(r => string.IsNullOrEmpty(r.RoomKey))
+        .Include(r => r.Messages)
+            .ThenInclude(m => m.MessageViewers)
+        .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
+        {
+            RoomKey = r.RoomKey,
+            LastActivity = r.LastActivity,
+            Created = r.Created,
+            CreatorName = r.CreatorName,
+            Id = r.Id,
+            Members = r.Members,
+            Messages = r.Messages.OrderBy(m => m.Created).ToList(),
+            Name = r.Name
+        }).ToListAsync();
 
     public Task<List<Room>> GetCreatedRooms(string creatorUserId) => _context.Rooms
     .Where(r => r.CreatorId.Equals(creatorUserId)).Select(r => new Room()

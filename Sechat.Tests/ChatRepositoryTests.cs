@@ -26,7 +26,7 @@ public class ChatRepositoryTests
         _ = await sechatRepo.SaveChanges();
         sechatRepo.ClearTracker();
 
-        var res = (await sechatRepo.GetRooms(inviter?.Id)).FirstOrDefault();
+        var res = (await sechatRepo.GetStandardRooms(inviter?.Id)).FirstOrDefault();
         var member = res?.Members.FirstOrDefault();
 
         Assert.NotNull(res);
