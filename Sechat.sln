@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Tests", "Sechat.Test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Domain", "Sechat.Domain\Sechat.Domain.csproj", "{DBB20E0E-3E61-4A0E-9862-B0CA0C927BC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sechat.TestConsole", "Sechat.TestConsole\Sechat.TestConsole.csproj", "{AB93C6AE-D8DB-4A4C-B501-762AA036558E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.TestConsole", "Sechat.TestConsole\Sechat.TestConsole.csproj", "{AB93C6AE-D8DB-4A4C-B501-762AA036558E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

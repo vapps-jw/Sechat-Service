@@ -1,0 +1,9 @@
+@SechatService_HostAddress = https://localhost:5100
+
+Get {{SechatService_HostAddress}}/status/ping-api-global
+
+###
+
+Get {{SechatService_HostAddress}}/status/ping-api
+
+###
