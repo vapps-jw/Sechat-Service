@@ -26,7 +26,9 @@ public class AuthServicesInstaller : IServiceInstaller
             {
                 options.User.RequireUniqueEmail = false;
                 options.Password.RequiredLength = 8;
-                options.Lockout.MaxFailedAccessAttempts = 10;
+
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
             })
             .AddEntityFrameworkStores<SechatContext>()
@@ -42,6 +44,10 @@ public class AuthServicesInstaller : IServiceInstaller
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireDigit = false;
                 options.Password.RequireUppercase = false;
+
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
             })
             .AddEntityFrameworkStores<SechatContext>()
             .AddDefaultTokenProviders();

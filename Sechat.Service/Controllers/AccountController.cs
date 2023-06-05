@@ -59,12 +59,18 @@ public class AccountController : SechatControllerBase
     [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> SignIn([FromBody] UserCredentials userCredentials)
     {
-        var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, false);
+        var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, true);
 
         if (signInResult.Succeeded)
         {
-            _logger.LogWarning("User Signed In: {Username}", userCredentials.Username);
+            _logger.LogInformation("User Signed In: {Username}", userCredentials.Username);
             return Ok();
+        }
+
+        if (signInResult.IsLockedOut)
+        {
+            _logger.LogWarning("User Locked: {Username}", userCredentials.Username);
+            return BadRequest("Too many attempts, try later");
         }
 
         _logger.LogWarning("User failed to Sign In: {Username}", userCredentials.Username);
@@ -76,7 +82,10 @@ public class AccountController : SechatControllerBase
     [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public async Task<IActionResult> SignUp([FromBody] UserCredentials userCredentials)
     {
-        var user = new IdentityUser(userCredentials.Username);
+        var user = new IdentityUser(userCredentials.Username)
+        {
+            LockoutEnabled = true
+        };
         var createUserResult = await _userManager.CreateAsync(user, userCredentials.Password);
 
         if (!createUserResult.Succeeded)
