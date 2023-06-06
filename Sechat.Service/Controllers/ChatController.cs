@@ -7,7 +7,6 @@ using Sechat.Data.Repositories;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
-using Sechat.Service.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -87,17 +86,79 @@ public class ChatController : SechatControllerBase
         }
 
         var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
-        var connectedContacts = contacts
-            .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
-                        _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
-            .Select(c => c.Id)
-            .ToList();
+        //var connectedContacts = contacts
+        //    .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
+        //                _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
+        //    .Select(c => c.Id)
+        //    .ToList();
 
-        foreach (var contactDto in contactDtos)
+        //foreach (var contactDto in contactDtos)
+        //{
+        //    contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
+        //        AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+        //}
+
+        var res = new StateDto
         {
-            contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
-                AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+            Rooms = roomDtos,
+            UserContacts = contactDtos
+        };
+
+        return Ok(res);
+    }
+
+    [HttpGet("state-update")]
+    public async Task<IActionResult> StateUpdate()
+    {
+        // todo: pull only whats new / missing
+        // get rooms and last messages from the front
+        var rooms = await _chatRepository.GetStandardRooms(UserId);
+        var contacts = await _userRepository.GetContacts(UserId);
+
+        _userRepository.UpdateUserActivity(UserId);
+        _ = await _userRepository.SaveChanges();
+
+        foreach (var room in rooms)
+        {
+            foreach (var message in room.Messages)
+            {
+                message.Text = _encryptor.DecryptString(room.RoomKey, message.Text);
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
         }
+
+        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
+        //var connectedContacts = contacts
+        //    .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
+        //                _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
+        //    .Select(c => c.Id)
+        //    .ToList();
+
+        //foreach (var contactDto in contactDtos)
+        //{
+        //    contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
+        //        AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+        //}
 
         var res = new StateDto
         {
@@ -155,8 +216,6 @@ public class ChatController : SechatControllerBase
 
         var room = _chatRepository.GetRoomWithoutRelations(incomingMessageDto.RoomId);
         var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(room.RoomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
-        var roomMembers = _chatRepository.GetRoomMembersIds(incomingMessageDto.RoomId);
-        _ = roomMembers.RemoveAll(m => m.Equals(UserId));
 
         var res = _chatRepository.CreateMessage(UserId, encryptedMessage.Text, encryptedMessage.RoomId);
         if (await _chatRepository.SaveChanges() == 0)
@@ -174,6 +233,8 @@ public class ChatController : SechatControllerBase
 
         await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
 
+        var roomMembers = _chatRepository.GetRoomMembersIds(incomingMessageDto.RoomId);
+        _ = roomMembers.RemoveAll(m => m.Equals(UserId));
         if (!roomMembers.Any()) return Ok();
 
         foreach (var member in roomMembers)
