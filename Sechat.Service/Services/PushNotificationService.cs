@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
+using Sechat.Service.Configuration;
 using Sechat.Service.Settings;
-using Sechat.Service.Utilities;
 using System;
 using System.Linq;
 using System.Text.Json;

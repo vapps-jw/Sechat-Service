@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Sechat.Domain.CustomExceptions;
-using Sechat.Service.Utilities;
+using Sechat.Service.Configuration;
 using System;
 using System.Net;
 using System.Text.Json;

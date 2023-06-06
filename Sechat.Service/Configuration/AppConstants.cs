@@ -1,4 +1,4 @@
-﻿namespace Sechat.Service.Utilities;
+﻿namespace Sechat.Service.Configuration;
 
 public class AppConstants
 {
@@ -21,6 +21,12 @@ public class AppConstants
         public const string Online = "Online";
         public const string Offline = "Offline";
         public const string Unknown = "Unknown";
+    }
+    public enum PushNotificationType
+    {
+        IncomingVideoCall,
+        IncomingMessage,
+        IncomingContactRequest,
     }
     public struct ContentTypes
     {

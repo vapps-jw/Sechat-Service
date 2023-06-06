@@ -4,13 +4,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Sechat.Data.Repositories;
+using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 using System.Threading.Tasks;
-using static Sechat.Service.Utilities.AppConstants;
+using static Sechat.Service.Configuration.AppConstants;
 
 namespace Sechat.Service.Hubs;
 
@@ -54,29 +56,29 @@ public interface IChatHub
 [Authorize]
 public class ChatHub : SechatHubBase<IChatHub>
 {
+    private readonly Channel<DefaultNotificationDto> _pushNotificationChannel;
     private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
     private readonly UserRepository _userRepository;
     private readonly UserManager<IdentityUser> _userManager;
-    private readonly PushNotificationService _pushNotificationService;
     private readonly ILogger<ChatHub> _logger;
     private readonly IMapper _mapper;
     private readonly IEncryptor _encryptor;
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
+        Channel<DefaultNotificationDto> pushNotificationChannel,
         SignalRConnectionsMonitor signalRConnectionsMonitor,
         UserRepository userRepository,
         UserManager<IdentityUser> userManager,
-        PushNotificationService pushNotificationService,
         ILogger<ChatHub> logger,
         IMapper mapper,
         IEncryptor encryptor,
         ChatRepository chatRepository)
     {
+        _pushNotificationChannel = pushNotificationChannel;
         _signalRConnectionsMonitor = signalRConnectionsMonitor;
         _userRepository = userRepository;
         _userManager = userManager;
-        _pushNotificationService = pushNotificationService;
         _logger = logger;
         _mapper = mapper;
         _encryptor = encryptor;
@@ -174,7 +176,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         var contactId = await IsContactAllowed(message.Message);
         if (string.IsNullOrEmpty(contactId)) return;
 
-        await _pushNotificationService.IncomingVideoCallNotification(contactId, UserName);
+        await _pushNotificationChannel.Writer.WriteAsync(new DefaultNotificationDto(PushNotificationType.IncomingVideoCall, contactId, UserName));
         await Clients.Group(contactId).VideoCallRequested(new StringMessage(UserName));
     }
 

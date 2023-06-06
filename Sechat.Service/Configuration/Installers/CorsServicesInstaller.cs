@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Sechat.Service.Utilities;
 
 namespace Sechat.Service.Configuration.Installers;
 

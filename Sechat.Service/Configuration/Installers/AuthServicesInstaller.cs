@@ -7,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sechat.Data;
-using Sechat.Service.Utilities;
 using System;
 
 namespace Sechat.Service.Configuration.Installers;

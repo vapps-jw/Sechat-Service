@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Hosting;
-using Sechat.Service.Utilities;
+using Sechat.Service.Configuration;
 
 namespace Sechat.Tests.Utils;
 internal class MockedApi : WebApplicationFactory<Service.Program>

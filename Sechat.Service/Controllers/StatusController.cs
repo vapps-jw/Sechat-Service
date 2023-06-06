@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
-using Sechat.Service.Utilities;
+using Sechat.Service.Configuration;
 
 namespace Sechat.Service.Controllers;
 

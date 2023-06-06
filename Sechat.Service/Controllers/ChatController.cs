@@ -4,12 +4,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Sechat.Data.Repositories;
+using Sechat.Service.Configuration;
+using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Controllers;
@@ -86,17 +89,17 @@ public class ChatController : SechatControllerBase
         }
 
         var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
-        //var connectedContacts = contacts
-        //    .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
-        //                _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
-        //    .Select(c => c.Id)
-        //    .ToList();
+        var connectedContacts = contacts
+            .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
+                        _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
+            .Select(c => c.Id)
+            .ToList();
 
-        //foreach (var contactDto in contactDtos)
-        //{
-        //    contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
-        //        AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
-        //}
+        foreach (var contactDto in contactDtos)
+        {
+            contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
+                AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+        }
 
         var res = new StateDto
         {
@@ -207,7 +210,9 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("send-message")]
-    public async Task<IActionResult> SendMessage([FromBody] IncomingMessage incomingMessageDto)
+    public async Task<IActionResult> SendMessage(
+        [FromServices] Channel<DefaultNotificationDto> channel,
+        [FromBody] IncomingMessage incomingMessageDto)
     {
         if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
         {
@@ -239,7 +244,7 @@ public class ChatController : SechatControllerBase
 
         foreach (var member in roomMembers)
         {
-            await _pushNotificationService.IncomingMessageNotification(member, room.Name);
+            await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingMessage, member, room.Name));
         }
 
         return Ok();

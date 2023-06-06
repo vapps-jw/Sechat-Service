@@ -8,7 +8,6 @@ using Sechat.Data;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos.AutoMapperProfiles;
 using Sechat.Service.Services;
-using Sechat.Service.Utilities;
 using System;
 
 namespace Sechat.Service.Configuration.Installers;

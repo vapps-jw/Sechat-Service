@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sechat.Service.Configuration.CustomRateLimiters;
-using Sechat.Service.Utilities;
 using System;
 using System.Threading.RateLimiting;
 

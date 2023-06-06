@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Sechat.Service.Utilities;
+using Sechat.Service.Configuration;
 
 namespace Sechat.Service.Dtos;
 
