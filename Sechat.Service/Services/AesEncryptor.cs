@@ -55,5 +55,45 @@ public class AesEncryptor : IEncryptor
 
         return Convert.ToBase64String(aesAlgorithm.Key);
     }
+
+    public byte[] Encrypt(byte[] data, string password, byte[] salt, byte[] iv)
+    {
+        using var aes = Aes.Create();
+        aes.KeySize = 256;
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
+
+        using var rfc = new Rfc2898DeriveBytes(password, salt, 2000, HashAlgorithmName.SHA512);
+        aes.Key = rfc.GetBytes(256 / 8);
+        aes.IV = iv;
+
+        using var ms = new MemoryStream();
+        using var cs = new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write);
+
+        using (var bw = new BinaryWriter(cs))
+        {
+            bw.Write(data);
+        }
+
+        return ms.ToArray();
+    }
+
+    public byte[] Decrypt(byte[] data, string password, byte[] salt, byte[] iv)
+    {
+        using var aes = Aes.Create();
+        aes.KeySize = 256;
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
+
+        using var rfc = new Rfc2898DeriveBytes(password, salt, 2000, HashAlgorithmName.SHA512);
+        aes.Key = rfc.GetBytes(256 / 8);
+        aes.IV = iv;
+
+        using var ms = new MemoryStream(data);
+        using var cs = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Read);
+
+        using var br = new BinaryReader(cs);
+        return br.ReadBytes(data.Length);
+    }
 }
 
