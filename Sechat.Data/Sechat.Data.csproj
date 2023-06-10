@@ -21,10 +21,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Projections\" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <ProjectReference Include="..\Sechat.Domain\Sechat.Domain.csproj" />
 	</ItemGroup>
 

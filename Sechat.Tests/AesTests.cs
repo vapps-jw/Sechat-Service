@@ -1,4 +1,4 @@
-using Sechat.Service.Services;
+using Sechat.Data.DataServices;
 using System.Text;
 
 namespace Sechat.Tests;
@@ -10,7 +10,7 @@ public class AesTests
     [Fact]
     public void GenerateAesKeyTest()
     {
-        var encryptor = new AesEncryptor();
+        var encryptor = new DataEncryptor();
         var key = encryptor.GenerateKey();
         Assert.True(!string.IsNullOrEmpty(key));
     }
@@ -18,7 +18,7 @@ public class AesTests
     [Fact]
     public void EncryptStringTest()
     {
-        var encryptor = new AesEncryptor();
+        var encryptor = new DataEncryptor();
         var key = encryptor.GenerateKey();
         var encryptedString = encryptor.EncryptString(key, _testString);
 
@@ -28,7 +28,7 @@ public class AesTests
     [Fact]
     public void DecryptStringTest()
     {
-        var encryptor = new AesEncryptor();
+        var encryptor = new DataEncryptor();
         var key = encryptor.GenerateKey();
         var encryptedString = encryptor.EncryptString(key, _testString);
 
@@ -42,7 +42,7 @@ public class AesTests
     [Fact]
     public void EncryptionWithPasswordTest()
     {
-        var encryptor = new AesEncryptor();
+        var encryptor = new DataEncryptor();
         var data = "test string to encrypt";
         var saltString = "sadasdasd";
         var iv = new byte[16];

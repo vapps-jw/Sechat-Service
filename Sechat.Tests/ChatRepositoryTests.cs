@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Sechat.Data.DataServices;
 using Sechat.Data.Repositories;
 using Sechat.Service.Services;
 using Sechat.Tests.Utils;
@@ -26,7 +27,7 @@ public class ChatRepositoryTests
         _ = await sechatRepo.SaveChanges();
         sechatRepo.ClearTracker();
 
-        var res = (await sechatRepo.GetStandardRooms(inviter?.Id)).FirstOrDefault();
+        var res = (await sechatRepo.GetStandardRoomsWithMessages(inviter?.Id)).FirstOrDefault();
         var member = res?.Members.FirstOrDefault();
 
         Assert.NotNull(res);

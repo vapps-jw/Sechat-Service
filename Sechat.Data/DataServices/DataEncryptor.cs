@@ -1,10 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
-namespace Sechat.Service.Services;
+namespace Sechat.Data.DataServices;
 
-public class AesEncryptor : IEncryptor
+public class DataEncryptor
 {
     public string EncryptString(string key, string plainText)
     {

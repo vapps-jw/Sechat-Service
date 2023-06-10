@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Sechat.Data.DataServices;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
@@ -26,7 +27,7 @@ public class ChatController : SechatControllerBase
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
     private readonly ChatRepository _chatRepository;
-    private readonly IEncryptor _encryptor;
+    private readonly DataEncryptor _encryptor;
     private readonly IMapper _mapper;
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
@@ -36,7 +37,7 @@ public class ChatController : SechatControllerBase
         UserManager<IdentityUser> userManager,
         UserRepository userRepository,
         ChatRepository chatRepository,
-        IEncryptor encryptor,
+        DataEncryptor encryptor,
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
@@ -53,7 +54,7 @@ public class ChatController : SechatControllerBase
     [HttpGet("get-state")]
     public async Task<IActionResult> GetState()
     {
-        var rooms = await _chatRepository.GetStandardRooms(UserId);
+        var rooms = await _chatRepository.GetStandardRoomsWithMessages(UserId);
         var contacts = await _userRepository.GetContacts(UserId);
 
         _userRepository.UpdateUserActivity(UserId);
@@ -63,7 +64,6 @@ public class ChatController : SechatControllerBase
         {
             foreach (var message in room.Messages)
             {
-                message.Text = _encryptor.DecryptString(room.RoomKey, message.Text);
                 foreach (var viewer in message.MessageViewers)
                 {
                     viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
@@ -111,78 +111,14 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("state-update")]
-    public async Task<IActionResult> StateUpdate()
-    {
+    public IActionResult StateUpdate([FromBody] StateUpdateRequest stateUpdateRequest) =>
         // todo: pull only whats new / missing
         // get rooms and last messages from the front
-        var rooms = await _chatRepository.GetStandardRooms(UserId);
-        var contacts = await _userRepository.GetContacts(UserId);
 
-        _userRepository.UpdateUserActivity(UserId);
-        _ = await _userRepository.SaveChanges();
-
-        foreach (var room in rooms)
-        {
-            foreach (var message in room.Messages)
-            {
-                message.Text = _encryptor.DecryptString(room.RoomKey, message.Text);
-                foreach (var viewer in message.MessageViewers)
-                {
-                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
-                }
-            }
-        }
-
-        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
-
-        foreach (var room in roomDtos)
-        {
-            foreach (var message in room.Messages)
-            {
-                foreach (var viewer in message.MessageViewers)
-                {
-                    if (viewer.User.Equals(UserName))
-                    {
-                        message.WasViewed = true;
-                        continue;
-                    }
-                }
-            }
-        }
-
-        var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
-        //var connectedContacts = contacts
-        //    .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
-        //                _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
-        //    .Select(c => c.Id)
-        //    .ToList();
-
-        //foreach (var contactDto in contactDtos)
-        //{
-        //    contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
-        //        AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
-        //}
-
-        var res = new StateDto
-        {
-            Rooms = roomDtos,
-            UserContacts = contactDtos
-        };
-
-        return Ok(res);
-    }
+        Ok();
 
     [HttpGet("get-state-updates")]
     public IActionResult GetStateUpdates() => Ok();
-
-    [HttpGet("get-my-rooms")]
-    public async Task<IActionResult> GetRooms()
-    {
-        var rooms = await _chatRepository.GetStandardRooms(UserId);
-        var responseDtos = _mapper.Map<List<RoomDto>>(rooms);
-
-        return Ok(responseDtos);
-    }
 
     [HttpGet("generate-aes-key")]
     public IActionResult GenerateAesKey() => Ok(_encryptor.GenerateKey());
@@ -219,10 +155,7 @@ public class ChatController : SechatControllerBase
             throw new Exception("You dont have access to this room");
         }
 
-        var room = _chatRepository.GetRoomWithoutRelations(incomingMessageDto.RoomId);
-        var encryptedMessage = new IncomingMessage(_encryptor.EncryptString(room.RoomKey, incomingMessageDto.Text), incomingMessageDto.RoomId);
-
-        var res = _chatRepository.CreateMessage(UserId, encryptedMessage.Text, encryptedMessage.RoomId);
+        var res = _chatRepository.CreateMessage(UserId, incomingMessageDto.Text, incomingMessageDto.RoomId);
         if (await _chatRepository.SaveChanges() == 0)
         {
             return BadRequest("Message not sent");
@@ -242,9 +175,10 @@ public class ChatController : SechatControllerBase
         _ = roomMembers.RemoveAll(m => m.Equals(UserId));
         if (!roomMembers.Any()) return Ok();
 
+        var roomName = _chatRepository.GetRoomName(incomingMessageDto.RoomId);
         foreach (var member in roomMembers)
         {
-            await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingMessage, member, room.Name));
+            await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingMessage, member, roomName));
         }
 
         return Ok();

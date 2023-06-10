@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Sechat.Data.DataServices;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
@@ -62,7 +63,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ILogger<ChatHub> _logger;
     private readonly IMapper _mapper;
-    private readonly IEncryptor _encryptor;
+    private readonly DataEncryptor _encryptor;
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
@@ -72,7 +73,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         UserManager<IdentityUser> userManager,
         ILogger<ChatHub> logger,
         IMapper mapper,
-        IEncryptor encryptor,
+        DataEncryptor encryptor,
         ChatRepository chatRepository)
     {
         _pushNotificationChannel = pushNotificationChannel;
