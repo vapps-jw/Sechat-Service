@@ -100,35 +100,42 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return res;
     }
 
-    public async Task<List<Room>> GetStandardRoomsWithMessagesUpdate(string memberUserId, List<GetRoomUpdate> getRoomUpdates)
+    public async Task<List<Room>> GetStandardRoomsWithMessages(string memberUserId, List<GetRoomUpdate> getRoomUpdates)
     {
-        // todo: test and finish this
-        var res = await _context.Rooms
-        .Where(r => !r.EncryptedByUser && !string.IsNullOrEmpty(r.RoomKey) && r.Members.Any(m => m.Id.Equals(memberUserId)))
-        .Select(r => new Room()
-        {
-            RoomKey = r.RoomKey,
-            LastActivity = r.LastActivity,
-            Created = r.Created,
-            CreatorName = r.CreatorName,
-            Id = r.Id,
-            Members = r.Members,
-            Messages = r.Messages
-                .Where(m => !getRoomUpdates.Any(ru => ru.RoomId.Equals(m.RoomId)) || m.Created > getRoomUpdates.FirstOrDefault(ru => ru.RoomId.Equals(m.RoomId)).LastMessage)
-                .Select(m => new Message()
-                {
-                    Id = m.Id,
-                    Created = m.Created,
-                    IdSentBy = m.IdSentBy,
-                    NameSentBy = m.NameSentBy,
-                    Text = m.Text,
-                    MessageViewers = m.MessageViewers.ToList(),
-                }).ToList(),
-            Name = r.Name
-        }).ToListAsync();
+        var rooms = await _context.Rooms
+            .Where(r => !r.EncryptedByUser && r.Members.Any(m => m.Id.Equals(memberUserId)))
+            .Select(r => new Room()
+            {
+                Name = r.Name,
+                RoomKey = r.RoomKey,
+                LastActivity = r.LastActivity,
+                Created = r.Created,
+                CreatorName = r.CreatorName,
+                Id = r.Id,
+                Members = r.Members
+            }).ToListAsync();
 
-        res.ForEach(r => r.Messages.ForEach(m => m.Text = _dataEncryptor.DecryptString(r.RoomKey, m.Text)));
-        return res;
+        foreach (var room in rooms)
+        {
+            var updateData = getRoomUpdates.FirstOrDefault(ru => ru.RoomId.Equals(room.Id));
+            if (updateData is not null)
+            {
+                room.Messages = _context.Messages
+                    .Include(m => m.MessageViewers)
+                    .Where(m => m.Created > updateData.LastMessage)
+                    .OrderBy(m => m.Created)
+                    .ToList();
+                room.Messages.ForEach(m => m.Text = _dataEncryptor.DecryptString(room.RoomKey, m.Text));
+                continue;
+            }
+
+            room.Messages = _context.Messages
+                .Include(m => m.MessageViewers)
+                .OrderBy(m => m.Created)
+                .ToList();
+            room.Messages.ForEach(m => m.Text = _dataEncryptor.DecryptString(room.RoomKey, m.Text));
+        }
+        return rooms;
     }
 
     public Room AddToRoom(string roomId, string userId)

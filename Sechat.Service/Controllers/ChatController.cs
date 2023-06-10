@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Sechat.Data.DataServices;
+using Sechat.Data.QueryModels;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
@@ -57,9 +58,6 @@ public class ChatController : SechatControllerBase
         var rooms = await _chatRepository.GetStandardRoomsWithMessages(UserId);
         var contacts = await _userRepository.GetContacts(UserId);
 
-        _userRepository.UpdateUserActivity(UserId);
-        _ = await _userRepository.SaveChanges();
-
         foreach (var room in rooms)
         {
             foreach (var message in room.Messages)
@@ -110,12 +108,96 @@ public class ChatController : SechatControllerBase
         return Ok(res);
     }
 
-    [HttpGet("state-update")]
-    public IActionResult StateUpdate([FromBody] StateUpdateRequest stateUpdateRequest) =>
-        // todo: pull only whats new / missing
-        // get rooms and last messages from the front
+    [HttpGet("contacts")]
+    public async Task<IActionResult> GetContacts()
+    {
+        var contacts = await _userRepository.GetContacts(UserId);
+        var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
+        var connectedContacts = contacts
+            .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
+                        _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
+            .Select(c => c.Id)
+            .ToList();
 
-        Ok();
+        foreach (var contactDto in contactDtos)
+        {
+            contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
+                AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+        }
+
+        return Ok(contactDtos);
+    }
+
+    [HttpGet("rooms")]
+    public async Task<IActionResult> GetRooms()
+    {
+        var rooms = await _chatRepository.GetStandardRoomsWithMessages(UserId);
+
+        foreach (var room in rooms)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
+        }
+
+        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return Ok(roomDtos);
+    }
+
+    [HttpPost("rooms-update")]
+    public async Task<IActionResult> GetRoomsUpdate([FromBody] List<GetRoomUpdate> getRoomUpdates)
+    {
+        var rooms = await _chatRepository.GetStandardRoomsWithMessages(UserId, getRoomUpdates);
+
+        foreach (var room in rooms)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
+        }
+
+        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return Ok(roomDtos);
+    }
 
     [HttpGet("get-state-updates")]
     public IActionResult GetStateUpdates() => Ok();
