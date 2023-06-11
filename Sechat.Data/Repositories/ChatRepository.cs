@@ -92,7 +92,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
             CreatorName = r.CreatorName,
             Id = r.Id,
             Members = r.Members,
-            Messages = r.Messages.OrderBy(m => m.Created).ToList(),
+            Messages = r.Messages.OrderBy(m => m.Id).ToList(),
             Name = r.Name
         }).ToListAsync();
 
@@ -121,17 +121,19 @@ public class ChatRepository : RepositoryBase<SechatContext>
             if (updateData is not null)
             {
                 room.Messages = _context.Messages
+                    .Where(m => m.RoomId.Equals(room.Id))
                     .Include(m => m.MessageViewers)
-                    .Where(m => m.Created > updateData.LastMessage)
-                    .OrderBy(m => m.Created)
+                    .Where(m => m.Id > updateData.LastMessage)
+                    .OrderBy(m => m.Id)
                     .ToList();
                 room.Messages.ForEach(m => m.Text = _dataEncryptor.DecryptString(room.RoomKey, m.Text));
                 continue;
             }
 
             room.Messages = _context.Messages
+                .Where(m => m.RoomId.Equals(room.Id))
                 .Include(m => m.MessageViewers)
-                .OrderBy(m => m.Created)
+                .OrderBy(m => m.Id)
                 .ToList();
             room.Messages.ForEach(m => m.Text = _dataEncryptor.DecryptString(room.RoomKey, m.Text));
         }
