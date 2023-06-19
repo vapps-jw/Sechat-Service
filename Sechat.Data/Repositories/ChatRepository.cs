@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sechat.Data.DataServices;
-using Sechat.Data.Models;
+using Sechat.Data.Models.ChatModels;
 using Sechat.Data.QueryModels;
 using Sechat.Domain.CustomExceptions;
 

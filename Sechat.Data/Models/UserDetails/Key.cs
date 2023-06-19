@@ -1,4 +1,6 @@
-﻿namespace Sechat.Data.Models;
+﻿using Sechat.Data.Models.Abstractions;
+
+namespace Sechat.Data.Models;
 public record Key : BaseModel<long>
 {
     public KeyType Type { get; set; }

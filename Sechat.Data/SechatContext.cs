@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Sechat.Data.Models;
+using Sechat.Data.Models.ChatModels;
+using Sechat.Data.Models.UserDetails;
+using Sechat.Data.Models.VideoCalls;
 
 namespace Sechat.Data;
 

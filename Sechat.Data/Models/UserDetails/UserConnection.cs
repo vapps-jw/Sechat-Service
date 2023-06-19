@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Sechat.Data.Models.Abstractions;
+using System.ComponentModel.DataAnnotations;
 
-namespace Sechat.Data.Models;
+namespace Sechat.Data.Models.UserDetails;
 public record UserConnection : BaseModel<long>
 {
     public bool Approved { get; set; }

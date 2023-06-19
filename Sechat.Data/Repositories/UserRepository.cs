@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Sechat.Data.Models;
+using Sechat.Data.Models.UserDetails;
 using Sechat.Data.Projections;
 
 namespace Sechat.Data.Repositories;

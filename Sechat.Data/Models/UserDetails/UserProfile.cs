@@ -1,6 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Sechat.Data.Models.Abstractions;
+using Sechat.Data.Models.ChatModels;
+using Sechat.Data.Models.VideoCalls;
+using System.ComponentModel.DataAnnotations;
 
-namespace Sechat.Data.Models;
+namespace Sechat.Data.Models.UserDetails;
 
 public record UserProfile : BaseTrackedModel<string>
 {

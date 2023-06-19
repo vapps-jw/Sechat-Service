@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Sechat.Data.Models;
+using Sechat.Data.Models.UserDetails;
 using Sechat.Service.Dtos.ChatDtos;
 
 namespace Sechat.Service.Dtos.AutoMapperProfiles;

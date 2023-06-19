@@ -1,4 +1,6 @@
-﻿namespace Sechat.Data.Models;
+﻿using Sechat.Data.Models.Abstractions;
+
+namespace Sechat.Data.Models;
 
 public record Feature : BaseModel<long>
 {

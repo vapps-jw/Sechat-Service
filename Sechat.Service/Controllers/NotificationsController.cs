@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Sechat.Data.Models;
+using Sechat.Data.Models.UserDetails;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using System.Threading.Tasks;

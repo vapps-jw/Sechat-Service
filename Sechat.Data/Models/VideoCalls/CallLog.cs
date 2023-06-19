@@ -1,4 +1,7 @@
-﻿namespace Sechat.Data.Models;
+﻿using Sechat.Data.Models.Abstractions;
+using Sechat.Data.Models.UserDetails;
+
+namespace Sechat.Data.Models.VideoCalls;
 public record CallLog : BaseModel<long>
 {
     public string CalleeId { get; set; }

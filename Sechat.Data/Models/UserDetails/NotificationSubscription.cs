@@ -1,4 +1,4 @@
-﻿namespace Sechat.Data.Models;
+﻿namespace Sechat.Data.Models.UserDetails;
 public record NotificationSubscription
 {
     public int Id { get; set; }
