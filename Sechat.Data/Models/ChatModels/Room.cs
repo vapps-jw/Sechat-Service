@@ -1,4 +1,5 @@
 ﻿using Sechat.Data.Models.Abstractions;
+using Sechat.Data.Models.UserDetails;
 using System.ComponentModel.DataAnnotations;
 
 namespace Sechat.Data.Models.ChatModels;

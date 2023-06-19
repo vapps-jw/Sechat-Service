@@ -1,6 +1,6 @@
 ﻿using Sechat.Data.Models.Abstractions;
 
-namespace Sechat.Data.Models;
+namespace Sechat.Data.Models.UserDetails;
 public record Key : BaseModel<long>
 {
     public KeyType Type { get; set; }

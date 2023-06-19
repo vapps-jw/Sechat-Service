@@ -1,4 +1,4 @@
-﻿namespace Sechat.Data.Models;
+﻿namespace Sechat.Data.Models.Abstractions;
 
 public abstract record BaseModel<TKey>
 {
