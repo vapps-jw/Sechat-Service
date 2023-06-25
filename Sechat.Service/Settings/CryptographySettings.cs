@@ -2,6 +2,8 @@
 
 public class CryptographySettings
 {
-    public string SecretKey { get; set; } = string.Empty;
-    public string Salt { get; set; } = string.Empty;
+    public string DefaultSalt { get; set; } = string.Empty;
+    public string DefaultKeyPart { get; set; } = string.Empty;
+    public int DefaultInterations { get; set; }
+    public string DefaultIV { get; set; }
 }

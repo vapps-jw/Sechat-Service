@@ -36,11 +36,11 @@ public class AccountsCleaner : BackgroundService
 
                 var ids = profilesToDelete.Select(p => p.Id).ToList();
                 var roomsToDelete = ctx.Rooms.Where(r => ids.Contains(r.CreatorId)).ToList();
-                var contactsToDelete = ctx.UserConnections.Where(uc => ids.Contains(uc.InvitedId) || ids.Contains(uc.InviterId));
+                var contactsToDelete = ctx.Contacts.Where(uc => ids.Contains(uc.InvitedId) || ids.Contains(uc.InviterId));
 
                 ctx.UserProfiles.RemoveRange(profilesToDelete);
                 ctx.Rooms.RemoveRange(roomsToDelete);
-                ctx.UserConnections.RemoveRange(contactsToDelete);
+                ctx.Contacts.RemoveRange(contactsToDelete);
 
                 var res = await ctx.SaveChangesAsync(stoppingToken);
                 _logger.LogWarning("Accounts cleanup, deleted records: {records}", res);

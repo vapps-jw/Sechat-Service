@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace Sechat.Data.Models.UserDetails;
-public record UserConnection : BaseModel<long>
+public record Contact : BaseModel<long>
 {
     public bool Approved { get; set; }
     [Required]

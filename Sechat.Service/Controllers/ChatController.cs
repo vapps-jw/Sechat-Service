@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Sechat.Data.DataServices;
+using Microsoft.Extensions.Options;
 using Sechat.Data.QueryModels;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
@@ -11,6 +11,7 @@ using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
+using Sechat.Service.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,31 +24,31 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class ChatController : SechatControllerBase
 {
+    private readonly IOptionsMonitor<CryptographySettings> _cryptoSettings;
+    private readonly CryptographyService _cryptographyService;
     private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
-    private readonly PushNotificationService _pushNotificationService;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
     private readonly ChatRepository _chatRepository;
-    private readonly DataEncryptor _encryptor;
     private readonly IMapper _mapper;
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public ChatController(
+        IOptionsMonitor<CryptographySettings> cryptoSettings,
+        CryptographyService cryptographyService,
         SignalRConnectionsMonitor signalRConnectionsMonitor,
-        PushNotificationService pushNotificationService,
         UserManager<IdentityUser> userManager,
         UserRepository userRepository,
         ChatRepository chatRepository,
-        DataEncryptor encryptor,
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
+        _cryptoSettings = cryptoSettings;
+        _cryptographyService = cryptographyService;
         _signalRConnectionsMonitor = signalRConnectionsMonitor;
-        _pushNotificationService = pushNotificationService;
         _userManager = userManager;
         _userRepository = userRepository;
         _chatRepository = chatRepository;
-        _encryptor = encryptor;
         _mapper = mapper;
         _chatHubContext = chatHubContext;
     }
@@ -86,7 +87,7 @@ public class ChatController : SechatControllerBase
             }
         }
 
-        var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
+        var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
         var connectedContacts = contacts
             .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
                         _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
@@ -112,7 +113,7 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetContacts()
     {
         var contacts = await _userRepository.GetContacts(UserId);
-        var contactDtos = _mapper.Map<List<UserContactDto>>(contacts);
+        var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
         var connectedContacts = contacts
             .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
                         _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
@@ -132,11 +133,14 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetRooms()
     {
         var rooms = await _chatRepository.GetStandardRoomsWithMessages(UserId);
+        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        var iv = Array.ConvertAll(parts, byte.Parse);
 
         foreach (var room in rooms)
         {
             foreach (var message in room.Messages)
             {
+                message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
                 foreach (var viewer in message.MessageViewers)
                 {
                     viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
@@ -202,9 +206,6 @@ public class ChatController : SechatControllerBase
     [HttpGet("get-state-updates")]
     public IActionResult GetStateUpdates() => Ok();
 
-    [HttpGet("generate-aes-key")]
-    public IActionResult GenerateAesKey() => Ok(_encryptor.GenerateKey());
-
     [HttpGet("new-messages")]
     public async Task<IActionResult> GetNewMessages([FromBody] GetNewMessagesRequest getNewMessagesRequest)
     {
@@ -213,14 +214,16 @@ public class ChatController : SechatControllerBase
             return BadRequest("Not your room?");
         }
 
+        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        var iv = Array.ConvertAll(parts, byte.Parse);
+
         var res = new List<RoomDto>();
         foreach (var lastMessageInTheRoom in getNewMessagesRequest.LastMessageInTheRooms)
         {
             var room = await _chatRepository.GetRoomWithNewMessages(lastMessageInTheRoom.RoomId, lastMessageInTheRoom.LastMessage);
             if (!room.Messages.Any()) continue;
 
-            room.Messages.ForEach(m => m.Text = _encryptor.DecryptString(room.RoomKey, m.Text));
-
+            room.Messages.ForEach(m => m.Text = _cryptographyService.Decrypt(m.Text, room.RoomKey, iv));
             res.Add(_mapper.Map<RoomDto>(room));
         }
 
@@ -237,7 +240,14 @@ public class ChatController : SechatControllerBase
             throw new Exception("You dont have access to this room");
         }
 
-        var res = _chatRepository.CreateMessage(UserId, incomingMessageDto.Text, incomingMessageDto.RoomId);
+        var roomKey = _chatRepository.GetRoomKey(incomingMessageDto.RoomId);
+
+        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        var iv = Array.ConvertAll(parts, byte.Parse);
+
+        var encryptedText = _cryptographyService.Encrypt(incomingMessageDto.Text, roomKey, iv);
+
+        var res = _chatRepository.CreateMessage(UserId, encryptedText, incomingMessageDto.RoomId);
         if (await _chatRepository.SaveChanges() == 0)
         {
             return BadRequest("Message not sent");

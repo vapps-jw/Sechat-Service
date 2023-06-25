@@ -76,8 +76,8 @@ public class UserController : SechatControllerBase
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(_mapper.Map<UserContactDto>(newConnection));
-            await _chatHubContext.Clients.Group(UserId).ConnectionRequestReceived(_mapper.Map<UserContactDto>(newConnection));
+            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(_mapper.Map<ContactDto>(newConnection));
+            await _chatHubContext.Clients.Group(UserId).ConnectionRequestReceived(_mapper.Map<ContactDto>(newConnection));
             await _pushNotificationService.IncomingContactRequestNotification(invitedUser.Id, UserName);
             return Ok();
         }
@@ -96,7 +96,7 @@ public class UserController : SechatControllerBase
             return BadRequest("You are blocked");
         }
 
-        var connectionDto = _mapper.Map<UserContactDto>(connection);
+        var connectionDto = _mapper.Map<ContactDto>(connection);
         if (!connectionDto.UserPresent(UserName))
         {
             return BadRequest("Not your contact");
@@ -122,7 +122,7 @@ public class UserController : SechatControllerBase
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            var connectionDto = _mapper.Map<UserContactDto>(connection);
+            var connectionDto = _mapper.Map<ContactDto>(connection);
             await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InvitedName)).ConnectionUpdated(connectionDto);
             await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InviterName)).ConnectionUpdated(connectionDto);
             return Ok();
@@ -139,7 +139,7 @@ public class UserController : SechatControllerBase
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            var connectionDto = _mapper.Map<UserContactDto>(connection);
+            var connectionDto = _mapper.Map<ContactDto>(connection);
             await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InvitedName)).ConnectionUpdated(connectionDto);
             await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InviterName)).ConnectionUpdated(connectionDto);
             return Ok();
@@ -156,7 +156,7 @@ public class UserController : SechatControllerBase
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            var connectionDto = _mapper.Map<UserContactDto>(connection);
+            var connectionDto = _mapper.Map<ContactDto>(connection);
             await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InvitedName)).ConnectionUpdated(connectionDto);
             await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InviterName)).ConnectionUpdated(connectionDto);
             return Ok();

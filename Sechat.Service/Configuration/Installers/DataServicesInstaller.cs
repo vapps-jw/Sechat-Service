@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sechat.Data;
-using Sechat.Data.DataServices;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos.AutoMapperProfiles;
 using Sechat.Service.Services;
@@ -37,7 +36,7 @@ public class DataServicesInstaller : IServiceInstaller
         _ = webApplicationBuilder.Services.AddScoped<ChatRepository>();
         _ = webApplicationBuilder.Services.AddScoped<UserRepository>();
 
-        _ = webApplicationBuilder.Services.AddTransient<DataEncryptor>();
+        _ = webApplicationBuilder.Services.AddTransient<CryptographyService>();
         _ = webApplicationBuilder.Services.AddTransient<ITokenService, TokenService>();
 
         _ = webApplicationBuilder.Services.AddAutoMapper(typeof(DefaultProfile), typeof(ChatModelsProfile));

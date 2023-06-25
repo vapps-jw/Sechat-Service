@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using Sechat.Data.DataServices;
+using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Services;
+using Sechat.Service.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,41 +49,46 @@ public interface IChatHub
     Task UserRemovedFromRoom(RoomUserActionMessage message);
 
     // Chat Contacts
-    Task ConnectionRequestReceived(UserContactDto message);
+    Task ConnectionRequestReceived(ContactDto message);
     Task ConnectionDeleted(ResourceId message);
-    Task ConnectionUpdated(UserContactDto message);
+    Task ConnectionUpdated(ContactDto message);
     Task ContactStateChanged(StringUserMessage message);
 }
 
 [Authorize]
 public class ChatHub : SechatHubBase<IChatHub>
 {
+    private readonly IOptionsMonitor<CryptographySettings> _cryptoSettings;
+    private readonly CryptographyService _cryptographyService;
     private readonly Channel<DefaultNotificationDto> _pushNotificationChannel;
     private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
     private readonly UserRepository _userRepository;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ILogger<ChatHub> _logger;
     private readonly IMapper _mapper;
-    private readonly DataEncryptor _encryptor;
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
+        IOptionsMonitor<CryptographySettings> cryptoSettings,
+        CryptographyService cryptographyService,
         Channel<DefaultNotificationDto> pushNotificationChannel,
         SignalRConnectionsMonitor signalRConnectionsMonitor,
         UserRepository userRepository,
         UserManager<IdentityUser> userManager,
         ILogger<ChatHub> logger,
         IMapper mapper,
-        DataEncryptor encryptor,
+
         ChatRepository chatRepository)
     {
+        _cryptoSettings = cryptoSettings;
+        _cryptographyService = cryptographyService;
         _pushNotificationChannel = pushNotificationChannel;
         _signalRConnectionsMonitor = signalRConnectionsMonitor;
         _userRepository = userRepository;
         _userManager = userManager;
         _logger = logger;
         _mapper = mapper;
-        _encryptor = encryptor;
+
         _chatRepository = chatRepository;
     }
 
@@ -185,7 +191,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
-            var newRoom = _chatRepository.CreateRoom(request.RoomName, UserId, UserName, _encryptor.GenerateKey());
+            var newRoom = _chatRepository.CreateRoom(request.RoomName, UserId, UserName, _cryptographyService.GenerateDefaultKey($"{Guid.NewGuid()}{_cryptoSettings.CurrentValue.DefaultKeyPart}", _cryptoSettings.CurrentValue.DefaultSalt, _cryptoSettings.CurrentValue.DefaultInterations));
             if (await _chatRepository.SaveChanges() == 0)
             {
                 throw new Exception("Room creation failed");

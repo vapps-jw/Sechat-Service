@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Sechat.Service.Dtos.ChatDtos;
 
-public class UserContactDto
+public class ContactDto
 {
     public long Id { get; set; }
     public bool Approved { get; set; }

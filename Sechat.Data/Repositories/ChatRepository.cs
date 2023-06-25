@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Sechat.Data.DataServices;
 using Sechat.Data.Models.ChatModels;
 using Sechat.Data.QueryModels;
 using Sechat.Domain.CustomExceptions;
@@ -8,9 +7,7 @@ namespace Sechat.Data.Repositories;
 
 public class ChatRepository : RepositoryBase<SechatContext>
 {
-    private readonly DataEncryptor _dataEncryptor;
-
-    public ChatRepository(SechatContext context, DataEncryptor dataEncryptor) : base(context) => _dataEncryptor = dataEncryptor;
+    public ChatRepository(SechatContext context) : base(context) { }
 
     // Access
 
@@ -33,7 +30,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
         var newMessage = new Message()
         {
-            Text = _dataEncryptor.EncryptString(room.RoomKey, messageText),
+            Text = messageText,
             IdSentBy = profile.Id,
             NameSentBy = profile.UserName,
             RoomId = room.Id,
@@ -62,7 +59,9 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     // Rooms
 
-    public Room CreateRoom(string roomName, string creatorUserId, string creatorName, string roomKey)
+    public byte[] GetRoomKey(string roomId) => _context.Rooms.Where(r => r.Id.Equals(roomId)).Select(r => r.RoomKey).FirstOrDefault();
+
+    public Room CreateRoom(string roomName, string creatorUserId, string creatorName, byte[] roomKey)
     {
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(creatorUserId));
         if (profile == null) return null;
@@ -81,7 +80,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
     public async Task<List<Room>> GetStandardRoomsWithMessages(string memberUserId)
     {
         var res = await _context.Rooms
-        .Where(r => !string.IsNullOrEmpty(r.RoomKey))
+        .Where(r => !r.EncryptedByUser)
         .Include(r => r.Messages)
             .ThenInclude(m => m.MessageViewers)
         .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
@@ -95,8 +94,6 @@ public class ChatRepository : RepositoryBase<SechatContext>
             Messages = r.Messages.OrderBy(m => m.Id).ToList(),
             Name = r.Name
         }).ToListAsync();
-
-        res.ForEach(r => r.Messages.ForEach(m => m.Text = _dataEncryptor.DecryptString(r.RoomKey, m.Text)));
         return res;
     }
 
@@ -126,7 +123,6 @@ public class ChatRepository : RepositoryBase<SechatContext>
                     .Where(m => m.Id > updateData.LastMessage)
                     .OrderBy(m => m.Id)
                     .ToList();
-                room.Messages.ForEach(m => m.Text = _dataEncryptor.DecryptString(room.RoomKey, m.Text));
                 continue;
             }
 
@@ -135,7 +131,6 @@ public class ChatRepository : RepositoryBase<SechatContext>
                 .Include(m => m.MessageViewers)
                 .OrderBy(m => m.Id)
                 .ToList();
-            room.Messages.ForEach(m => m.Text = _dataEncryptor.DecryptString(room.RoomKey, m.Text));
         }
         return rooms;
     }

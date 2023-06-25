@@ -13,58 +13,58 @@ public class UserRepository : RepositoryBase<SechatContext>
     // Contacts
 
     public bool ContactExists(string userOne, string userTwo) =>
-        _context.UserConnections.Any(uc =>
+        _context.Contacts.Any(uc =>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
             (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
     public bool ContactExists(long connectionId, string userOne, string userTwo)
     {
-        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
+        var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == connectionId);
         return connection is not null
             && (connection.InvitedId.Equals(userOne) || connection.InviterId.Equals(userOne))
             && (connection.InvitedId.Equals(userTwo) || connection.InviterId.Equals(userTwo));
     }
 
-    public UserConnection GetContact(string userOne, string userTwo) =>
-        _context.UserConnections.FirstOrDefault(uc =>
+    public Contact GetContact(string userOne, string userTwo) =>
+        _context.Contacts.FirstOrDefault(uc =>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
             (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
     public void DeleteContact(long id)
     {
-        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == id);
+        var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == id);
         if (connection is not null)
         {
-            _ = _context.UserConnections.Remove(connection);
+            _ = _context.Contacts.Remove(connection);
         }
     }
 
-    public void DeleteContactsFor(string userId) => _context.UserConnections.RemoveRange(_context.UserConnections
+    public void DeleteContactsFor(string userId) => _context.Contacts.RemoveRange(_context.Contacts
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId)));
 
     public long GetContactId(string userOne, string userTwo)
     {
-        var connection = _context.UserConnections.FirstOrDefault(uc =>
+        var connection = _context.Contacts.FirstOrDefault(uc =>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
             (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
         return connection is not null ? connection.Id : 0;
     }
 
-    public Task<List<UserConnection>> GetContacts(string userId) =>
-        _context.UserConnections
+    public Task<List<Contact>> GetContacts(string userId) =>
+        _context.Contacts
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
             .ToListAsync();
 
     public Task<List<string>> GetAllowedContactsIds(string userId) =>
-        _context.UserConnections
+        _context.Contacts
             .Where(uc => uc.InvitedId.Equals(userId) || (uc.InviterId.Equals(userId) && !uc.Blocked && uc.Approved))
             .Select(uc => uc.InvitedId.Equals(userId) ? uc.InviterId : uc.InvitedId)
             .ToListAsync();
 
-    public UserConnection BlockContact(long connectionId, string blockedById, string blockedByName)
+    public Contact BlockContact(long connectionId, string blockedById, string blockedByName)
     {
-        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
+        var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == connectionId);
         if (connection is null || connection.Blocked) return null;
 
         connection.Blocked = true;
@@ -74,9 +74,9 @@ public class UserRepository : RepositoryBase<SechatContext>
         return connection;
     }
 
-    public UserConnection AllowContact(long connectionId, string userId)
+    public Contact AllowContact(long connectionId, string userId)
     {
-        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
+        var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == connectionId);
         if (connection is null || !connection.Blocked || !connection.BlockedById.Equals(userId)) return null;
 
         connection.Blocked = false;
@@ -86,28 +86,28 @@ public class UserRepository : RepositoryBase<SechatContext>
         return connection;
     }
 
-    public UserConnection ApproveContact(long connectionId, string approverId)
+    public Contact ApproveContact(long connectionId, string approverId)
     {
-        var connection = _context.UserConnections.FirstOrDefault(uc => uc.Id == connectionId);
+        var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == connectionId);
         if (connection is null || connection.Approved || !connection.InvitedId.Equals(approverId)) return null;
         connection.Approved = true;
 
         return connection;
     }
 
-    public Task<UserConnection> GetContact(long connectionId) =>
-        _context.UserConnections.FirstOrDefaultAsync(uc => uc.Id == connectionId);
+    public Task<Contact> GetContact(long connectionId) =>
+        _context.Contacts.FirstOrDefaultAsync(uc => uc.Id == connectionId);
 
-    public UserConnection CreateContact(string inviterId, string inviterName, string invitedId, string invitedName)
+    public Contact CreateContact(string inviterId, string inviterName, string invitedId, string invitedName)
     {
-        var newConnection = new UserConnection()
+        var newConnection = new Contact()
         {
             InvitedId = invitedId,
             InvitedName = invitedName,
             InviterId = inviterId,
             InviterName = inviterName
         };
-        _ = _context.UserConnections.Add(newConnection);
+        _ = _context.Contacts.Add(newConnection);
         return newConnection;
     }
 
@@ -151,7 +151,7 @@ public class UserRepository : RepositoryBase<SechatContext>
         }
 
         _context.Rooms.RemoveRange(ownedRooms);
-        _context.UserConnections.RemoveRange(connections);
+        _context.Contacts.RemoveRange(connections);
 
         return new ProfileDeleteResult(
             ownedRooms.Select(r => r.Id).ToList(),

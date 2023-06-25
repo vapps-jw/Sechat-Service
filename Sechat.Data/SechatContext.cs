@@ -15,7 +15,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<Feature> Features { get; set; }
     public DbSet<Key> Keys { get; set; }
-    public DbSet<UserConnection> UserConnections { get; set; }
+    public DbSet<Contact> Contacts { get; set; }
     public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; }
     public DbSet<MessageViewer> MessageViewers { get; set; }
     public DbSet<CallLog> CallLogs { get; set; }
@@ -63,9 +63,9 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
         _ = modelBuilder.Entity<Message>()
               .HasIndex(c => c.Created);
 
-        _ = modelBuilder.Entity<UserConnection>()
+        _ = modelBuilder.Entity<Contact>()
             .HasIndex(c => c.InviterId);
-        _ = modelBuilder.Entity<UserConnection>()
+        _ = modelBuilder.Entity<Contact>()
             .HasIndex(c => c.InvitedId);
 
         _ = modelBuilder.Entity<Room>()
