@@ -66,7 +66,10 @@ public class ChatController : SechatControllerBase
         {
             foreach (var message in room.Messages)
             {
-                message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
+                if (!room.EncryptedByUser)
+                {
+                    message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
+                }
                 foreach (var viewer in message.MessageViewers)
                 {
                     viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
@@ -227,7 +230,11 @@ public class ChatController : SechatControllerBase
             var room = await _chatRepository.GetRoomWithNewMessages(lastMessageInTheRoom.RoomId, lastMessageInTheRoom.LastMessage);
             if (!room.Messages.Any()) continue;
 
-            room.Messages.ForEach(m => m.Text = _cryptographyService.Decrypt(m.Text, room.RoomKey, iv));
+            if (!room.EncryptedByUser)
+            {
+                room.Messages.ForEach(m => m.Text = _cryptographyService.Decrypt(m.Text, room.RoomKey, iv));
+            }
+
             res.Add(_mapper.Map<RoomDto>(room));
         }
 
@@ -244,14 +251,20 @@ public class ChatController : SechatControllerBase
             throw new Exception("You dont have access to this room");
         }
 
-        var roomKey = _chatRepository.GetRoomKey(incomingMessageDto.RoomId);
+        var messageToSave = string.Empty;
+        messageToSave = incomingMessageDto.Text;
 
-        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-        var iv = Array.ConvertAll(parts, byte.Parse);
+        if (!_chatRepository.RoomEncryptedByUser(incomingMessageDto.RoomId))
+        {
+            var roomKey = _chatRepository.GetRoomKey(incomingMessageDto.RoomId);
 
-        var encryptedText = _cryptographyService.Encrypt(incomingMessageDto.Text, roomKey, iv);
+            var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            var iv = Array.ConvertAll(parts, byte.Parse);
 
-        var res = _chatRepository.CreateMessage(UserId, encryptedText, incomingMessageDto.RoomId);
+            messageToSave = _cryptographyService.Encrypt(incomingMessageDto.Text, roomKey, iv);
+        }
+
+        var res = _chatRepository.CreateMessage(UserId, messageToSave, incomingMessageDto.RoomId);
         if (await _chatRepository.SaveChanges() == 0)
         {
             return BadRequest("Message not sent");

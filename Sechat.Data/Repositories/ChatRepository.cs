@@ -59,6 +59,8 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     // Rooms
 
+    public bool RoomEncryptedByUser(string roomId) => _context.Rooms.Where(r => r.Id.Equals(roomId)).Select(r => r.EncryptedByUser).FirstOrDefault();
+
     public byte[] GetRoomKey(string roomId) => _context.Rooms.Where(r => r.Id.Equals(roomId)).Select(r => r.RoomKey).FirstOrDefault();
 
     public Room CreateRoom(string roomName, string creatorUserId, string creatorName, byte[] roomKey)
