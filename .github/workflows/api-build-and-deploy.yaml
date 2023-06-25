@@ -34,6 +34,10 @@ jobs:
           CorsSettings.ApiUrl: ${{ secrets.API_URL }}
           CookieSettings.AuthCookieDomain: ${{ secrets.AUTH_COOKIE_DOMAIN }}
           CookieSettings.AuthCookieName: ${{ secrets.AUTH_COOKIE_NAME }}
+          CryptographySettings.DefaultSalt: ${{ secrets.CS_DEFAULT_SALT }}
+          CryptographySettings.DefaultKeyPart: ${{ secrets.CS_DEFAULT_KP }}
+          CryptographySettings.DefaultInterations: ${{ secrets.CS_DEFAULT_INTR }}
+          CryptographySettings.DefaultIV: ${{ secrets.CS_DEFAULT_IV }}
       - name: Push to Linode
         run: |
           echo "$ssh_key" > ~/ssh_key
