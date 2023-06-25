@@ -453,6 +453,11 @@ namespace Sechat.Data.Migrations
                 column: "InviterId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Features_Name",
+                table: "Features",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_FeatureUserProfile_UserProfilesId",
                 table: "FeatureUserProfile",
                 column: "UserProfilesId");

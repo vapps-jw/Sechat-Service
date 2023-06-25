@@ -421,6 +421,8 @@ namespace Sechat.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name");
+
                     b.ToTable("Features");
                 });
 

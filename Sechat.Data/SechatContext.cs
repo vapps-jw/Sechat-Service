@@ -29,6 +29,9 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
         _ = modelBuilder.Entity<Message>()
             .HasIndex(c => c.Created);
 
+        _ = modelBuilder.Entity<Feature>()
+            .HasIndex(c => c.Name);
+
         _ = modelBuilder.Entity<MessageViewer>()
             .HasIndex(c => c.UserId);
 

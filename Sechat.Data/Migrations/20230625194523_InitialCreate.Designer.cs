@@ -12,7 +12,7 @@ using Sechat.Data;
 namespace Sechat.Data.Migrations
 {
     [DbContext(typeof(SechatContext))]
-    [Migration("20230625191547_InitialCreate")]
+    [Migration("20230625194523_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -423,6 +423,8 @@ namespace Sechat.Data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name");
 
                     b.ToTable("Features");
                 });
