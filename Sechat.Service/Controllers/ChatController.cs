@@ -59,10 +59,14 @@ public class ChatController : SechatControllerBase
         var rooms = await _chatRepository.GetStandardRoomsWithMessages(UserId);
         var contacts = await _userRepository.GetContacts(UserId);
 
+        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        var iv = Array.ConvertAll(parts, byte.Parse);
+
         foreach (var room in rooms)
         {
             foreach (var message in room.Messages)
             {
+                message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
                 foreach (var viewer in message.MessageViewers)
                 {
                     viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
