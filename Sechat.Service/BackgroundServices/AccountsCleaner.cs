@@ -31,7 +31,7 @@ public class AccountsCleaner : BackgroundService
             {
                 using var ctx = await _contextFactory.CreateDbContextAsync(stoppingToken);
 
-                var profilesToDelete = ctx.UserProfiles.Where(p => p.LastActivity <= DateTime.UtcNow.AddDays(-30)).ToList();
+                var profilesToDelete = ctx.UserProfiles.Where(p => p.LastActivity <= DateTime.UtcNow.AddMonths(-3)).ToList();
                 if (!profilesToDelete.Any()) continue;
 
                 var ids = profilesToDelete.Select(p => p.Id).ToList();
