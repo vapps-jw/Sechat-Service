@@ -198,6 +198,8 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     public void RemovePushNotificationSubscriptions(string userId) =>
         _context.NotificationSubscriptions.RemoveRange(_context.NotificationSubscriptions.Where(s => s.UserProfileId.Equals(userId)));
+    public void RemovePushNotificationSubscription(int subId) =>
+        _context.NotificationSubscriptions.Remove(_context.NotificationSubscriptions.FirstOrDefault(s => s.Id == subId));
 
     public List<NotificationSubscription> GetSubscriptions(string userId) =>
         _context.NotificationSubscriptions.Where(s => s.UserProfileId.Equals(userId)).ToList();

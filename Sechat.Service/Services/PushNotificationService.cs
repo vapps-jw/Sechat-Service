@@ -30,6 +30,13 @@ public class PushNotificationService
         _logger = logger;
     }
 
+    private async Task RemoveInvalidSubscription(int subId)
+    {
+        _logger.LogWarning("Removing invalid subscription");
+        _userRepository.RemovePushNotificationSubscription(subId);
+        _ = await _userRepository.SaveChanges();
+    }
+
     public async Task IncomingVideoCallNotification(string userId, string callerName)
     {
         var subs = _userRepository.GetSubscriptions(userId);
@@ -56,8 +63,12 @@ public class PushNotificationService
             }
             catch (WebPushException exception)
             {
+                if (exception.Message.Contains("Subscription no longer valid", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    await RemoveInvalidSubscription(sub.Id);
+                    return;
+                }
                 _logger.LogError(exception, exception.Message);
-                Console.WriteLine("Http STATUS code" + exception.StatusCode);
             }
         }
     }
@@ -88,8 +99,12 @@ public class PushNotificationService
             }
             catch (WebPushException exception)
             {
+                if (exception.Message.Contains("Subscription no longer valid", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    await RemoveInvalidSubscription(sub.Id);
+                    return;
+                }
                 _logger.LogError(exception, exception.Message);
-                Console.WriteLine("Http STATUS code" + exception.StatusCode);
             }
         }
     }
@@ -120,8 +135,12 @@ public class PushNotificationService
             }
             catch (WebPushException exception)
             {
+                if (exception.Message.Contains("Subscription no longer valid", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    await RemoveInvalidSubscription(sub.Id);
+                    return;
+                }
                 _logger.LogError(exception, exception.Message);
-                Console.WriteLine("Http STATUS code" + exception.StatusCode);
             }
         }
     }
