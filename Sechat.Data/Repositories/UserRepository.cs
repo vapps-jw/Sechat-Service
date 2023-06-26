@@ -124,7 +124,7 @@ public class UserRepository : RepositoryBase<SechatContext>
         .FirstOrDefault(p => p.Id.Equals(id));
 
     public void CreateUserProfile(string id, string userName) => _context
-        .Add(new UserProfile() { Id = id, UserName = userName });
+        .Add(new UserProfile() { Id = id, UserName = userName, PrivacyPolicyAccepted = true });
 
     public async Task<ProfileDeleteResult> DeleteUserProfile(string id)
     {
