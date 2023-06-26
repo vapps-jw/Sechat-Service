@@ -62,7 +62,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPost("request-connection")]
-    public async Task<IActionResult> ConnectionRequest([FromBody] ConnectionRequestDto invitationDto)
+    public async Task<IActionResult> ContactRequest([FromBody] ConnectionRequestDto invitationDto)
     {
         if (UserName.Equals(invitationDto.Username)) return BadRequest("You cant invite yourself :)");
 
@@ -86,7 +86,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpDelete("delete-connection")]
-    public async Task<IActionResult> DeleteConnection(long connectionId)
+    public async Task<IActionResult> DeleteContact(long connectionId)
     {
         var connection = await _userRepository.GetContact(connectionId);
         if (connection is null) return BadRequest("Not your contact");
@@ -115,7 +115,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("block-connection")]
-    public async Task<IActionResult> BlockConnection(long connectionId)
+    public async Task<IActionResult> BlockContact(long connectionId)
     {
         var connection = _userRepository.BlockContact(connectionId, UserId, UserName);
         if (connection is null) return BadRequest("Can`t do that");
@@ -132,7 +132,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("allow-connection")]
-    public async Task<IActionResult> AllowConnection(long connectionId)
+    public async Task<IActionResult> AllowContact(long connectionId)
     {
         var connection = _userRepository.AllowContact(connectionId, UserId);
         if (connection is null) return BadRequest("Can`t do that");
@@ -149,7 +149,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("approve-connection")]
-    public async Task<IActionResult> ApproveConnection(long connectionId)
+    public async Task<IActionResult> ApproveContact(long connectionId)
     {
         var connection = _userRepository.ApproveContact(connectionId, UserId);
         if (connection is null) return BadRequest("Can`t do that");
