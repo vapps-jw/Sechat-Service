@@ -22,6 +22,10 @@ public class AppConstants
         public const string Offline = "Offline";
         public const string Unknown = "Unknown";
     }
+    public struct Cookies
+    {
+        public const string E2E = "E2E";
+    }
     public enum PushNotificationType
     {
         IncomingVideoCall,

@@ -8,7 +8,7 @@ public class CryptographyTests
         var service = new Service.Services.CryptographyService();
         var secretString = "test-secret";
 
-        var key = service.GenerateDefaultKey($"{Guid.NewGuid()}test123", "asasas12", 500);
+        var key = service.GenerateKey($"{Guid.NewGuid()}test123", "asasas12", 500);
 
         var iv = new byte[] { 10, 20, 30, 40, 50, 60, 70, 80, 80, 80, 80, 80, 80, 80, 80, 80 };
 

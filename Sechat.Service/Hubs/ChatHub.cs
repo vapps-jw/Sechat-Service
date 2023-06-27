@@ -187,11 +187,18 @@ public class ChatHub : SechatHubBase<IChatHub>
         await Clients.Group(contactId).VideoCallRequested(new StringMessage(UserName));
     }
 
-    public async Task<RoomDto> CreateRoom(RoomNameMessage request)
+    public async Task<RoomDto> CreateRoom(CreateRoomMessage request)
     {
         try
         {
-            var newRoom = _chatRepository.CreateRoom(request.RoomName, UserId, UserName, _cryptographyService.GenerateDefaultKey($"{Guid.NewGuid()}{_cryptoSettings.CurrentValue.DefaultKeyPart}", _cryptoSettings.CurrentValue.DefaultSalt, _cryptoSettings.CurrentValue.DefaultInterations));
+            var newRoom = _chatRepository.CreateRoom(
+                request.RoomName,
+                UserId,
+                UserName,
+                _cryptographyService.GenerateKey($"{Guid.NewGuid()}{_cryptoSettings.CurrentValue.DefaultKeyPart}",
+                _cryptoSettings.CurrentValue.DefaultSalt,
+                _cryptoSettings.CurrentValue.DefaultInterations),
+                request.UserEncrypted);
             if (await _chatRepository.SaveChanges() == 0)
             {
                 throw new Exception("Room creation failed");

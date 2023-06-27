@@ -19,10 +19,10 @@ public class IncomingMessageValidation : AbstractValidator<IncomingMessage>
     public IncomingMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(5000);
 }
 
-public record RoomNameMessage(string RoomName, bool UserEncrypted);
-public class RoomNameMessageValidation : AbstractValidator<RoomNameMessage>
+public record CreateRoomMessage(string RoomName, bool UserEncrypted);
+public class CreateRoomMessageValidation : AbstractValidator<CreateRoomMessage>
 {
-    public RoomNameMessageValidation() => _ = RuleFor(x => x.RoomName).NotEmpty().MaximumLength(25);
+    public CreateRoomMessageValidation() => _ = RuleFor(x => x.RoomName).NotEmpty().MaximumLength(25);
 }
 
 public record RoomMemberUpdateRequest(string UserName, string RoomId, long connectionId);

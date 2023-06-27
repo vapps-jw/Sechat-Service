@@ -63,12 +63,12 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public byte[] GetRoomKey(string roomId) => _context.Rooms.Where(r => r.Id.Equals(roomId)).Select(r => r.RoomKey).FirstOrDefault();
 
-    public Room CreateRoom(string roomName, string creatorUserId, string creatorName, byte[] roomKey)
+    public Room CreateRoom(string roomName, string creatorUserId, string creatorName, byte[] roomKey, bool encryptedByUser)
     {
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(creatorUserId));
         if (profile == null) return null;
 
-        var newRoom = new Room() { Id = Guid.NewGuid().ToString(), RoomKey = roomKey, CreatorId = creatorUserId, Name = roomName, CreatorName = creatorName };
+        var newRoom = new Room() { Id = Guid.NewGuid().ToString(), RoomKey = roomKey, CreatorId = creatorUserId, Name = roomName, CreatorName = creatorName, EncryptedByUser = encryptedByUser };
         newRoom.Members.Add(profile);
 
         _ = _context.Rooms.Add(newRoom);
@@ -79,14 +79,14 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public List<string> GetRoomMembersIds(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
 
-    public async Task<List<Room>> GetStandardRoomsWithMessages(string memberUserId)
+    public async Task<List<Room>> GetRoomsWithMessages(string memberUserId)
     {
         var res = await _context.Rooms
-        .Where(r => !r.EncryptedByUser)
         .Include(r => r.Messages)
             .ThenInclude(m => m.MessageViewers)
         .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
         {
+            EncryptedByUser = r.EncryptedByUser,
             RoomKey = r.RoomKey,
             LastActivity = r.LastActivity,
             Created = r.Created,
@@ -99,12 +99,13 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return res;
     }
 
-    public async Task<List<Room>> GetStandardRoomsWithMessages(string memberUserId, List<GetRoomUpdate> getRoomUpdates)
+    public async Task<List<Room>> GetRoomsWithMessages(string memberUserId, List<GetRoomUpdate> getRoomUpdates)
     {
         var rooms = await _context.Rooms
-            .Where(r => !r.EncryptedByUser && r.Members.Any(m => m.Id.Equals(memberUserId)))
+            .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId)))
             .Select(r => new Room()
             {
+                EncryptedByUser = r.EncryptedByUser,
                 Name = r.Name,
                 RoomKey = r.RoomKey,
                 LastActivity = r.LastActivity,

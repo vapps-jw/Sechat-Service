@@ -48,11 +48,73 @@ public class CryptographyService
         return streamReader.ReadToEnd();
     }
 
-    public byte[] GenerateDefaultKey(string password, string salt, int interations)
+    public string Encrypt(string plainText, string password)
+    {
+        byte[] encryptedData;
+        var salt = RandomNumberGenerator.GetBytes(16);
+        var iv = RandomNumberGenerator.GetBytes(16);
+        var interations = new Random().Next(10000, 30000);
+
+        var key = GenerateKey(password, salt, interations);
+
+        using (var aes = Aes.Create())
+        {
+            aes.Key = key;
+            aes.IV = iv;
+
+            var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+
+            using MemoryStream memoryStream = new();
+            using CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write);
+            using (StreamWriter streamWriter = new(cryptoStream))
+            {
+                streamWriter.Write(plainText);
+            }
+
+            encryptedData = memoryStream.ToArray();
+        }
+
+        return string.Join(
+            _segmentDelimiter,
+            Convert.ToHexString(encryptedData),
+            Convert.ToHexString(iv),
+            Convert.ToHexString(salt),
+            interations
+        );
+    }
+
+    public string Decrypt(string encryptedString, string password)
+    {
+        var segments = encryptedString.Split(_segmentDelimiter);
+        var encryptedData = Convert.FromHexString(segments[0]);
+        var iv = Convert.FromHexString(segments[1]);
+        var salt = Convert.FromHexString(segments[2]);
+        var iterations = int.Parse(segments[3]);
+
+        var key = GenerateKey(password, salt, iterations);
+
+        using var aes = Aes.Create();
+        aes.Key = key;
+        aes.IV = iv;
+        var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+
+        using MemoryStream memoryStream = new(encryptedData);
+        using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
+        using StreamReader streamReader = new(cryptoStream);
+        return streamReader.ReadToEnd();
+    }
+
+    public byte[] GenerateKey(string password, string salt, int interations)
     {
         var saltBytes = Encoding.UTF8.GetBytes(salt);
         using var keyGenerator = new Rfc2898DeriveBytes(password, saltBytes, interations, HashAlgorithmName.SHA256);
 
+        return keyGenerator.GetBytes(32);
+    }
+
+    public byte[] GenerateKey(string password, byte[] salt, int interations)
+    {
+        using var keyGenerator = new Rfc2898DeriveBytes(password, salt, interations, HashAlgorithmName.SHA256);
         return keyGenerator.GetBytes(32);
     }
 

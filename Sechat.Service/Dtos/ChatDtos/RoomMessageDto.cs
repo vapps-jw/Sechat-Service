@@ -21,3 +21,10 @@ public class MessageViewerDto
 {
     public string User { get; set; }
 }
+
+public record MessageToDecrypt
+{
+    public string Id { get; set; }
+    public string Text { get; set; }
+    public string RoomId { get; set; }
+}
