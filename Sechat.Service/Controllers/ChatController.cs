@@ -83,6 +83,20 @@ public class ChatController : SechatControllerBase
         return Ok(roomDtos);
     }
 
+    [HttpGet("room/{roomId}")]
+    public async Task<IActionResult> GetRoom(string roomId)
+    {
+        if (!_chatRepository.IsRoomAllowed(UserId, roomId))
+        {
+            return BadRequest("You dont have access to this room");
+        }
+
+        var rooms = await _chatRepository.GetRoomWithMessages(roomId);
+        var roomDtos = await PrepareRoomDto(rooms);
+
+        return Ok(roomDtos);
+    }
+
     [HttpPost("rooms-update")]
     public async Task<IActionResult> GetRoomsUpdate([FromBody] List<GetRoomUpdate> getRoomUpdates)
     {
@@ -99,7 +113,7 @@ public class ChatController : SechatControllerBase
     {
         if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
         {
-            throw new Exception("You dont have access to this room");
+            return BadRequest("You dont have access to this room");
         }
 
         var messageToSave = incomingMessageDto.Text;
@@ -245,9 +259,10 @@ public class ChatController : SechatControllerBase
         if (await _chatRepository.DeleteRoom(roomId, UserId) > 0)
         {
             await _chatHubContext.Clients.Group(roomId).RoomDeleted(new ResourceGuid(roomId));
+            return Ok();
         }
 
-        return Ok();
+        return BadRequest();
     }
 
     private async Task<List<RoomDto>> PrepareRoomDtos(List<Room> rooms)
@@ -311,5 +326,63 @@ public class ChatController : SechatControllerBase
         }
 
         return roomDtos;
+    }
+
+    private async Task<RoomDto> PrepareRoomDto(Room room)
+    {
+        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        var iv = Array.ConvertAll(parts, byte.Parse);
+
+        var decryptionErrors = new List<long>();
+
+        var roomKey = ExtractE2ECookieDataForRoom(room.Id);
+        if (roomKey is null && room.EncryptedByUser)
+        {
+            room.Messages.Clear();
+        }
+
+        foreach (var message in room.Messages)
+        {
+            if (!room.EncryptedByUser)
+            {
+                message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
+            }
+            else
+            {
+                if (_cryptographyService.Decrypt(message.Text, roomKey.Key, out var result))
+                {
+                    message.Text = result;
+                }
+                else
+                {
+                    message.Text = result;
+                    decryptionErrors.Add(message.Id);
+                }
+            }
+
+            foreach (var viewer in message.MessageViewers)
+            {
+                viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+            }
+        }
+
+        var roomDto = _mapper.Map<RoomDto>(room);
+        foreach (var message in roomDto.Messages)
+        {
+            if (decryptionErrors.Any(de => de == message.Id))
+            {
+                message.Error = true;
+            }
+            foreach (var viewer in message.MessageViewers)
+            {
+                if (viewer.User.Equals(UserName))
+                {
+                    message.WasViewed = true;
+                    continue;
+                }
+            }
+        }
+
+        return roomDto;
     }
 }

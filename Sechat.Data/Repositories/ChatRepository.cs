@@ -99,6 +99,27 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return res;
     }
 
+    public async Task<Room> GetRoomWithMessages(string roomId)
+    {
+        var res = await _context.Rooms
+        .Where(r => r.Id.Equals(roomId))
+        .Include(r => r.Messages)
+            .ThenInclude(m => m.MessageViewers)
+        .Select(r => new Room()
+        {
+            EncryptedByUser = r.EncryptedByUser,
+            RoomKey = r.RoomKey,
+            LastActivity = r.LastActivity,
+            Created = r.Created,
+            CreatorName = r.CreatorName,
+            Id = r.Id,
+            Members = r.Members,
+            Messages = r.Messages.OrderBy(m => m.Id).ToList(),
+            Name = r.Name
+        }).FirstOrDefaultAsync();
+        return res;
+    }
+
     public async Task<List<Room>> GetRoomsWithMessages(string memberUserId, List<GetRoomUpdate> getRoomUpdates)
     {
         var rooms = await _context.Rooms
