@@ -22,7 +22,7 @@ public class IncomingMessageValidation : AbstractValidator<IncomingMessage>
 public record CreateRoomMessage(string RoomName, bool UserEncrypted);
 public class CreateRoomMessageValidation : AbstractValidator<CreateRoomMessage>
 {
-    public CreateRoomMessageValidation() => _ = RuleFor(x => x.RoomName).NotEmpty().MaximumLength(25);
+    public CreateRoomMessageValidation() => _ = RuleFor(x => x.RoomName).NotEmpty().MaximumLength(20);
 }
 
 public record RoomMemberUpdateRequest(string UserName, string RoomId, long connectionId);

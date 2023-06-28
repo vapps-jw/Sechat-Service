@@ -11,6 +11,7 @@ public class RoomMessageDto
 
     public string RoomId { get; set; } = string.Empty;
     public DateTime Created { get; set; } = DateTime.UtcNow;
+    public bool Error { get; set; }
 
     public bool WasViewed { get; set; }
 

@@ -25,7 +25,16 @@ public class CryptoController : SechatControllerBase
             return Unauthorized("You dont have a key");
         }
 
-        messageDecryptionRequest.Message = _cryptographyService.Decrypt(messageDecryptionRequest.Message, roomKey.Key);
+        if (_cryptographyService.Decrypt(messageDecryptionRequest.Message, roomKey.Key, out var result))
+        {
+            messageDecryptionRequest.Message = result;
+        }
+        else
+        {
+            messageDecryptionRequest.Message = result;
+            messageDecryptionRequest.Error = true;
+        }
+
         return Ok(messageDecryptionRequest);
     }
 }

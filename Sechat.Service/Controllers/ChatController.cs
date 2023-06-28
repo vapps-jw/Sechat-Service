@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
+using Sechat.Data.Models.ChatModels;
 using Sechat.Data.QueryModels;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
@@ -77,54 +78,7 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetRooms()
     {
         var rooms = await _chatRepository.GetRoomsWithMessages(UserId);
-        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-        var iv = Array.ConvertAll(parts, byte.Parse);
-
-        foreach (var room in rooms)
-        {
-            var roomKey = ExtractE2ECookieDataForRoom(room.Id);
-            if (roomKey is null && room.EncryptedByUser)
-            {
-                room.Messages.Clear();
-            }
-
-            foreach (var message in room.Messages)
-            {
-                if (!room.EncryptedByUser)
-                {
-                    message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
-                }
-                else
-                {
-                    if (roomKey is not null)
-                    {
-                        message.Text = _cryptographyService.Decrypt(message.Text, roomKey.Key);
-                    }
-                }
-
-                foreach (var viewer in message.MessageViewers)
-                {
-                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
-                }
-            }
-        }
-
-        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
-
-        foreach (var room in roomDtos)
-        {
-            foreach (var message in room.Messages)
-            {
-                foreach (var viewer in message.MessageViewers)
-                {
-                    if (viewer.User.Equals(UserName))
-                    {
-                        message.WasViewed = true;
-                        continue;
-                    }
-                }
-            }
-        }
+        var roomDtos = await PrepareRoomDtos(rooms);
 
         return Ok(roomDtos);
     }
@@ -133,54 +87,7 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetRoomsUpdate([FromBody] List<GetRoomUpdate> getRoomUpdates)
     {
         var rooms = await _chatRepository.GetRoomsWithMessages(UserId, getRoomUpdates);
-
-        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-        var iv = Array.ConvertAll(parts, byte.Parse);
-
-        foreach (var room in rooms)
-        {
-            var roomKey = ExtractE2ECookieDataForRoom(room.Id);
-            if (roomKey is null && room.EncryptedByUser)
-            {
-                room.Messages.Clear();
-            }
-
-            foreach (var message in room.Messages)
-            {
-                if (!room.EncryptedByUser)
-                {
-                    message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
-                }
-                else
-                {
-                    if (roomKey is not null)
-                    {
-                        message.Text = _cryptographyService.Decrypt(message.Text, roomKey.Key);
-                    }
-                }
-
-                foreach (var viewer in message.MessageViewers)
-                {
-                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
-                }
-            }
-        }
-
-        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
-        foreach (var room in roomDtos)
-        {
-            foreach (var message in room.Messages)
-            {
-                foreach (var viewer in message.MessageViewers)
-                {
-                    if (viewer.User.Equals(UserName))
-                    {
-                        message.WasViewed = true;
-                        continue;
-                    }
-                }
-            }
-        }
+        var roomDtos = await PrepareRoomDtos(rooms);
 
         return Ok(roomDtos);
     }
@@ -341,5 +248,68 @@ public class ChatController : SechatControllerBase
         }
 
         return Ok();
+    }
+
+    private async Task<List<RoomDto>> PrepareRoomDtos(List<Room> rooms)
+    {
+        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        var iv = Array.ConvertAll(parts, byte.Parse);
+
+        var decryptionErrors = new List<long>();
+        foreach (var room in rooms)
+        {
+            var roomKey = ExtractE2ECookieDataForRoom(room.Id);
+            if (roomKey is null && room.EncryptedByUser)
+            {
+                room.Messages.Clear();
+            }
+
+            foreach (var message in room.Messages)
+            {
+                if (!room.EncryptedByUser)
+                {
+                    message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
+                }
+                else
+                {
+                    if (_cryptographyService.Decrypt(message.Text, roomKey.Key, out var result))
+                    {
+                        message.Text = result;
+                    }
+                    else
+                    {
+                        message.Text = result;
+                        decryptionErrors.Add(message.Id);
+                    }
+                }
+
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
+        }
+
+        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                if (decryptionErrors.Any(de => de == message.Id))
+                {
+                    message.Error = true;
+                }
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return roomDtos;
     }
 }

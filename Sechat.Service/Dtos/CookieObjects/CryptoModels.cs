@@ -5,4 +5,5 @@ public class MessageDecryptionRequest
     public long Id { get; set; }
     public string Message { get; set; }
     public string RoomId { get; set; }
+    public bool Error { get; set; }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,6 +9,9 @@ namespace Sechat.Service.Services;
 public class CryptographyService
 {
     private const char _segmentDelimiter = ':';
+    private readonly ILogger<CryptographyService> _logger;
+
+    public CryptographyService(ILogger<CryptographyService> logger) => _logger = logger;
 
     public string Encrypt(string plainText, byte[] encryptionKeyBytes, byte[] iv)
     {
@@ -83,25 +87,35 @@ public class CryptographyService
         );
     }
 
-    public string Decrypt(string encryptedString, string password)
+    public bool Decrypt(string encryptedString, string password, out string decryptedString)
     {
-        var segments = encryptedString.Split(_segmentDelimiter);
-        var encryptedData = Convert.FromHexString(segments[0]);
-        var iv = Convert.FromHexString(segments[1]);
-        var salt = Convert.FromHexString(segments[2]);
-        var iterations = int.Parse(segments[3]);
+        try
+        {
+            var segments = encryptedString.Split(_segmentDelimiter);
+            var encryptedData = Convert.FromHexString(segments[0]);
+            var iv = Convert.FromHexString(segments[1]);
+            var salt = Convert.FromHexString(segments[2]);
+            var iterations = int.Parse(segments[3]);
 
-        var key = GenerateKey(password, salt, iterations);
+            var key = GenerateKey(password, salt, iterations);
 
-        using var aes = Aes.Create();
-        aes.Key = key;
-        aes.IV = iv;
-        var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+            using var aes = Aes.Create();
+            aes.Key = key;
+            aes.IV = iv;
+            var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 
-        using MemoryStream memoryStream = new(encryptedData);
-        using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
-        using StreamReader streamReader = new(cryptoStream);
-        return streamReader.ReadToEnd();
+            using MemoryStream memoryStream = new(encryptedData);
+            using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
+            using StreamReader streamReader = new(cryptoStream);
+            decryptedString = streamReader.ReadToEnd();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Decryption Issue");
+            decryptedString = "Decryption error, check your Key";
+            return false;
+        }
     }
 
     public byte[] GenerateKey(string password, string salt, int interations)
