@@ -20,7 +20,12 @@ public abstract class SechatControllerBase : ControllerBase
         var e2e = Request.Cookies[AppConstants.Cookies.E2E];
         if (string.IsNullOrWhiteSpace(e2e)) return null;
 
-        var e2eData = JsonSerializer.Deserialize<E2EData[]>(e2e);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var e2eData = JsonSerializer.Deserialize<E2EData[]>(e2e, options);
         return e2eData.FirstOrDefault(k => k.RoomId.Equals(roomId));
     }
 }

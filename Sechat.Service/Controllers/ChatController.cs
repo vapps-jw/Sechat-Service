@@ -53,83 +53,6 @@ public class ChatController : SechatControllerBase
         _chatHubContext = chatHubContext;
     }
 
-    //[Obsolete("To be removed")]
-    //[HttpGet("get-state")]
-    //public async Task<IActionResult> GetState()
-    //{
-    //    var rooms = await _chatRepository.GetRoomsWithMessages(UserId);
-    //    var contacts = await _userRepository.GetContacts(UserId);
-
-    //    var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-    //    var iv = Array.ConvertAll(parts, byte.Parse);
-
-    //    var e2e = Request.Cookies[AppConstants.Cookies.E2E];
-    //    var e2eData = JsonSerializer.Deserialize<E2EData[]>(e2e);
-
-    //    foreach (var room in rooms)
-    //    {
-    //        var roomKey = e2eData.FirstOrDefault(k => k.Key.Equals(room.Id));
-
-    //        foreach (var message in room.Messages)
-    //        {
-    //            if (!room.EncryptedByUser)
-    //            {
-    //                message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
-    //            }
-    //            else
-    //            {
-    //                if (roomKey is not null)
-    //                {
-    //                    message.Text = _cryptographyService.Encrypt(message.Text, roomKey.Key);
-    //                }
-    //            }
-
-    //            foreach (var viewer in message.MessageViewers)
-    //            {
-    //                viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
-    //            }
-    //        }
-    //    }
-
-    //    var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
-
-    //    foreach (var room in roomDtos)
-    //    {
-    //        foreach (var message in room.Messages)
-    //        {
-    //            foreach (var viewer in message.MessageViewers)
-    //            {
-    //                if (viewer.User.Equals(UserName))
-    //                {
-    //                    message.WasViewed = true;
-    //                    continue;
-    //                }
-    //            }
-    //        }
-    //    }
-
-    //    var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
-    //    var connectedContacts = contacts
-    //        .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
-    //                    _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
-    //        .Select(c => c.Id)
-    //        .ToList();
-
-    //    foreach (var contactDto in contactDtos)
-    //    {
-    //        contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
-    //            AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
-    //    }
-
-    //    var res = new StateDto
-    //    {
-    //        Rooms = roomDtos,
-    //        UserContacts = contactDtos
-    //    };
-
-    //    return Ok(res);
-    //}
-
     [HttpGet("contacts")]
     public async Task<IActionResult> GetContacts()
     {
@@ -160,6 +83,11 @@ public class ChatController : SechatControllerBase
         foreach (var room in rooms)
         {
             var roomKey = ExtractE2ECookieDataForRoom(room.Id);
+            if (roomKey is null && room.EncryptedByUser)
+            {
+                room.Messages.Clear();
+            }
+
             foreach (var message in room.Messages)
             {
                 if (!room.EncryptedByUser)
@@ -206,10 +134,31 @@ public class ChatController : SechatControllerBase
     {
         var rooms = await _chatRepository.GetRoomsWithMessages(UserId, getRoomUpdates);
 
+        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        var iv = Array.ConvertAll(parts, byte.Parse);
+
         foreach (var room in rooms)
         {
+            var roomKey = ExtractE2ECookieDataForRoom(room.Id);
+            if (roomKey is null && room.EncryptedByUser)
+            {
+                room.Messages.Clear();
+            }
+
             foreach (var message in room.Messages)
             {
+                if (!room.EncryptedByUser)
+                {
+                    message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
+                }
+                else
+                {
+                    if (roomKey is not null)
+                    {
+                        message.Text = _cryptographyService.Decrypt(message.Text, roomKey.Key);
+                    }
+                }
+
                 foreach (var viewer in message.MessageViewers)
                 {
                     viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
@@ -236,48 +185,6 @@ public class ChatController : SechatControllerBase
         return Ok(roomDtos);
     }
 
-    [HttpGet("get-state-updates")]
-    public IActionResult GetStateUpdates() => Ok();
-
-    [HttpGet("new-messages")]
-    public async Task<IActionResult> GetNewMessages([FromBody] GetNewMessagesRequest getNewMessagesRequest)
-    {
-        if (!_chatRepository.IsRoomsMember(UserId, getNewMessagesRequest.LastMessageInTheRooms.Select(lm => lm.RoomId).ToList()))
-        {
-            return BadRequest("Not your room?");
-        }
-
-        var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-        var iv = Array.ConvertAll(parts, byte.Parse);
-
-        var res = new List<RoomDto>();
-        foreach (var lastMessageInTheRoom in getNewMessagesRequest.LastMessageInTheRooms)
-        {
-            var room = await _chatRepository.GetRoomWithNewMessages(lastMessageInTheRoom.RoomId, lastMessageInTheRoom.LastMessage);
-            if (!room.Messages.Any()) continue;
-            if (!room.EncryptedByUser)
-            {
-                room.Messages.ForEach(m => m.Text = _cryptographyService.Decrypt(m.Text, room.RoomKey, iv));
-            }
-            else
-            {
-                var roomKey = ExtractE2ECookieDataForRoom(room.Id);
-                if (roomKey is null)
-                {
-                    room.Messages = new();
-                }
-                else
-                {
-                    room.Messages.ForEach(m => m.Text = _cryptographyService.Decrypt(m.Text, roomKey.Key));
-                }
-            }
-
-            res.Add(_mapper.Map<RoomDto>(room));
-        }
-
-        return Ok(res);
-    }
-
     [HttpPost("send-message")]
     public async Task<IActionResult> SendMessage(
         [FromServices] Channel<DefaultNotificationDto> channel,
@@ -294,7 +201,7 @@ public class ChatController : SechatControllerBase
         if (_chatRepository.RoomEncryptedByUser(incomingMessageDto.RoomId))
         {
             var roomKey = ExtractE2ECookieDataForRoom(incomingMessageDto.RoomId);
-            if (roomKey is null) return BadRequest("Something is wrong with this room");
+            if (roomKey is null) return BadRequest("Secret Key for this Room is missing");
 
             var encryptedMessage = _cryptographyService.Encrypt(incomingMessageDto.Text, roomKey.Key);
 

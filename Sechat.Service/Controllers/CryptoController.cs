@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Sechat.Service.Dtos.ChatDtos;
+using Sechat.Service.Dtos.CookieObjects;
 using Sechat.Service.Services;
 
 namespace Sechat.Service.Controllers;
@@ -17,16 +17,15 @@ public class CryptoController : SechatControllerBase
     public IActionResult Encrypt() => Ok();
 
     [HttpPost("decrypt-message")]
-    public IActionResult Decrypt([FromBody] MessageToDecrypt messageToDecrypt)
+    public IActionResult Decrypt([FromBody] MessageDecryptionRequest messageDecryptionRequest)
     {
-        var roomKey = ExtractE2ECookieDataForRoom(messageToDecrypt.RoomId);
+        var roomKey = ExtractE2ECookieDataForRoom(messageDecryptionRequest.RoomId);
         if (roomKey is null)
         {
-            messageToDecrypt.Text = "Room Password Missing";
-            return Ok(messageToDecrypt);
+            return Unauthorized("You dont have a key");
         }
 
-        return Ok();
-
+        messageDecryptionRequest.Message = _cryptographyService.Decrypt(messageDecryptionRequest.Message, roomKey.Key);
+        return Ok(messageDecryptionRequest);
     }
 }
