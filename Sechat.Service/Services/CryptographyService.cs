@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,9 +8,6 @@ namespace Sechat.Service.Services;
 public class CryptographyService
 {
     private const char _segmentDelimiter = ':';
-    private readonly ILogger<CryptographyService> _logger;
-
-    public CryptographyService(ILogger<CryptographyService> logger) => _logger = logger;
 
     public string Encrypt(string plainText, byte[] encryptionKeyBytes, byte[] iv)
     {
@@ -110,9 +106,8 @@ public class CryptographyService
             decryptedString = streamReader.ReadToEnd();
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, "Decryption Issue");
             decryptedString = "Decryption error, check your Key";
             return false;
         }
