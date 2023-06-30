@@ -184,6 +184,20 @@ public class ChatController : SechatControllerBase
         return Ok();
     }
 
+    [HttpDelete("message/{roomId}/{messageId}")]
+    public async Task<IActionResult> DeleteMessage(string roomId, long messageId)
+    {
+        if (!_chatRepository.MessageExists(messageId)) return BadRequest("Message does not exits");
+        if (!_chatRepository.IsRoomMember(UserId, roomId)) return BadRequest("Not your room");
+        if (!_chatRepository.IsMessageAuthor(messageId, UserId)) return BadRequest("Not your message");
+        if (await _chatRepository.DeleteMessage(roomId, messageId) > 0)
+        {
+            await _chatHubContext.Clients.Group(roomId).MessageDeleted(new MessageId(messageId, roomId));
+            return Ok();
+        }
+        return BadRequest("Message not deleted");
+    }
+
     [HttpPatch("message-viewed/{roomId}/{messageId}")]
     public async Task<IActionResult> MessageViewed(string roomId, long messageId)
     {

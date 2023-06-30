@@ -19,6 +19,14 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     // Messages
 
+    public bool MessageExists(long messageId) => _context.Messages.Any(m => m.Id == messageId);
+
+    public bool IsMessageAuthor(long messageId, string userId)
+    {
+        var msg = _context.Messages.Where(m => m.Id == messageId).ToList();
+        return msg.Any() && msg.First().IdSentBy.Equals(userId);
+    }
+
     public Message CreateMessage(string userId, string messageText, string roomId)
     {
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
@@ -56,6 +64,10 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
         message?.MessageViewers.Add(new MessageViewer(userId));
     }
+
+    public Task<int> DeleteMessage(string roomId, long messageId) => _context.Messages
+        .Where(m => m.Id == messageId && m.RoomId.Equals(roomId))
+        .ExecuteDeleteAsync();
 
     // Rooms
 
