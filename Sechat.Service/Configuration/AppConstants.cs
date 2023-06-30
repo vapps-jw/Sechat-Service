@@ -14,6 +14,7 @@ public class AppConstants
     {
         public const string NewMessage = "New Message";
         public const string NewInvitation = "New Invitation";
+        public const string InvitationApproved = "Invitation Approved";
         public const string VideoCall = "Video Call";
     }
     public struct ContactState

@@ -157,8 +157,11 @@ public class UserController : SechatControllerBase
         if (await _userRepository.SaveChanges() > 0)
         {
             var connectionDto = _mapper.Map<ContactDto>(connection);
-            await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InvitedName)).ConnectionUpdated(connectionDto);
-            await _chatHubContext.Clients.Group(await GetUserId(connectionDto.InviterName)).ConnectionUpdated(connectionDto);
+            var inviterId = await GetUserId(connectionDto.InviterName);
+
+            await _chatHubContext.Clients.Group(UserId).ConnectionUpdated(connectionDto);
+            await _chatHubContext.Clients.Group(inviterId).ConnectionUpdated(connectionDto);
+            await _pushNotificationService.ContactRequestApprovedNotification(inviterId, UserName);
             return Ok();
         }
 
