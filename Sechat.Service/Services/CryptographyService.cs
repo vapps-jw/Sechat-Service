@@ -12,7 +12,6 @@ public class CryptographyService
     public string Encrypt(string plainText, byte[] encryptionKeyBytes, byte[] iv)
     {
         byte[] array;
-
         using (var aes = Aes.Create())
         {
             aes.Key = encryptionKeyBytes;
@@ -83,11 +82,11 @@ public class CryptographyService
         );
     }
 
-    public bool Decrypt(string encryptedString, string password, out string decryptedString)
+    public bool Decrypt(string cipherText, string password, out string decryptedString)
     {
         try
         {
-            var segments = encryptedString.Split(_segmentDelimiter);
+            var segments = cipherText.Split(_segmentDelimiter);
             var encryptedData = Convert.FromHexString(segments[0]);
             var iv = Convert.FromHexString(segments[1]);
             var salt = Convert.FromHexString(segments[2]);
@@ -111,6 +110,15 @@ public class CryptographyService
             decryptedString = "Decryption error, check your Key";
             return false;
         }
+    }
+
+    public byte[] GenerateKey(string password)
+    {
+        var salt = RandomNumberGenerator.GetBytes(16);
+        var interations = new Random().Next(10000, 30000);
+
+        using var keyGenerator = new Rfc2898DeriveBytes(password, salt, interations, HashAlgorithmName.SHA256);
+        return keyGenerator.GetBytes(32);
     }
 
     public byte[] GenerateKey(string password, string salt, int interations)

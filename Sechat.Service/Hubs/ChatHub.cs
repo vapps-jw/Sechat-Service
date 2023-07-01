@@ -196,9 +196,7 @@ public class ChatHub : SechatHubBase<IChatHub>
                 request.RoomName,
                 UserId,
                 UserName,
-                _cryptographyService.GenerateKey($"{Guid.NewGuid()}{_cryptoSettings.CurrentValue.DefaultKeyPart}",
-                _cryptoSettings.CurrentValue.DefaultSalt,
-                _cryptoSettings.CurrentValue.DefaultInterations),
+                _cryptographyService.GenerateKey($"{Guid.NewGuid()}{_cryptoSettings.CurrentValue.DefaultKeyPart}"),
                 request.UserEncrypted);
             if (await _chatRepository.SaveChanges() == 0)
             {
