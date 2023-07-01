@@ -32,6 +32,7 @@ public class AppConstants
         IncomingVideoCall,
         IncomingMessage,
         IncomingContactRequest,
+        ContactRequestApproved,
     }
     public struct ContentTypes
     {

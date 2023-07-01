@@ -47,6 +47,9 @@ public class PushNotificationDispatcher : BackgroundService
                     case Configuration.AppConstants.PushNotificationType.IncomingContactRequest:
                         await ns.IncomingContactRequestNotification(msg.UserId, msg.BodyData);
                         break;
+                    case Configuration.AppConstants.PushNotificationType.ContactRequestApproved:
+                        await ns.ContactRequestApprovedNotification(msg.UserId, msg.BodyData);
+                        break;
                     default:
                         break;
                 }

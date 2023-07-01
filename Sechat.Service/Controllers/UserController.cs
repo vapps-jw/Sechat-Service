@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Sechat.Data.Repositories;
+using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using System;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Controllers;
@@ -149,7 +151,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("approve-connection")]
-    public async Task<IActionResult> ApproveContact(long connectionId)
+    public async Task<IActionResult> ApproveContact([FromServices] Channel<DefaultNotificationDto> channel, long connectionId)
     {
         var connection = _userRepository.ApproveContact(connectionId, UserId);
         if (connection is null) return BadRequest("Can`t do that");
@@ -161,7 +163,7 @@ public class UserController : SechatControllerBase
 
             await _chatHubContext.Clients.Group(UserId).ConnectionUpdated(connectionDto);
             await _chatHubContext.Clients.Group(inviterId).ConnectionUpdated(connectionDto);
-            await _pushNotificationService.ContactRequestApprovedNotification(inviterId, UserName);
+            await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.ContactRequestApproved, inviterId, UserName));
             return Ok();
         }
 
