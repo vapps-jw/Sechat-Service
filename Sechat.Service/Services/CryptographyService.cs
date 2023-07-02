@@ -9,6 +9,8 @@ public class CryptographyService
 {
     private const char _segmentDelimiter = ':';
 
+    public record Keys(string Public, string Private);
+
     public string Encrypt(string plainText, byte[] encryptionKeyBytes, byte[] iv)
     {
         byte[] array;
@@ -110,6 +112,31 @@ public class CryptographyService
             decryptedString = "Decryption error, check your Key";
             return false;
         }
+    }
+
+    public string AsymmetricEncrypt(string plainText, string publicKey)
+    {
+        using var rsaCryptoServiceProvider = new RSACryptoServiceProvider();
+        rsaCryptoServiceProvider.FromXmlString(publicKey);
+
+        var byteData = Encoding.UTF8.GetBytes(plainText);
+        var encryptedData = rsaCryptoServiceProvider.Encrypt(byteData, false);
+        return Convert.ToBase64String(encryptedData);
+    }
+    public string AsymmetricDecrypt(string cipherText, string privateKey)
+    {
+        using var rsaCryptoServiceProvider = new RSACryptoServiceProvider();
+        rsaCryptoServiceProvider.FromXmlString(privateKey);
+
+        var cipherDataAsByte = Convert.FromBase64String(cipherText);
+        var encryptedData = rsaCryptoServiceProvider.Decrypt(cipherDataAsByte, false);
+        return Encoding.UTF8.GetString(encryptedData);
+    }
+
+    public Keys GenetateAsymmetricKeys(int keySize)
+    {
+        var rsa = new RSACryptoServiceProvider(keySize);
+        return new Keys(rsa.ToXmlString(false), rsa.ToXmlString(true));
     }
 
     public byte[] GenerateKey(string password)

@@ -3,7 +3,7 @@ namespace Sechat.Tests;
 public class CryptographyTests
 {
     [Fact]
-    public void EncryptionWithPasswordTest()
+    public void PasswordEncryptionTest()
     {
         var service = new Service.Services.CryptographyService();
         var secretString = "test-secret";
@@ -14,6 +14,19 @@ public class CryptographyTests
 
         var encrypted = service.Encrypt(secretString, key, iv);
         var decrypted = service.Decrypt(encrypted, key, iv);
+
+        Assert.Equal(secretString, decrypted);
+    }
+
+    [Fact]
+    public void AsymmetricEncryptionTest()
+    {
+        var service = new Service.Services.CryptographyService();
+        var keys = service.GenetateAsymmetricKeys(4096);
+        var secretString = "test-secret";
+
+        var encrypted = service.AsymmetricEncrypt(secretString, keys.Public);
+        var decrypted = service.AsymmetricDecrypt(encrypted, keys.Private);
 
         Assert.Equal(secretString, decrypted);
     }
