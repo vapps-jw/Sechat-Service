@@ -3,6 +3,7 @@ public enum KeyType
 {
     EmailUpdate = 0,
     PasswordReset = 1,
+    UserCustomKey = 2,
 }
 public enum VideoCallType
 {
