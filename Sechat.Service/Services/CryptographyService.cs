@@ -8,6 +8,8 @@ namespace Sechat.Service.Services;
 public class CryptographyService
 {
     private const char _segmentDelimiter = ':';
+    private const string _rsaPrivateKey = "RSA PRIVATE KEY";
+    private const string _subjectPublicKeyInfo = "PUBLIC KEY";
 
     public record Keys(string Public, string Private);
 
@@ -116,27 +118,64 @@ public class CryptographyService
 
     public string AsymmetricEncrypt(string plainText, string publicKey)
     {
-        using var rsaCryptoServiceProvider = new RSACryptoServiceProvider();
-        rsaCryptoServiceProvider.FromXmlString(publicKey);
+        using var rsa = new RSACryptoServiceProvider();
+
+        rsa.ImportSubjectPublicKeyInfo(PemToBer(publicKey, _subjectPublicKeyInfo), out _);
 
         var byteData = Encoding.UTF8.GetBytes(plainText);
-        var encryptedData = rsaCryptoServiceProvider.Encrypt(byteData, false);
+        var encryptedData = rsa.Encrypt(byteData, false);
         return Convert.ToBase64String(encryptedData);
     }
     public string AsymmetricDecrypt(string cipherText, string privateKey)
     {
-        using var rsaCryptoServiceProvider = new RSACryptoServiceProvider();
-        rsaCryptoServiceProvider.FromXmlString(privateKey);
+        using var rsa = new RSACryptoServiceProvider();
+
+        rsa.ImportRSAPrivateKey(PemToBer(privateKey, _rsaPrivateKey), out _);
 
         var cipherDataAsByte = Convert.FromBase64String(cipherText);
-        var encryptedData = rsaCryptoServiceProvider.Decrypt(cipherDataAsByte, false);
+        var encryptedData = rsa.Decrypt(cipherDataAsByte, false);
         return Encoding.UTF8.GetString(encryptedData);
     }
 
-    public Keys GenetateAsymmetricKeys(int keySize)
+    public Keys GenerateAsymmetricKeys(int keySize)
     {
         var rsa = new RSACryptoServiceProvider(keySize);
-        return new Keys(rsa.ToXmlString(false), rsa.ToXmlString(true));
+        return new Keys(MakePem(rsa.ExportSubjectPublicKeyInfo(), _subjectPublicKeyInfo), MakePem(rsa.ExportRSAPrivateKey(), _rsaPrivateKey));
+    }
+
+    private string MakePem(byte[] ber, string header)
+    {
+        var builder = new StringBuilder("-----BEGIN ");
+        _ = builder.Append(header);
+        _ = builder.AppendLine("-----");
+
+        var base64 = Convert.ToBase64String(ber);
+        var offset = 0;
+        const int LineLength = 64;
+
+        while (offset < base64.Length)
+        {
+            var lineEnd = Math.Min(offset + LineLength, base64.Length);
+            _ = builder.AppendLine(base64[offset..lineEnd]);
+            offset = lineEnd;
+        }
+
+        _ = builder.Append("-----END ");
+        _ = builder.Append(header);
+        _ = builder.AppendLine("-----");
+        return builder.ToString();
+    }
+
+    private byte[] PemToBer(string pem, string header)
+    {
+        var begin = $"-----BEGIN {header}-----";
+        var end = $"-----END {header}-----";
+
+        var beginIdx = pem.IndexOf(begin);
+        var base64Start = beginIdx + begin.Length;
+        var endIdx = pem.IndexOf(end, base64Start);
+
+        return Convert.FromBase64String(pem[base64Start..endIdx]);
     }
 
     public byte[] GenerateKey(string password)

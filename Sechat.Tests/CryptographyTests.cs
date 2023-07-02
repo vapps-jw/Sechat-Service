@@ -22,7 +22,7 @@ public class CryptographyTests
     public void AsymmetricEncryptionTest()
     {
         var service = new Service.Services.CryptographyService();
-        var keys = service.GenetateAsymmetricKeys(4096);
+        var keys = service.GenerateAsymmetricKeys(4096);
         var secretString = "test-secret";
 
         var encrypted = service.AsymmetricEncrypt(secretString, keys.Public);
