@@ -126,6 +126,7 @@ public class CryptographyService
         var encryptedData = rsa.Encrypt(byteData, false);
         return Convert.ToBase64String(encryptedData);
     }
+
     public string AsymmetricDecrypt(string cipherText, string privateKey)
     {
         using var rsa = new RSACryptoServiceProvider();
@@ -185,6 +186,17 @@ public class CryptographyService
 
         using var keyGenerator = new Rfc2898DeriveBytes(password, salt, interations, HashAlgorithmName.SHA256);
         return keyGenerator.GetBytes(32);
+    }
+
+    public string GenerateStringKey()
+    {
+        var salt = RandomNumberGenerator.GetBytes(16);
+        var interations = new Random().Next(10000, 30000);
+
+        using var crypto = Aes.Create();
+        crypto.GenerateKey();
+        using var keyGenerator = new Rfc2898DeriveBytes(Convert.ToBase64String(crypto.Key), salt, interations, HashAlgorithmName.SHA256);
+        return Convert.ToBase64String(keyGenerator.GetBytes(32));
     }
 
     public byte[] GenerateKey(string password, string salt, int interations)

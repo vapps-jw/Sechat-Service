@@ -147,7 +147,7 @@ public class ChatController : SechatControllerBase
         }
 
         res.Text = messageToSendBack;
-        var messageDto = _mapper.Map<RoomMessageDto>(res);
+        var messageDto = _mapper.Map<MessageDto>(res);
 
         foreach (var viewer in messageDto.MessageViewers)
         {

@@ -14,6 +14,6 @@ public class RoomDto
     public DateTime LastActivity { get; set; } = DateTime.UtcNow;
     public DateTime Created { get; set; } = DateTime.UtcNow;
 
-    public List<RoomMessageDto> Messages { get; set; } = new();
+    public List<MessageDto> Messages { get; set; } = new();
     public List<RoomMemberDto> Members { get; set; } = new();
 }

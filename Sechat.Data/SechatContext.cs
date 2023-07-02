@@ -19,7 +19,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; }
     public DbSet<MessageViewer> MessageViewers { get; set; }
     public DbSet<CallLog> CallLogs { get; set; }
-    public DbSet<PrivateMessage> PrivateMessages { get; set; }
+    public DbSet<DirectMessage> DirectMessages { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -29,6 +29,13 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     {
         _ = modelBuilder.Entity<Message>()
             .HasIndex(c => c.Created);
+        _ = modelBuilder.Entity<Message>()
+            .HasMany(x => x.MessageViewers)
+            .WithOne(x => x.Message)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        _ = modelBuilder.Entity<DirectMessage>()
+            .HasIndex(c => c.Created);
 
         _ = modelBuilder.Entity<Feature>()
             .HasIndex(c => c.Name);
@@ -36,46 +43,33 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
         _ = modelBuilder.Entity<MessageViewer>()
             .HasIndex(c => c.UserId);
 
-        _ = modelBuilder.Entity<Message>()
-            .HasMany(x => x.MessageViewers)
-            .WithOne(x => x.Message)
-            .OnDelete(DeleteBehavior.Cascade);
-
         _ = modelBuilder.Entity<UserProfile>()
             .HasMany(x => x.NotificationSubscriptions)
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
-
         _ = modelBuilder.Entity<UserProfile>()
             .HasMany(x => x.Features)
             .WithMany(x => x.UserProfiles);
-
         _ = modelBuilder.Entity<UserProfile>()
             .HasMany(x => x.Rooms)
             .WithMany(x => x.Members);
-
         _ = modelBuilder.Entity<UserProfile>()
             .HasMany(x => x.Keys)
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
-
-        _ = modelBuilder.Entity<UserProfile>()
-            .HasMany(x => x.PrivateMessages)
-            .WithOne(x => x.UserProfile)
-            .OnDelete(DeleteBehavior.Cascade);
-
         _ = modelBuilder.Entity<UserProfile>()
             .HasMany(x => x.CallLogs)
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
 
-        _ = modelBuilder.Entity<Message>()
-              .HasIndex(c => c.Created);
-
         _ = modelBuilder.Entity<Contact>()
             .HasIndex(c => c.InviterId);
         _ = modelBuilder.Entity<Contact>()
             .HasIndex(c => c.InvitedId);
+        _ = modelBuilder.Entity<Contact>()
+            .HasMany(x => x.DirectMessages)
+            .WithOne(x => x.Contact)
+            .OnDelete(DeleteBehavior.Cascade);
 
         _ = modelBuilder.Entity<Room>()
             .HasMany(x => x.Messages)

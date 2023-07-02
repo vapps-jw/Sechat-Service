@@ -182,6 +182,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
         var newMemberProfile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
 
         room.Members.Add(newMemberProfile);
+        room.LastActivity = DateTime.UtcNow;
         return room;
     }
 

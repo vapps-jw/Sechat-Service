@@ -42,4 +42,27 @@ public class CryptographyTests
 
         Assert.True(res);
     }
+
+    [Fact]
+    public void GenerateRandomStringTest()
+    {
+        var service = new Service.Services.CryptographyService();
+        var text = service.GenerateStringKey();
+
+        Assert.NotNull(text);
+    }
+
+    [Fact]
+    public void DirectMessageTest()
+    {
+        var service = new Service.Services.CryptographyService();
+        var secretString = "test-message";
+
+        var key = service.GenerateStringKey();
+
+        var encrypted = service.Encrypt(secretString, key);
+        _ = service.Decrypt(encrypted, key, out var decrypted);
+
+        Assert.Equal(secretString, decrypted);
+    }
 }

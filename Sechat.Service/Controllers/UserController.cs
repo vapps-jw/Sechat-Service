@@ -19,6 +19,7 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class UserController : SechatControllerBase
 {
+    private readonly CryptographyService _cryptographyService;
     private readonly PushNotificationService _pushNotificationService;
     private readonly IMapper _mapper;
     private readonly UserManager<IdentityUser> _userManager;
@@ -26,12 +27,14 @@ public class UserController : SechatControllerBase
     private readonly UserRepository _userRepository;
 
     public UserController(
+          CryptographyService cryptographyService,
         PushNotificationService pushNotificationService,
         IMapper mapper,
         UserManager<IdentityUser> userManager,
         IHubContext<ChatHub, IChatHub> chatHubContext,
         UserRepository userRepository)
     {
+        _cryptographyService = cryptographyService;
         _pushNotificationService = pushNotificationService;
         _mapper = mapper;
         _userManager = userManager;
@@ -71,15 +74,16 @@ public class UserController : SechatControllerBase
         var invitedUser = await _userManager.FindByNameAsync(invitationDto.Username);
         if (invitedUser is null) return BadRequest("No one was invited");
 
-        var connectionExists = _userRepository.ContactExists(UserId, invitedUser.Id);
-        if (connectionExists) return BadRequest("Contact exists");
+        var contactExists = _userRepository.ContactExists(UserId, invitedUser.Id);
+        if (contactExists) return BadRequest("Contact exists");
 
-        var newConnection = _userRepository.CreateContact(UserId, UserName, invitedUser.Id, invitedUser.UserName);
+        var newKey = _cryptographyService.GenerateStringKey();
+        var newContact = _userRepository.CreateContact(UserId, UserName, invitedUser.Id, invitedUser.UserName, newKey);
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(_mapper.Map<ContactDto>(newConnection));
-            await _chatHubContext.Clients.Group(UserId).ConnectionRequestReceived(_mapper.Map<ContactDto>(newConnection));
+            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(_mapper.Map<ContactDto>(newContact));
+            await _chatHubContext.Clients.Group(UserId).ConnectionRequestReceived(_mapper.Map<ContactDto>(newContact));
             await _pushNotificationService.IncomingContactRequestNotification(invitedUser.Id, UserName);
             return Ok();
         }

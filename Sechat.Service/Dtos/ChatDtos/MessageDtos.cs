@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Sechat.Service.Dtos.ChatDtos;
 
-public class RoomMessageDto
+public class MessageDto
 {
     public long Id { get; set; }
     public string NameSentBy { get; set; } = string.Empty;
@@ -16,6 +16,20 @@ public class RoomMessageDto
     public bool WasViewed { get; set; }
 
     public List<MessageViewerDto> MessageViewers { get; set; } = new();
+}
+
+public class DirectMessageDto
+{
+    public long Id { get; set; }
+    public DateTime Created { get; set; } = DateTime.UtcNow;
+
+    public string FromId { get; set; } = string.Empty;
+    public string ToId { get; set; } = string.Empty;
+
+    public string Text { get; set; } = string.Empty;
+    public bool WasViewed { get; set; }
+
+    public long ContactId { get; set; }
 }
 
 public class MessageViewerDto

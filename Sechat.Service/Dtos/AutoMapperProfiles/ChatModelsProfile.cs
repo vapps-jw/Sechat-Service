@@ -11,7 +11,9 @@ public class ChatModelsProfile : Profile
     public ChatModelsProfile()
     {
         _ = CreateMap<Room, RoomDto>();
-        _ = CreateMap<Message, RoomMessageDto>();
+        _ = CreateMap<Message, MessageDto>();
+        _ = CreateMap<Contact, ContactDto>();
+        _ = CreateMap<DirectMessage, DirectMessageDto>();
         _ = CreateMap<UserProfile, RoomMemberDto>();
         _ = CreateMap<MessageViewer, MessageViewerDto>().ForMember(x => x.User, y => y.MapFrom(z => z.UserId));
     }

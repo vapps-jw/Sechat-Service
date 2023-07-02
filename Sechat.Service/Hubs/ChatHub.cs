@@ -38,7 +38,7 @@ public interface IChatHub
     Task CamStateChanged(StringMessage message);
 
     // Chat Messages
-    Task MessageIncoming(RoomMessageDto message);
+    Task MessageIncoming(MessageDto message);
     Task MessagesWereViewed(RoomUserActionMessage message);
     Task MessageWasViewed(RoomMessageUserActionMessage message);
     Task MessageDeleted(MessageId messageId);
@@ -196,7 +196,7 @@ public class ChatHub : SechatHubBase<IChatHub>
                 request.RoomName,
                 UserId,
                 UserName,
-                _cryptographyService.GenerateKey($"{Guid.NewGuid()}{_cryptoSettings.CurrentValue.DefaultKeyPart}"),
+                _cryptographyService.GenerateKey(_cryptographyService.GenerateStringKey()),
                 request.UserEncrypted);
             if (await _chatRepository.SaveChanges() == 0)
             {

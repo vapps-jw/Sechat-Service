@@ -98,14 +98,15 @@ public class UserRepository : RepositoryBase<SechatContext>
     public Task<Contact> GetContact(long connectionId) =>
         _context.Contacts.FirstOrDefaultAsync(uc => uc.Id == connectionId);
 
-    public Contact CreateContact(string inviterId, string inviterName, string invitedId, string invitedName)
+    public Contact CreateContact(string inviterId, string inviterName, string invitedId, string invitedName, string contactKey)
     {
         var newConnection = new Contact()
         {
             InvitedId = invitedId,
             InvitedName = invitedName,
             InviterId = inviterId,
-            InviterName = inviterName
+            InviterName = inviterName,
+            ContactKey = contactKey
         };
         _ = _context.Contacts.Add(newConnection);
         return newConnection;
