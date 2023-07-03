@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sechat.Data.Models.UserDetails;
 using Sechat.Data.Projections;
+using Sechat.Data.QueryModels;
 
 namespace Sechat.Data.Repositories;
 
@@ -17,6 +18,15 @@ public class UserRepository : RepositoryBase<SechatContext>
             (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
             (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
 
+    public bool CheckContact(long contactId, string userId, out Contact contact)
+    {
+        contact = _context.Contacts
+            .Where(c => (c.Id == contactId && c.InvitedId.Equals(userId)) || c.InviterId.Equals(userId))
+            .FirstOrDefault();
+
+        return contact is not null && !contact.Blocked && contact.Approved;
+    }
+
     public bool ContactExists(long connectionId, string userOne, string userTwo)
     {
         var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == connectionId);
@@ -32,28 +42,28 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     public void DeleteContact(long id)
     {
-        var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == id);
-        if (connection is not null)
+        var contact = _context.Contacts.FirstOrDefault(uc => uc.Id == id);
+        if (contact is not null)
         {
-            _ = _context.Contacts.Remove(connection);
+            _ = _context.Contacts.Remove(contact);
         }
-    }
-
-    public void DeleteContactsFor(string userId) => _context.Contacts.RemoveRange(_context.Contacts
-            .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId)));
-
-    public long GetContactId(string userOne, string userTwo)
-    {
-        var connection = _context.Contacts.FirstOrDefault(uc =>
-            (uc.InvitedId.Equals(userTwo) && uc.InviterId.Equals(userOne)) ||
-            (uc.InviterId.Equals(userTwo) && uc.InvitedId.Equals(userOne)));
-
-        return connection is not null ? connection.Id : 0;
     }
 
     public Task<List<Contact>> GetContacts(string userId) =>
         _context.Contacts
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
+            .ToListAsync();
+
+    public Task<List<Contact>> GetContactsWithMessages(string userId) =>
+        _context.Contacts
+            .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
+            .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
+            .ToListAsync();
+
+    public Task<List<Contact>> GetContactsWithMessages(string userId, List<GetContactUpdate> contactsToUpdate) =>
+        _context.Contacts
+            .Where(uc => contactsToUpdate.Any(ctu => ctu.ContactId == uc.Id) && (uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId)))
+            .Include(c => c.DirectMessages.Where(dm => contactsToUpdate.First(c => c.ContactId == c.ContactId).LastMessage < dm.Id))
             .ToListAsync();
 
     public Task<List<string>> GetAllowedContactsIds(string userId) =>
@@ -64,14 +74,14 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     public Contact BlockContact(long connectionId, string blockedById, string blockedByName)
     {
-        var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == connectionId);
-        if (connection is null || connection.Blocked) return null;
+        var contact = _context.Contacts.FirstOrDefault(uc => uc.Id == connectionId);
+        if (contact is null || contact.Blocked) return null;
 
-        connection.Blocked = true;
-        connection.BlockedById = blockedById;
-        connection.BlockedByName = blockedByName;
+        contact.Blocked = true;
+        contact.BlockedById = blockedById;
+        contact.BlockedByName = blockedByName;
 
-        return connection;
+        return contact;
     }
 
     public Contact AllowContact(long connectionId, string userId)
@@ -95,8 +105,8 @@ public class UserRepository : RepositoryBase<SechatContext>
         return connection;
     }
 
-    public Task<Contact> GetContact(long connectionId) =>
-        _context.Contacts.FirstOrDefaultAsync(uc => uc.Id == connectionId);
+    public Task<Contact> GetContact(long contactId) =>
+        _context.Contacts.FirstOrDefaultAsync(uc => uc.Id == contactId);
 
     public Contact CreateContact(string inviterId, string inviterName, string invitedId, string invitedName, string contactKey)
     {

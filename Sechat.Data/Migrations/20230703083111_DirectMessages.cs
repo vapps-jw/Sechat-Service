@@ -31,8 +31,8 @@ namespace Sechat.Data.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FromId = table.Column<string>(type: "text", nullable: true),
-                    ToId = table.Column<string>(type: "text", nullable: true),
+                    IdSentBy = table.Column<string>(type: "text", nullable: true),
+                    NameSentBy = table.Column<string>(type: "text", nullable: true),
                     Text = table.Column<string>(type: "text", nullable: true),
                     WasViewed = table.Column<bool>(type: "boolean", nullable: false),
                     ContactId = table.Column<long>(type: "bigint", nullable: false),

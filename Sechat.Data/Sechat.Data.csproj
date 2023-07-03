@@ -24,8 +24,4 @@
 	  <ProjectReference Include="..\Sechat.Domain\Sechat.Domain.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Models\ChatModels\SecretZone\" />
-	</ItemGroup>
-
 </Project>

@@ -22,5 +22,5 @@ public record Contact : BaseModel<long>
     public string BlockedById { get; set; } = string.Empty;
     public string BlockedByName { get; set; } = string.Empty;
 
-    public List<DirectMessage> DirectMessages { get; set; }
+    public List<DirectMessage> DirectMessages { get; set; } = new();
 }

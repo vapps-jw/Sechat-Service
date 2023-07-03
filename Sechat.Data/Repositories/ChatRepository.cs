@@ -21,18 +21,28 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public bool MessageExists(long messageId) => _context.Messages.Any(m => m.Id == messageId);
 
+    public bool DirectMessageExists(long messageId) => _context.DirectMessages.Any(m => m.Id == messageId);
+
     public bool IsMessageAuthor(long messageId, string userId)
     {
-        var msg = _context.Messages.Where(m => m.Id == messageId).ToList();
-        return msg.Any() && msg.First().IdSentBy.Equals(userId);
+        var msg = _context.Messages.Where(m => m.Id == messageId).FirstOrDefault();
+        return msg is not null && msg.IdSentBy.Equals(userId);
+    }
+
+    public bool IsDirectMessageAuthor(long messageId, string userId)
+    {
+        var msg = _context.DirectMessages.Where(m => m.Id == messageId).FirstOrDefault();
+        return msg is not null && msg.IdSentBy.Equals(userId);
     }
 
     public Message CreateMessage(string userId, string messageText, string roomId)
     {
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
-        if (profile == null) return null;
+        if (profile is null) return null;
 
         var room = _context.Rooms.FirstOrDefault(r => r.Id.Equals(roomId));
+        if (room is null) return null;
+
         room.LastActivity = DateTime.UtcNow;
         profile.LastActivity = DateTime.UtcNow;
 
@@ -45,6 +55,24 @@ public class ChatRepository : RepositoryBase<SechatContext>
             MessageViewers = new List<MessageViewer>() { new MessageViewer(userId) }
         };
         room.Messages.Add(newMessage);
+        return newMessage;
+    }
+
+    public DirectMessage CreateDirectMessage(string userId, string messageText, long contactId)
+    {
+        var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
+        if (profile is null) return null;
+
+        var contact = _context.Contacts.FirstOrDefault(p => p.Id == contactId);
+        if (contact is null) return null;
+
+        var newMessage = new DirectMessage()
+        {
+            Text = messageText,
+            IdSentBy = profile.Id,
+            NameSentBy = profile.UserName,
+        };
+        contact.DirectMessages.Add(newMessage);
         return newMessage;
     }
 
@@ -65,8 +93,27 @@ public class ChatRepository : RepositoryBase<SechatContext>
         message?.MessageViewers.Add(new MessageViewer(userId));
     }
 
+    public void MarkDirectMessageAsViewed(string userId, long contactId, long messageId)
+    {
+        var message = _context.DirectMessages
+            .FirstOrDefault(m => m.Id == messageId && m.ContactId == contactId && !m.IdSentBy.Equals(userId));
+        message.WasViewed = true;
+    }
+
+    public void MarkDirectMessagesAsViewed(string userId, long contactId)
+    {
+        var messages = _context.DirectMessages
+            .Where(m => m.ContactId == contactId && !m.IdSentBy.Equals(userId))
+            .ExecuteUpdate(setters => setters
+                .SetProperty(m => m.WasViewed, true));
+    }
+
     public Task<int> DeleteMessage(string roomId, long messageId) => _context.Messages
         .Where(m => m.Id == messageId && m.RoomId.Equals(roomId))
+        .ExecuteDeleteAsync();
+
+    public Task<int> DeleteDirectMessage(long contactId, long messageId) => _context.DirectMessages
+        .Where(m => m.Id == messageId && m.ContactId == contactId)
         .ExecuteDeleteAsync();
 
     // Rooms

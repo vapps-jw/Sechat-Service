@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Sechat.Data.Models.ChatModels;
+using Sechat.Data.Models.UserDetails;
 using Sechat.Data.QueryModels;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
@@ -57,8 +58,9 @@ public class ChatController : SechatControllerBase
     [HttpGet("contacts")]
     public async Task<IActionResult> GetContacts()
     {
-        var contacts = await _userRepository.GetContacts(UserId);
-        var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
+        var contacts = await _userRepository.GetContactsWithMessages(UserId);
+        var contactDtos = PrepareContactsDtos(contacts);
+
         var connectedContacts = contacts
             .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
                         _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
@@ -104,6 +106,15 @@ public class ChatController : SechatControllerBase
         var roomDtos = await PrepareRoomDtos(rooms);
 
         return Ok(roomDtos);
+    }
+
+    [HttpPost("contacts-update")]
+    public async Task<IActionResult> GetContactsUpdateAsync([FromBody] List<GetContactUpdate> getContactUpdates)
+    {
+        var contacts = await _userRepository.GetContactsWithMessages(UserId, getContactUpdates);
+        var contactDtos = PrepareContactsDtos(contacts);
+
+        return Ok(contactDtos);
     }
 
     [HttpPost("send-message")]
@@ -169,6 +180,41 @@ public class ChatController : SechatControllerBase
         return Ok();
     }
 
+    [HttpPost("send-direct-message")]
+    public async Task<IActionResult> SendDirectMessage(
+    [FromServices] Channel<DefaultNotificationDto> channel,
+    [FromBody] IncomingDirectMessage incomingMessageDto)
+    {
+        var recipient = await _userManager.FindByNameAsync(incomingMessageDto.Recipient);
+        var contact = _userRepository.GetContact(UserId, recipient.Id);
+
+        if (contact.Blocked) return BadRequest("User blocked");
+        if (!contact.Approved) return BadRequest("Contact was not approved");
+
+        if (string.IsNullOrEmpty(contact.ContactKey))
+        {
+            var newKey = _cryptographyService.GenerateStringKey();
+            contact.ContactKey = newKey;
+        }
+
+        var messageToSave = _cryptographyService.Encrypt(incomingMessageDto.Text, contact.ContactKey);
+
+        var res = _chatRepository.CreateDirectMessage(UserId, messageToSave, contact.Id);
+        if (await _chatRepository.SaveChanges() == 0)
+        {
+            return BadRequest("Message not sent");
+        }
+
+        res.Text = incomingMessageDto.Text;
+        var messageDto = _mapper.Map<DirectMessageDto>(res);
+
+        await _chatHubContext.Clients.Group(UserId).DirectMessageIncoming(messageDto);
+        await _chatHubContext.Clients.Group(recipient.Id).DirectMessageIncoming(messageDto);
+        await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingDirectMessage, recipient.Id, UserName));
+
+        return Ok();
+    }
+
     [HttpPatch("messages-viewed")]
     public async Task<IActionResult> MessagesViewed([FromBody] ResourceGuid resourceGuid)
     {
@@ -184,6 +230,21 @@ public class ChatController : SechatControllerBase
         return Ok();
     }
 
+    [HttpPatch("direct-messages-viewed")]
+    public async Task<IActionResult> DirectMessagesViewed([FromBody] ResourceId resourceId)
+    {
+        if (!_userRepository.CheckContact(resourceId.Id, UserId, out var contact))
+        {
+            return BadRequest("You cant do that");
+        }
+
+        _chatRepository.MarkDirectMessagesAsViewed(UserId, resourceId.Id);
+        var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
+        await _chatHubContext.Clients.Group(recipientId).DirectMessagesWereViewed(new DirectMessagesViewed(resourceId.Id));
+
+        return Ok();
+    }
+
     [HttpDelete("message/{roomId}/{messageId}")]
     public async Task<IActionResult> DeleteMessage(string roomId, long messageId)
     {
@@ -193,6 +254,25 @@ public class ChatController : SechatControllerBase
         if (await _chatRepository.DeleteMessage(roomId, messageId) > 0)
         {
             await _chatHubContext.Clients.Group(roomId).MessageDeleted(new MessageId(messageId, roomId));
+            return Ok();
+        }
+        return BadRequest("Message not deleted");
+    }
+
+    [HttpDelete("direct-message/{contactId}/{messageId}")]
+    public async Task<IActionResult> DeleteDirectMessage(long contactId, long messageId)
+    {
+        if (!_chatRepository.DirectMessageExists(messageId)) return BadRequest("Message does not exits");
+        if (!_chatRepository.IsDirectMessageAuthor(messageId, UserId)) return BadRequest("Not your message");
+
+        var contact = await _userRepository.GetContact(contactId);
+        if (contact.Blocked) return BadRequest("User blocked");
+        if (!contact.Approved) return BadRequest("Contact was not approved");
+
+        if (await _chatRepository.DeleteDirectMessage(contactId, messageId) > 0)
+        {
+            await _chatHubContext.Clients.Group(contact.InvitedId).DirectMessageDeleted(new DirectMessageId(messageId, contactId));
+            await _chatHubContext.Clients.Group(contact.InviterId).DirectMessageDeleted(new DirectMessageId(messageId, contactId));
             return Ok();
         }
         return BadRequest("Message not deleted");
@@ -213,6 +293,24 @@ public class ChatController : SechatControllerBase
         return Ok();
     }
 
+    [HttpPatch("direct-message-viewed/{contactId}/{messageId}")]
+    public async Task<IActionResult> DirectMessageViewed(long contactId, long messageId)
+    {
+        if (!_userRepository.CheckContact(contactId, UserId, out var contact))
+        {
+            return BadRequest("You cant do that");
+        }
+
+        _chatRepository.MarkDirectMessageAsViewed(UserId, contactId, messageId);
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
+            await _chatHubContext.Clients.Group(recipientId).DirectMessageWasViewed(new DirectMessageViewed(contactId, messageId));
+        }
+
+        return Ok();
+    }
+
     [HttpPost("add-to-room")]
     public async Task<IActionResult> AddToRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
     {
@@ -221,6 +319,7 @@ public class ChatController : SechatControllerBase
 
         var contact = await _userRepository.GetContact(roomMemberUpdate.connectionId);
         if (contact.Blocked) return BadRequest("User blocked");
+        if (!contact.Approved) return BadRequest("Contact was not approved");
 
         var room = _chatRepository.AddToRoom(roomMemberUpdate.RoomId, user.Id);
         if (await _chatRepository.SaveChanges() > 0)
@@ -340,6 +439,37 @@ public class ChatController : SechatControllerBase
         }
 
         return roomDtos;
+    }
+
+    private List<ContactDto> PrepareContactsDtos(List<Contact> contacts)
+    {
+        var decryptionErrors = new List<long>();
+        foreach (var contact in contacts)
+        {
+            foreach (var message in contact.DirectMessages)
+            {
+
+                if (contact.EncryptedByUser)
+                {
+
+                }
+                else
+                {
+                    if (_cryptographyService.Decrypt(message.Text, contact.ContactKey, out var result))
+                    {
+                        message.Text = result;
+                    }
+                    else
+                    {
+                        message.Text = result;
+                        decryptionErrors.Add(message.Id);
+                    }
+                }
+            }
+        }
+
+        var dtos = _mapper.Map<List<ContactDto>>(contacts);
+        return dtos;
     }
 
     private async Task<RoomDto> PrepareRoomDto(Room room)

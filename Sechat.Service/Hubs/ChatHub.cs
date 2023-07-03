@@ -41,7 +41,13 @@ public interface IChatHub
     Task MessageIncoming(MessageDto message);
     Task MessagesWereViewed(RoomUserActionMessage message);
     Task MessageWasViewed(RoomMessageUserActionMessage message);
-    Task MessageDeleted(MessageId messageId);
+    Task MessageDeleted(MessageId message);
+
+    // Chat Direct Messages
+    Task DirectMessageIncoming(DirectMessageDto message);
+    Task DirectMessagesWereViewed(DirectMessagesViewed message);
+    Task DirectMessageWasViewed(DirectMessageViewed message);
+    Task DirectMessageDeleted(DirectMessageId message);
 
     // Chat Rooms
     Task RoomDeleted(ResourceGuid message);

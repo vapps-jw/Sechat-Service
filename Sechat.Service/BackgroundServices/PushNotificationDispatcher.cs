@@ -39,16 +39,19 @@ public class PushNotificationDispatcher : BackgroundService
                 switch (msg.NotificationType)
                 {
                     case Configuration.AppConstants.PushNotificationType.IncomingVideoCall:
-                        await ns.IncomingVideoCallNotification(msg.UserId, msg.BodyData);
+                        await ns.IncomingVideoCallNotification(msg.RecipientId, msg.BodyData);
                         break;
                     case Configuration.AppConstants.PushNotificationType.IncomingMessage:
-                        await ns.IncomingMessageNotification(msg.UserId, msg.BodyData);
+                        await ns.IncomingMessageNotification(msg.RecipientId, msg.BodyData);
                         break;
                     case Configuration.AppConstants.PushNotificationType.IncomingContactRequest:
-                        await ns.IncomingContactRequestNotification(msg.UserId, msg.BodyData);
+                        await ns.IncomingContactRequestNotification(msg.RecipientId, msg.BodyData);
                         break;
                     case Configuration.AppConstants.PushNotificationType.ContactRequestApproved:
-                        await ns.ContactRequestApprovedNotification(msg.UserId, msg.BodyData);
+                        await ns.ContactRequestApprovedNotification(msg.RecipientId, msg.BodyData);
+                        break;
+                    case Configuration.AppConstants.PushNotificationType.IncomingDirectMessage:
+                        await ns.IncomingDirectMessageNotification(msg.RecipientId, msg.BodyData);
                         break;
                     default:
                         break;

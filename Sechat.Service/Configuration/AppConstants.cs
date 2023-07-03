@@ -13,6 +13,7 @@ public class AppConstants
     public struct PushNotificationTitles
     {
         public const string NewMessage = "New Message";
+        public const string NewDirectMessage = "Direct Message";
         public const string NewInvitation = "New Invitation";
         public const string InvitationApproved = "Invitation Approved";
         public const string VideoCall = "Video Call";
@@ -26,11 +27,13 @@ public class AppConstants
     public struct Cookies
     {
         public const string E2E = "E2E";
+        public const string E2E_DM = "E2E_DM";
     }
     public enum PushNotificationType
     {
         IncomingVideoCall,
         IncomingMessage,
+        IncomingDirectMessage,
         IncomingContactRequest,
         ContactRequestApproved,
     }

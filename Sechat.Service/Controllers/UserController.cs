@@ -85,7 +85,7 @@ public class UserController : SechatControllerBase
             await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(_mapper.Map<ContactDto>(newContact));
             await _chatHubContext.Clients.Group(UserId).ConnectionRequestReceived(_mapper.Map<ContactDto>(newContact));
             await _pushNotificationService.IncomingContactRequestNotification(invitedUser.Id, UserName);
-            return Ok();
+            return Ok("Invitation sent");
         }
 
         throw new Exception("Error when creating connection request");
@@ -155,18 +155,22 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("approve-connection")]
-    public async Task<IActionResult> ApproveContact([FromServices] Channel<DefaultNotificationDto> channel, long connectionId)
+    public async Task<IActionResult> ApproveContact(
+        [FromServices] Channel<DefaultNotificationDto> channel,
+        long connectionId)
     {
         var connection = _userRepository.ApproveContact(connectionId, UserId);
         if (connection is null) return BadRequest("Can`t do that");
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            var connectionDto = _mapper.Map<ContactDto>(connection);
-            var inviterId = await GetUserId(connectionDto.InviterName);
+            var contactDto = _mapper.Map<ContactDto>(connection);
+            var inviterId = await GetUserId(contactDto.InviterName);
 
-            await _chatHubContext.Clients.Group(UserId).ConnectionUpdated(connectionDto);
-            await _chatHubContext.Clients.Group(inviterId).ConnectionUpdated(connectionDto);
+            contactDto.ContactState = AppConstants.ContactState.Online;
+
+            await _chatHubContext.Clients.Group(UserId).ConnectionUpdated(contactDto);
+            await _chatHubContext.Clients.Group(inviterId).ConnectionUpdated(contactDto);
             await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.ContactRequestApproved, inviterId, UserName));
             return Ok();
         }

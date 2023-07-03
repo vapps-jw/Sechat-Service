@@ -23,8 +23,8 @@ public class DirectMessageDto
     public long Id { get; set; }
     public DateTime Created { get; set; } = DateTime.UtcNow;
 
-    public string FromId { get; set; } = string.Empty;
-    public string ToId { get; set; } = string.Empty;
+    public string IdSentBy { get; set; } = string.Empty;
+    public string NameSentBy { get; set; } = string.Empty;
 
     public string Text { get; set; } = string.Empty;
     public bool WasViewed { get; set; }

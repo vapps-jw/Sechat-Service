@@ -37,9 +37,9 @@ public class PushNotificationService
         _ = await _userRepository.SaveChanges();
     }
 
-    public async Task IncomingVideoCallNotification(string userId, string callerName)
+    public async Task IncomingVideoCallNotification(string recipientId, string callerName)
     {
-        var subs = _userRepository.GetSubscriptions(userId);
+        var subs = _userRepository.GetSubscriptions(recipientId);
         if (!subs.Any()) return;
 
         foreach (var sub in subs)
@@ -73,9 +73,9 @@ public class PushNotificationService
         }
     }
 
-    public async Task IncomingMessageNotification(string userId, string roomName)
+    public async Task IncomingMessageNotification(string recipientId, string roomName)
     {
-        var subs = _userRepository.GetSubscriptions(userId);
+        var subs = _userRepository.GetSubscriptions(recipientId);
         if (!subs.Any()) return;
 
         foreach (var sub in subs)
@@ -109,9 +109,45 @@ public class PushNotificationService
         }
     }
 
-    public async Task IncomingContactRequestNotification(string userId, string inviterName)
+    public async Task IncomingDirectMessageNotification(string recipientId, string senderName)
     {
-        var subs = _userRepository.GetSubscriptions(userId);
+        var subs = _userRepository.GetSubscriptions(recipientId);
+        if (!subs.Any()) return;
+
+        foreach (var sub in subs)
+        {
+            var subscription = new PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
+            var vapidDetails = new VapidDetails($"mailto:{_sechatEmails.Value.Master}", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
+
+            var webPushClient = new WebPushClient();
+            try
+            {
+                var payload = JsonSerializer.Serialize(new
+                {
+                    title = AppConstants.PushNotificationTitles.NewDirectMessage,
+                    options = new
+                    {
+                        body = senderName
+                    }
+                });
+
+                await webPushClient.SendNotificationAsync(subscription, payload, vapidDetails);
+            }
+            catch (WebPushException exception)
+            {
+                if (exception.Message.Contains("Subscription no longer valid", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    await RemoveInvalidSubscription(sub.Id);
+                    return;
+                }
+                _logger.LogError(exception, exception.Message);
+            }
+        }
+    }
+
+    public async Task IncomingContactRequestNotification(string recipientId, string inviterName)
+    {
+        var subs = _userRepository.GetSubscriptions(recipientId);
         if (!subs.Any()) return;
 
         foreach (var sub in subs)
@@ -145,9 +181,9 @@ public class PushNotificationService
         }
     }
 
-    public async Task ContactRequestApprovedNotification(string userId, string approverName)
+    public async Task ContactRequestApprovedNotification(string recipientId, string approverName)
     {
-        var subs = _userRepository.GetSubscriptions(userId);
+        var subs = _userRepository.GetSubscriptions(recipientId);
         if (!subs.Any()) return;
 
         foreach (var sub in subs)

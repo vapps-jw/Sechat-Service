@@ -281,13 +281,13 @@ namespace Sechat.Data.Migrations
                     b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FromId")
+                    b.Property<string>("IdSentBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NameSentBy")
                         .HasColumnType("text");
 
                     b.Property<string>("Text")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ToId")
                         .HasColumnType("text");
 
                     b.Property<bool>("WasViewed")

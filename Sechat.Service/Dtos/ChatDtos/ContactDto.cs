@@ -15,7 +15,9 @@ public class ContactDto
     public bool Blocked { get; set; }
     public string BlockedByName { get; set; } = string.Empty;
 
-    public List<DirectMessageDto> DirectMessageDtos { get; set; } = new();
+    public bool EncryptedByUser { get; set; }
+
+    public List<DirectMessageDto> DirectMessages { get; set; } = new();
 
     public bool UserPresent(string userName) => InviterName.Equals(userName) || InvitedName.Equals(userName);
     public bool UserPresents(string[] userNames) => userNames.All(un => InviterName.Equals(un) || InvitedName.Equals(un));

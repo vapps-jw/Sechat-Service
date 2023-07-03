@@ -4,8 +4,8 @@ using Sechat.Data.Models.UserDetails;
 namespace Sechat.Data.Models.ChatModels;
 public record DirectMessage : BaseModel<long>
 {
-    public string FromId { get; set; }
-    public string ToId { get; set; }
+    public string IdSentBy { get; set; } = string.Empty;
+    public string NameSentBy { get; set; } = string.Empty;
 
     public string Text { get; set; } = string.Empty;
     public bool WasViewed { get; set; }

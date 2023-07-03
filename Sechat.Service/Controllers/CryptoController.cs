@@ -17,15 +17,37 @@ public class CryptoController : SechatControllerBase
     public IActionResult Encrypt() => Ok();
 
     [HttpPost("decrypt-message")]
-    public IActionResult Decrypt([FromBody] MessageDecryptionRequest messageDecryptionRequest)
+    public IActionResult DecryptMessage([FromBody] MessageDecryptionRequest messageDecryptionRequest)
     {
-        var roomKey = ExtractE2ECookieDataForRoom(messageDecryptionRequest.RoomId);
-        if (roomKey is null)
+        var key = ExtractE2ECookieDataForRoom(messageDecryptionRequest.RoomId);
+        if (key is null)
         {
             return Unauthorized("You dont have a key");
         }
 
-        if (_cryptographyService.Decrypt(messageDecryptionRequest.Message, roomKey.Key, out var result))
+        if (_cryptographyService.Decrypt(messageDecryptionRequest.Message, key.Key, out var result))
+        {
+            messageDecryptionRequest.Message = result;
+        }
+        else
+        {
+            messageDecryptionRequest.Message = result;
+            messageDecryptionRequest.Error = true;
+        }
+
+        return Ok(messageDecryptionRequest);
+    }
+
+    [HttpPost("decrypt-direct-message")]
+    public IActionResult DecryptDirectMessage([FromBody] DirectMessageDecryptionRequest messageDecryptionRequest)
+    {
+        var key = ExtractE2ECookieDataForContact(messageDecryptionRequest.ContactId);
+        if (key is null)
+        {
+            return Unauthorized("You dont have a key");
+        }
+
+        if (_cryptographyService.Decrypt(messageDecryptionRequest.Message, key.Key, out var result))
         {
             messageDecryptionRequest.Message = result;
         }
