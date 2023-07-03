@@ -230,21 +230,6 @@ public class ChatController : SechatControllerBase
         return Ok();
     }
 
-    [HttpPatch("direct-messages-viewed")]
-    public async Task<IActionResult> DirectMessagesViewed([FromBody] ResourceId resourceId)
-    {
-        if (!_userRepository.CheckContact(resourceId.Id, UserId, out var contact))
-        {
-            return BadRequest("You cant do that");
-        }
-
-        _chatRepository.MarkDirectMessagesAsViewed(UserId, resourceId.Id);
-        var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
-        await _chatHubContext.Clients.Group(recipientId).DirectMessagesWereViewed(new DirectMessagesViewed(resourceId.Id));
-
-        return Ok();
-    }
-
     [HttpDelete("message/{roomId}/{messageId}")]
     public async Task<IActionResult> DeleteMessage(string roomId, long messageId)
     {
