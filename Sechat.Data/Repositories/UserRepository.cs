@@ -21,7 +21,7 @@ public class UserRepository : RepositoryBase<SechatContext>
     public bool CheckContact(long contactId, string userId, out Contact contact)
     {
         contact = _context.Contacts
-            .Where(c => (c.Id == contactId && c.InvitedId.Equals(userId)) || c.InviterId.Equals(userId))
+            .Where(c => c.Id == contactId && (c.InvitedId.Equals(userId) || c.InviterId.Equals(userId)))
             .FirstOrDefault();
 
         return contact is not null && !contact.Blocked && contact.Approved;
