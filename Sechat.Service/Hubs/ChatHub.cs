@@ -36,6 +36,7 @@ public interface IChatHub
     // Video call media
     Task MicStateChanged(StringMessage message);
     Task CamStateChanged(StringMessage message);
+    Task ScreenShareStateChanged(StringMessage message);
 
     // Chat Messages
     Task MessageIncoming(MessageDto message);
@@ -129,6 +130,14 @@ public class ChatHub : SechatHubBase<IChatHub>
         if (string.IsNullOrEmpty(contactId)) return;
 
         await Clients.Group(contactId).CamStateChanged(new StringMessage(message.Message));
+    }
+
+    public async Task SendScreenShareStateChange(StringUserMessage message)
+    {
+        var contactId = await IsContactAllowed(message.UserName);
+        if (string.IsNullOrEmpty(contactId)) return;
+
+        await Clients.Group(contactId).ScreenShareStateChanged(new StringMessage(message.Message));
     }
 
     public async Task SendICECandidate(StringUserMessage message)

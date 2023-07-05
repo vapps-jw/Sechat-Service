@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sechat.Data.Models.ChatModels;
 using Sechat.Data.QueryModels;
-using Sechat.Domain.CustomExceptions;
 
 namespace Sechat.Data.Repositories;
 
@@ -241,7 +240,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
             .FirstOrDefault();
 
         if (room is null) return null;
-        if (room.CreatorId.Equals(userId)) throw new ChatException("Cant remove creator of the room");
+        if (room.CreatorId.Equals(userId)) return null;
 
         var memberProfile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
 

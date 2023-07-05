@@ -8,6 +8,10 @@ namespace Sechat.Service.Dtos.ChatDtos;
 
 public record ResourceId(long Id);
 public record ResourceGuid(string Id);
+public record StringMessage(string Message);
+public record BooleanMessage(bool Message);
+public record StringUserMessage(string UserName, string Message);
+public record BoolUserMessage(string UserName, string Message);
 
 // Direct Messages
 
@@ -21,8 +25,6 @@ public record IncomingDirectMessage(string Text, string Recipient);
 public record MessageId(long Id, string RoomId);
 public record RoomUserActionMessage(string RoomId, string UserName);
 public record RoomMessageUserActionMessage(string RoomId, long MessageId, string UserName);
-public record StringMessage(string Message);
-public record StringUserMessage(string UserName, string Message);
 public record RoomIdsMessage(List<string> RoomIds);
 public record IncomingMessage(string Text, string RoomId);
 
