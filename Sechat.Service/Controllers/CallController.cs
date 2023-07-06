@@ -38,8 +38,8 @@ public class CallController : SechatControllerBase
     {
         if (lastLog != 0)
         {
-            var updates = _chatRepository.GetLogUpdates(UserId, lastLog);
-            var updatesProfiles = updates.Select(u => u.UserProfile).ToDictionary(k => k.UserName, v => v);
+            var updates = _chatRepository.GetCallLogUpdates(UserId, lastLog);
+            var updatesProfiles = updates.Select(u => u.UserProfile).DistinctBy(up => up.Id).ToDictionary(k => k.Id, v => v);
             var dtos = _mapper.Map<List<CallLogDto>>(updates);
             foreach (var dto in dtos)
             {
@@ -54,8 +54,8 @@ public class CallController : SechatControllerBase
             return Ok(dtos);
         }
 
-        var logs = _chatRepository.GetAllLogs(UserId);
-        var profiles = logs.Select(u => u.UserProfile).ToDictionary(k => k.UserName, v => v);
+        var logs = _chatRepository.GetAllCallLogs(UserId);
+        var profiles = logs.Select(u => u.UserProfile).DistinctBy(up => up.Id).ToDictionary(k => k.Id, v => v);
         var allDtos = _mapper.Map<List<CallLogDto>>(logs);
         foreach (var dto in allDtos)
         {
@@ -71,7 +71,22 @@ public class CallController : SechatControllerBase
         return Ok(allDtos);
     }
 
-    [HttpPost("log")]
+    [HttpGet("log/{callLogId:long?}")]
+    public IActionResult GetCallLog(long callLogId)
+    {
+        var callLog = _chatRepository.GetCallLog(callLogId, UserId);
+        if (callLog is null)
+        {
+            return BadRequest();
+        }
+
+        var dto = _mapper.Map<CallLogDto>(callLog);
+        dto.PhonerName = callLog.UserProfile.UserName;
+
+        return Ok(dto);
+    }
+
+    [HttpPost("register")]
     public async Task<IActionResult> RegisterCall([FromBody] CallControllerForms.CaleeNameForm form)
     {
         if (_userRepository.CheckContactAndGetContactId(UserName, form.CaleeName, out var contactId))
@@ -101,7 +116,7 @@ public class CallController : SechatControllerBase
     {
         if (_userRepository.CheckContactAndGetContactId(UserName, form.CaleeName, out var contactId))
         {
-            _chatRepository.CallAnswered(contactId, UserId);
+            _chatRepository.LogCallAnswered(contactId, UserId);
             if (await _chatRepository.SaveChanges() > 0)
             {
                 return Ok();
@@ -116,7 +131,7 @@ public class CallController : SechatControllerBase
     {
         if (_userRepository.CheckContactAndGetContactId(UserName, form.CaleeName, out var contactId))
         {
-            _chatRepository.CallRejected(contactId, UserId);
+            _chatRepository.LogCallRejected(contactId, UserId);
             if (await _chatRepository.SaveChanges() > 0)
             {
                 return Ok();

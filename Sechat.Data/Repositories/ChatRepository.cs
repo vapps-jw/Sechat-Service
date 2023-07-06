@@ -37,25 +37,28 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return newLog;
     }
 
-    public void CallAnswered(string caleeId, string phonerId)
+    public void LogCallAnswered(string caleeId, string phonerId)
     {
         var lastLog = _context.CallLogs
             .Where(cl => cl.UserProfileId.Equals(phonerId) && cl.CalleeId.Equals(caleeId))
-            .MinBy(cl => cl.Id);
+            .OrderByDescending(cl => cl.Id)
+            .FirstOrDefault();
 
         if (lastLog is null) return;
         lastLog.VideoCallResult = VideoCallResult.Answered;
         lastLog.WasViewed = true;
     }
 
-    public void CallRejected(string caleeId, string phonerId)
+    public void LogCallRejected(string caleeId, string phonerId)
     {
         var lastLog = _context.CallLogs
             .Where(cl => cl.UserProfileId.Equals(phonerId) && cl.CalleeId.Equals(caleeId))
-            .MinBy(cl => cl.Id);
+            .OrderByDescending(cl => cl.Id)
+            .FirstOrDefault();
 
         if (lastLog is null) return;
         lastLog.VideoCallResult = VideoCallResult.Rejected;
+        lastLog.WasViewed = true;
     }
 
     public void MarkCallLogsAsViewed(string userId)
@@ -66,12 +69,17 @@ public class ChatRepository : RepositoryBase<SechatContext>
         logsToMark.ForEach(cl => cl.WasViewed = true);
     }
 
-    public List<CallLog> GetAllLogs(string userId) => _context.CallLogs
+    public List<CallLog> GetAllCallLogs(string userId) => _context.CallLogs
         .Where(cl => cl.UserProfileId.Equals(userId) || cl.CalleeId.Equals(userId))
         .Include(cl => cl.UserProfile)
         .ToList();
 
-    public List<CallLog> GetLogUpdates(string userId, long lastLog) => _context.CallLogs
+    public CallLog GetCallLog(long logId, string userId) => _context.CallLogs
+        .Where(cl => cl.Id == logId && (cl.UserProfileId.Equals(userId) || cl.CalleeId.Equals(userId)))
+        .Include(cl => cl.UserProfile)
+        .FirstOrDefault();
+
+    public List<CallLog> GetCallLogUpdates(string userId, long lastLog) => _context.CallLogs
         .Where(cl => cl.Id > lastLog && (cl.UserProfileId.Equals(userId) || cl.CalleeId.Equals(userId)))
         .Include(cl => cl.UserProfile)
         .ToList();

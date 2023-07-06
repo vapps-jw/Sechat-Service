@@ -36,11 +36,10 @@ public class UserRepository : RepositoryBase<SechatContext>
             .FirstOrDefault();
         if (contact is not null && !contact.Blocked && contact.Approved)
         {
-            return false;
+            contactId = contact.InvitedName.Equals(userName) ? contact.InviterId : contact.InvitedId;
+            return true;
         }
-
-        contactId = contact.InvitedName.Equals(userName) ? contact.InviterId : contact.InvitedId;
-        return true;
+        return false;
     }
 
     public bool ContactExists(long contactId, string userOne, string userTwo)
