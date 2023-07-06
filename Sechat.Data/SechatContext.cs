@@ -27,6 +27,9 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        _ = modelBuilder.Entity<CallLog>()
+             .HasIndex(c => c.CalleeId);
+
         _ = modelBuilder.Entity<Message>()
             .HasIndex(c => c.Created);
         _ = modelBuilder.Entity<Message>()

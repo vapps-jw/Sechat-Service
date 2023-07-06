@@ -27,9 +27,25 @@ public class UserRepository : RepositoryBase<SechatContext>
         return contact is not null && !contact.Blocked && contact.Approved;
     }
 
-    public bool ContactExists(long connectionId, string userOne, string userTwo)
+    public bool CheckContactAndGetContactId(string userName, string contactName, out string contactId)
     {
-        var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == connectionId);
+        contactId = string.Empty;
+        var contact = _context.Contacts
+            .Where(c => (c.InvitedName.Equals(userName) || c.InviterName.Equals(userName)) &&
+                        (c.InvitedName.Equals(contactName) || c.InviterName.Equals(contactName)))
+            .FirstOrDefault();
+        if (contact is not null && !contact.Blocked && contact.Approved)
+        {
+            return false;
+        }
+
+        contactId = contact.InvitedName.Equals(userName) ? contact.InviterId : contact.InvitedId;
+        return true;
+    }
+
+    public bool ContactExists(long contactId, string userOne, string userTwo)
+    {
+        var connection = _context.Contacts.FirstOrDefault(uc => uc.Id == contactId);
         return connection is not null
             && (connection.InvitedId.Equals(userOne) || connection.InviterId.Equals(userOne))
             && (connection.InvitedId.Equals(userTwo) || connection.InviterId.Equals(userTwo));

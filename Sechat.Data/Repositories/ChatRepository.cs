@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sechat.Data.Models.ChatModels;
+using Sechat.Data.Models.VideoCalls;
 using Sechat.Data.QueryModels;
 
 namespace Sechat.Data.Repositories;
@@ -15,6 +16,65 @@ public class ChatRepository : RepositoryBase<SechatContext>
         var members = _context.Rooms.Where(r => r.Id.Equals(roomId)).SelectMany(r => r.Members.Select(rm => rm.Id)).ToList();
         return members.Any(m => m.Equals(userId));
     }
+
+    // Call Log
+
+    public CallLog CreateNewCallLog(string caleeId, string phonerId)
+    {
+        var calee = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(caleeId));
+        var phoner = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(phonerId));
+
+        if (calee is null || phoner is null) return null;
+
+        var newLog = new CallLog()
+        {
+            CalleeId = caleeId,
+            CalleeName = calee.UserName,
+            VideoCallResult = VideoCallResult.Unanswered,
+            VideoCallType = VideoCallType.Outgoing
+        };
+        phoner.CallLogs.Add(newLog);
+        return newLog;
+    }
+
+    public void CallAnswered(string caleeId, string phonerId)
+    {
+        var lastLog = _context.CallLogs
+            .Where(cl => cl.UserProfileId.Equals(phonerId) && cl.CalleeId.Equals(caleeId))
+            .MinBy(cl => cl.Id);
+
+        if (lastLog is null) return;
+        lastLog.VideoCallResult = VideoCallResult.Answered;
+        lastLog.WasViewed = true;
+    }
+
+    public void CallRejected(string caleeId, string phonerId)
+    {
+        var lastLog = _context.CallLogs
+            .Where(cl => cl.UserProfileId.Equals(phonerId) && cl.CalleeId.Equals(caleeId))
+            .MinBy(cl => cl.Id);
+
+        if (lastLog is null) return;
+        lastLog.VideoCallResult = VideoCallResult.Rejected;
+    }
+
+    public void MarkCallLogsAsViewed(string userId)
+    {
+        var logsToMark = _context.CallLogs
+            .Where(cl => cl.CalleeId.Equals(userId) && !cl.WasViewed)
+            .ToList();
+        logsToMark.ForEach(cl => cl.WasViewed = true);
+    }
+
+    public List<CallLog> GetAllLogs(string userId) => _context.CallLogs
+        .Where(cl => cl.UserProfileId.Equals(userId) || cl.CalleeId.Equals(userId))
+        .Include(cl => cl.UserProfile)
+        .ToList();
+
+    public List<CallLog> GetLogUpdates(string userId, long lastLog) => _context.CallLogs
+        .Where(cl => cl.Id > lastLog && (cl.UserProfileId.Equals(userId) || cl.CalleeId.Equals(userId)))
+        .Include(cl => cl.UserProfile)
+        .ToList();
 
     // Messages
 
