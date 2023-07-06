@@ -116,7 +116,7 @@ public class CallController : SechatControllerBase
     {
         if (_userRepository.CheckContactAndGetContactId(UserName, form.CaleeName, out var contactId))
         {
-            _chatRepository.LogCallAnswered(contactId, UserId);
+            _chatRepository.LogCallAnswered(UserId, contactId);
             if (await _chatRepository.SaveChanges() > 0)
             {
                 return Ok();
@@ -131,7 +131,7 @@ public class CallController : SechatControllerBase
     {
         if (_userRepository.CheckContactAndGetContactId(UserName, form.CaleeName, out var contactId))
         {
-            _chatRepository.LogCallRejected(contactId, UserId);
+            _chatRepository.LogCallRejected(UserId, contactId);
             if (await _chatRepository.SaveChanges() > 0)
             {
                 return Ok();
