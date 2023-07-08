@@ -22,3 +22,6 @@ public class ContactDto
     public bool UserPresent(string userName) => InviterName.Equals(userName) || InvitedName.Equals(userName);
     public bool UserPresents(string[] userNames) => userNames.All(un => InviterName.Equals(un) || InvitedName.Equals(un));
 }
+
+public record BlacklistedDto(string UserName, string UserProfileId);
+

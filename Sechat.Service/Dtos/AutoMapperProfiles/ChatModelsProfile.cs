@@ -16,6 +16,7 @@ public class ChatModelsProfile : Profile
         _ = CreateMap<Contact, ContactDto>();
         _ = CreateMap<DirectMessage, DirectMessageDto>();
         _ = CreateMap<UserProfile, RoomMemberDto>();
+        _ = CreateMap<Blacklisted, BlacklistedDto>();
         _ = CreateMap<CallLog, CallLogDto>()
             .ForMember(x => x.VideoCallType, y => y.MapFrom(z => z.VideoCallType))
             .ForMember(x => x.VideoCallResult, y => y.MapFrom(z => z.VideoCallResult));
