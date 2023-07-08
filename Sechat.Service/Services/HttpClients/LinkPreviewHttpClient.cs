@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Sechat.Service.Services.HttpClients.PollyPolicies;
 using System;
 using System.Linq;
 using System.Net.Http;
@@ -11,6 +12,7 @@ namespace Sechat.Service.Services.HttpClients;
 public class LinkPreviewHttpClient
 {
     private readonly HttpClient _httpClient;
+    private readonly BasicHttpClientPolicy _httpClientPolicy;
 
     public class LinkPreview
     {
@@ -21,13 +23,19 @@ public class LinkPreviewHttpClient
         public string Favicon { get; set; } = string.Empty;
     }
 
-    public LinkPreviewHttpClient(HttpClient httpClient) => _httpClient = httpClient;
+    public LinkPreviewHttpClient(HttpClient httpClient, BasicHttpClientPolicy httpClientPolicy)
+    {
+        _httpClient = httpClient;
+        _httpClientPolicy = httpClientPolicy;
+    }
 
     public async Task<LinkPreview> GetLinkPreview(string url)
     {
         var result = new LinkPreview();
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        var htmlString = await _httpClient.GetStringAsync(url);
+        var responseMessage = await _httpClientPolicy.ExponentialHttpRetry.ExecuteAsync(()
+                => _httpClient.GetAsync(url));
+        var htmlString = await responseMessage.Content.ReadAsStringAsync();
 
         var htmlDocument = new HtmlDocument();
         htmlDocument.LoadHtml(htmlString);
@@ -52,7 +60,10 @@ public class LinkPreviewHttpClient
 
     private async Task<bool> CheckImage(string url)
     {
-        var response = await _httpClient.GetAsync(url);
+        var response = await _httpClientPolicy.ExponentialHttpRetry.ExecuteAsync(()
+                => _httpClient.GetAsync(url));
+        var htmlString = await response.Content.ReadAsStringAsync();
+
         if (!response.IsSuccessStatusCode) return false;
 
         var stream = await response.Content.ReadAsStreamAsync();
@@ -154,7 +165,20 @@ public class LinkPreviewHttpClient
             }
         }
 
-        node = htmlDocument.DocumentNode.SelectSingleNode("//link[@rel='shortcut icon'");
+        var nodes = htmlDocument.DocumentNode.SelectNodes("//link[@rel='icon']");
+        if (nodes is not null)
+        {
+            foreach (var icon in nodes)
+            {
+                var href = icon.GetAttributeValue("href", string.Empty);
+                if (string.IsNullOrEmpty(href) && await CheckImage(href))
+                {
+                    return href;
+                }
+            }
+        }
+
+        node = htmlDocument.DocumentNode.SelectSingleNode("//link[@rel='shortcut icon']");
         if (node is not null)
         {
             var href = node.GetAttributeValue("href", string.Empty);
@@ -164,26 +188,20 @@ public class LinkPreviewHttpClient
             }
         }
 
-        var nodes = htmlDocument.DocumentNode.SelectNodes("//link[@rel='icon']");
-        foreach (var icon in nodes)
-        {
-            var href = icon.GetAttributeValue("href", string.Empty);
-            if (string.IsNullOrEmpty(href) && await CheckImage(href))
-            {
-                return href;
-            }
-        }
-
         nodes = htmlDocument.DocumentNode.SelectNodes("//link[@rel='apple-touch-icon']//link[@rel='apple-touch-icon-precomposed']");
-        foreach (var icon in nodes)
+        if (nodes is not null)
         {
-            var href = icon.GetAttributeValue("href", string.Empty);
-            if (string.IsNullOrEmpty(href) && await CheckImage(href))
+            foreach (var icon in nodes)
             {
-                return href;
+                var href = icon.GetAttributeValue("href", string.Empty);
+                if (string.IsNullOrEmpty(href) && await CheckImage(href))
+                {
+                    return href;
+                }
             }
         }
 
         return string.Empty;
     }
 }
+

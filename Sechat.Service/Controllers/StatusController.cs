@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using Sechat.Service.Configuration;
@@ -16,6 +17,11 @@ public class StatusController : SechatControllerBase
     [HttpGet("ping-api")]
     [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
     public IActionResult PingApi() => Ok();
+
+    [Authorize]
+    [HttpGet("ping-authorized")]
+    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
+    public IActionResult PingAuthorized() => Ok("Authorized");
 
     [HttpGet("ping-api-global")]
     public IActionResult PingApiGlobal() => Ok();
