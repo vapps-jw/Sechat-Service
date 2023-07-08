@@ -59,7 +59,7 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetContacts()
     {
         var contacts = await _userRepository.GetContactsWithMessages(UserId);
-        var contactDtos = PrepareContactsDtos(contacts);
+        var contactDtos = PrepareContactDtos(contacts);
 
         var connectedContacts = contacts
             .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
@@ -99,6 +99,20 @@ public class ChatController : SechatControllerBase
         return Ok(roomDtos);
     }
 
+    [HttpGet("contact/{contactId}")]
+    public async Task<IActionResult> GetContact(long contactId)
+    {
+        if (!_userRepository.CheckContact(contactId, UserId, out _))
+        {
+            return BadRequest("Contact not allowed");
+        }
+
+        var contact = await _userRepository.GetContact(contactId);
+        var contactDto = PrepareContactDto(contact);
+
+        return Ok(contactDto);
+    }
+
     [HttpPost("rooms-update")]
     public async Task<IActionResult> GetRoomsUpdate([FromBody] List<GetRoomUpdate> getRoomUpdates)
     {
@@ -109,10 +123,10 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("contacts-update")]
-    public async Task<IActionResult> GetContactsUpdateAsync([FromBody] List<GetContactUpdate> getContactUpdates)
+    public async Task<IActionResult> GetContactsUpdate([FromBody] List<GetContactUpdate> getContactUpdates)
     {
         var contacts = await _userRepository.GetContactsWithMessages(UserId, getContactUpdates);
-        var contactDtos = PrepareContactsDtos(contacts);
+        var contactDtos = PrepareContactDtos(contacts);
 
         return Ok(contactDtos);
     }
@@ -386,21 +400,17 @@ public class ChatController : SechatControllerBase
         var decryptionErrors = new List<long>();
         foreach (var room in rooms)
         {
-            var roomKey = ExtractE2ECookieDataForRoom(room.Id);
-            if (roomKey is null && room.EncryptedByUser)
+            var e2eKey = ExtractE2ECookieDataForRoom(room.Id);
+            if (e2eKey is null && room.EncryptedByUser)
             {
                 room.Messages.Clear();
             }
 
             foreach (var message in room.Messages)
             {
-                if (!room.EncryptedByUser)
+                if (room.EncryptedByUser)
                 {
-                    message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
-                }
-                else
-                {
-                    if (_cryptographyService.Decrypt(message.Text, roomKey.Key, out var result))
+                    if (_cryptographyService.Decrypt(message.Text, e2eKey.Key, out var result))
                     {
                         message.Text = result;
                     }
@@ -409,6 +419,10 @@ public class ChatController : SechatControllerBase
                         message.Text = result;
                         decryptionErrors.Add(message.Id);
                     }
+                }
+                else
+                {
+                    message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
                 }
 
                 foreach (var viewer in message.MessageViewers)
@@ -441,37 +455,6 @@ public class ChatController : SechatControllerBase
         return roomDtos;
     }
 
-    private List<ContactDto> PrepareContactsDtos(List<Contact> contacts)
-    {
-        var decryptionErrors = new List<long>();
-        foreach (var contact in contacts)
-        {
-            foreach (var message in contact.DirectMessages)
-            {
-
-                if (contact.EncryptedByUser)
-                {
-
-                }
-                else
-                {
-                    if (_cryptographyService.Decrypt(message.Text, contact.ContactKey, out var result))
-                    {
-                        message.Text = result;
-                    }
-                    else
-                    {
-                        message.Text = result;
-                        decryptionErrors.Add(message.Id);
-                    }
-                }
-            }
-        }
-
-        var dtos = _mapper.Map<List<ContactDto>>(contacts);
-        return dtos;
-    }
-
     private async Task<RoomDto> PrepareRoomDto(Room room)
     {
         var parts = _cryptoSettings.CurrentValue.DefaultIV.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -479,8 +462,8 @@ public class ChatController : SechatControllerBase
 
         var decryptionErrors = new List<long>();
 
-        var roomKey = ExtractE2ECookieDataForRoom(room.Id);
-        if (roomKey is null && room.EncryptedByUser)
+        var e2eKey = ExtractE2ECookieDataForRoom(room.Id);
+        if (e2eKey is null && room.EncryptedByUser)
         {
             room.Messages.Clear();
         }
@@ -489,11 +472,7 @@ public class ChatController : SechatControllerBase
         {
             if (!room.EncryptedByUser)
             {
-                message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
-            }
-            else
-            {
-                if (_cryptographyService.Decrypt(message.Text, roomKey.Key, out var result))
+                if (_cryptographyService.Decrypt(message.Text, e2eKey.Key, out var result))
                 {
                     message.Text = result;
                 }
@@ -502,6 +481,10 @@ public class ChatController : SechatControllerBase
                     message.Text = result;
                     decryptionErrors.Add(message.Id);
                 }
+            }
+            else
+            {
+                message.Text = _cryptographyService.Decrypt(message.Text, room.RoomKey, iv);
             }
 
             foreach (var viewer in message.MessageViewers)
@@ -528,5 +511,100 @@ public class ChatController : SechatControllerBase
         }
 
         return roomDto;
+    }
+
+    private List<ContactDto> PrepareContactDtos(List<Contact> contacts)
+    {
+        var decryptionErrors = new List<long>();
+        foreach (var contact in contacts)
+        {
+            var e2eKey = ExtractE2ECookieDataForContact(contact.Id);
+            foreach (var message in contact.DirectMessages)
+            {
+
+                if (contact.EncryptedByUser)
+                {
+                    if (_cryptographyService.Decrypt(message.Text, e2eKey.Key, out var result))
+                    {
+                        message.Text = result;
+                    }
+                    else
+                    {
+                        message.Text = result;
+                        decryptionErrors.Add(message.Id);
+                    }
+                }
+                else
+                {
+                    if (_cryptographyService.Decrypt(message.Text, contact.ContactKey, out var result))
+                    {
+                        message.Text = result;
+                    }
+                    else
+                    {
+                        message.Text = result;
+                        decryptionErrors.Add(message.Id);
+                    }
+                }
+            }
+        }
+
+        var dtos = _mapper.Map<List<ContactDto>>(contacts);
+        foreach (var contact in dtos)
+        {
+            foreach (var message in contact.DirectMessages)
+            {
+                if (decryptionErrors.Any(de => de == message.Id))
+                {
+                    message.Error = true;
+                }
+            }
+        }
+        return dtos;
+    }
+
+    private ContactDto PrepareContactDto(Contact contact)
+    {
+        var decryptionErrors = new List<long>();
+
+        var e2eKey = ExtractE2ECookieDataForContact(contact.Id);
+        foreach (var message in contact.DirectMessages)
+        {
+
+            if (contact.EncryptedByUser)
+            {
+                if (_cryptographyService.Decrypt(message.Text, e2eKey.Key, out var result))
+                {
+                    message.Text = result;
+                }
+                else
+                {
+                    message.Text = result;
+                    decryptionErrors.Add(message.Id);
+                }
+            }
+            else
+            {
+                if (_cryptographyService.Decrypt(message.Text, contact.ContactKey, out var result))
+                {
+                    message.Text = result;
+                }
+                else
+                {
+                    message.Text = result;
+                    decryptionErrors.Add(message.Id);
+                }
+            }
+        }
+
+        var dto = _mapper.Map<ContactDto>(contact);
+        foreach (var message in dto.DirectMessages)
+        {
+            if (decryptionErrors.Any(de => de == message.Id))
+            {
+                message.Error = true;
+            }
+        }
+        return dto;
     }
 }

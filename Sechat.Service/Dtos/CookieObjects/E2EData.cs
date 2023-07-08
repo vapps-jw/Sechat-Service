@@ -12,3 +12,9 @@ public class E2EDMData
     public string Key { get; set; }
 }
 
+public class E2ENotebookData
+{
+    public string NotebookId { get; set; }
+    public string Key { get; set; }
+}
+

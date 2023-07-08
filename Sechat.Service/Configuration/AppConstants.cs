@@ -26,6 +26,7 @@ public class AppConstants
     }
     public struct Cookies
     {
+        public const string E2E_NOTEBOOK = "E2E_NOTEBOOK";
         public const string E2E = "E2E";
         public const string E2E_DM = "E2E_DM";
     }

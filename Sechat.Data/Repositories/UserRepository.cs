@@ -75,6 +75,14 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
             .ToListAsync();
 
+    public Task<Contact> GetContact(long contactId) =>
+        _context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
+
+    public Task<Contact> GetContactWithMessages(long contactId) =>
+        _context.Contacts
+            .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
+            .FirstOrDefaultAsync(c => c.Id == contactId);
+
     public Task<List<Contact>> GetContactsWithMessages(string userId, List<GetContactUpdate> contactsToUpdate) =>
         _context.Contacts
             .Where(uc => contactsToUpdate.Any(ctu => ctu.ContactId == uc.Id) && (uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId)))
@@ -119,9 +127,6 @@ public class UserRepository : RepositoryBase<SechatContext>
 
         return connection;
     }
-
-    public Task<Contact> GetContact(long contactId) =>
-        _context.Contacts.FirstOrDefaultAsync(uc => uc.Id == contactId);
 
     public Contact CreateContact(string inviterId, string inviterName, string invitedId, string invitedName, string contactKey)
     {

@@ -42,4 +42,18 @@ public abstract class SechatControllerBase : ControllerBase
         var e2eData = JsonSerializer.Deserialize<E2EDMData[]>(e2e, options);
         return e2eData.FirstOrDefault(k => k.ContactId == contactId);
     }
+
+    protected E2ENotebookData ExtractE2ECookieDataForNoteboook(string notebookId)
+    {
+        var e2e = Request.Cookies[AppConstants.Cookies.E2E_NOTEBOOK];
+        if (string.IsNullOrWhiteSpace(e2e)) return null;
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var e2eData = JsonSerializer.Deserialize<E2ENotebookData[]>(e2e, options);
+        return e2eData.FirstOrDefault(k => k.NotebookId == notebookId);
+    }
 }
