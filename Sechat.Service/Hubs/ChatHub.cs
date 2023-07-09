@@ -49,6 +49,7 @@ public interface IChatHub
     Task DirectMessagesWereViewed(DirectMessagesViewed message);
     Task DirectMessageWasViewed(DirectMessageViewed message);
     Task DirectMessageDeleted(DirectMessageId message);
+    Task ContactUpdateRequired(ContactUpdateRequired message);
 
     // Chat Rooms
     Task RoomDeleted(ResourceGuid message);

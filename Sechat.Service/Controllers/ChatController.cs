@@ -107,7 +107,7 @@ public class ChatController : SechatControllerBase
             return BadRequest("Contact not allowed");
         }
 
-        var contact = await _userRepository.GetContact(contactId);
+        var contact = await _userRepository.GetContactWithMessages(contactId);
         var contactDto = PrepareContactDto(contact);
 
         return Ok(contactDto);
@@ -141,15 +141,15 @@ public class ChatController : SechatControllerBase
             return BadRequest("You dont have access to this room");
         }
 
-        var messageToSave = incomingMessageDto.Text;
-        var messageToSendBack = string.Empty;
+        string messageToSave;
+        string messageToSendBack;
 
         if (_chatRepository.RoomEncryptedByUser(incomingMessageDto.RoomId))
         {
-            var roomKey = ExtractE2ECookieDataForRoom(incomingMessageDto.RoomId);
-            if (roomKey is null) return BadRequest("Secret Key for this Room is missing");
+            var e2eKey = ExtractE2ECookieDataForRoom(incomingMessageDto.RoomId);
+            if (e2eKey is null) return BadRequest("Secret Key for this Room is missing");
 
-            var encryptedMessage = _cryptographyService.Encrypt(incomingMessageDto.Text, roomKey.Key);
+            var encryptedMessage = _cryptographyService.Encrypt(incomingMessageDto.Text, e2eKey.Key);
 
             messageToSave = encryptedMessage;
             messageToSendBack = encryptedMessage;
@@ -211,7 +211,23 @@ public class ChatController : SechatControllerBase
             contact.ContactKey = newKey;
         }
 
-        var messageToSave = _cryptographyService.Encrypt(incomingMessageDto.Text, contact.ContactKey);
+        string messageToSave;
+        string messageToSendBack;
+
+        if (contact.EncryptedByUser)
+        {
+            var e2eKey = ExtractE2ECookieDataForContact(contact.Id);
+            if (e2eKey is null) return BadRequest("Secret Key for this Chat is missing");
+            var encryptedMessage = _cryptographyService.Encrypt(incomingMessageDto.Text, e2eKey.Key);
+
+            messageToSave = encryptedMessage;
+            messageToSendBack = encryptedMessage;
+        }
+        else
+        {
+            messageToSave = _cryptographyService.Encrypt(incomingMessageDto.Text, contact.ContactKey);
+            messageToSendBack = incomingMessageDto.Text;
+        }
 
         var res = _chatRepository.CreateDirectMessage(UserId, messageToSave, contact.Id);
         if (await _chatRepository.SaveChanges() == 0)
@@ -219,7 +235,7 @@ public class ChatController : SechatControllerBase
             return BadRequest("Message not sent");
         }
 
-        res.Text = incomingMessageDto.Text;
+        res.Text = messageToSendBack;
         var messageDto = _mapper.Map<DirectMessageDto>(res);
 
         await _chatHubContext.Clients.Group(UserId).DirectMessageIncoming(messageDto);
@@ -308,6 +324,23 @@ public class ChatController : SechatControllerBase
         }
 
         return Ok();
+    }
+
+    [HttpDelete("direct-messages/{contactId}")]
+    public async Task<IActionResult> DirectMessages(long contactId)
+    {
+        if (_userRepository.CheckContactWithMessages(contactId, UserId, out var contact))
+        {
+            contact.DirectMessages.Clear();
+            if (await _chatRepository.SaveChanges() > 0)
+            {
+                await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
+                await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
+                return Ok("Chat cleared");
+            }
+        }
+
+        return BadRequest("Can`t do that");
     }
 
     [HttpPatch("direct-messages-viewed")]
@@ -470,7 +503,7 @@ public class ChatController : SechatControllerBase
 
         foreach (var message in room.Messages)
         {
-            if (!room.EncryptedByUser)
+            if (room.EncryptedByUser)
             {
                 if (_cryptographyService.Decrypt(message.Text, e2eKey.Key, out var result))
                 {
@@ -524,6 +557,11 @@ public class ChatController : SechatControllerBase
 
                 if (contact.EncryptedByUser)
                 {
+                    if (e2eKey is null)
+                    {
+                        message.Text = "Key is missing";
+                        continue;
+                    }
                     if (_cryptographyService.Decrypt(message.Text, e2eKey.Key, out var result))
                     {
                         message.Text = result;

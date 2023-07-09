@@ -15,6 +15,7 @@ public record BoolUserMessage(string UserName, string Message);
 
 // Direct Messages
 
+public record ContactUpdateRequired(long ContactId);
 public record DirectMessageId(long Id, long ContactId);
 public record DirectMessagesViewed(long ContactId);
 public record DirectMessageViewed(long ContactId, long MessageId);
