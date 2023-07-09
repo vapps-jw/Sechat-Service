@@ -18,5 +18,5 @@ public record UserProfile : BaseTrackedModel<string>
     public List<Key> Keys { get; set; } = new();
     public List<NotificationSubscription> NotificationSubscriptions { get; set; } = new();
     public List<CallLog> CallLogs { get; set; } = new();
-    public List<Blacklisted> Blacklisteds { get; set; } = new();
+    public List<Blacklisted> Blacklist { get; set; } = new();
 }

@@ -20,7 +20,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<MessageViewer> MessageViewers { get; set; }
     public DbSet<CallLog> CallLogs { get; set; }
     public DbSet<DirectMessage> DirectMessages { get; set; }
-    public DbSet<Blacklisted> Blacklisteds { get; set; }
+    public DbSet<Blacklisted> Blacklist { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -66,7 +66,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
         _ = modelBuilder.Entity<UserProfile>()
-            .HasMany(x => x.Blacklisteds)
+            .HasMany(x => x.Blacklist)
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
 
