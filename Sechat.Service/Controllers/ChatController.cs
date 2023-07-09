@@ -588,9 +588,18 @@ public class ChatController : SechatControllerBase
         }
 
         var dtos = _mapper.Map<List<ContactDto>>(contacts);
-        foreach (var contact in dtos)
+
+        var connectedContacts = contacts
+            .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
+                        _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
+            .Select(c => c.Id)
+            .ToList();
+
+        foreach (var contactDto in dtos)
         {
-            foreach (var message in contact.DirectMessages)
+            contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ? AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+
+            foreach (var message in contactDto.DirectMessages)
             {
                 if (decryptionErrors.Any(de => de == message.Id))
                 {
@@ -635,7 +644,12 @@ public class ChatController : SechatControllerBase
             }
         }
 
+        var otherUser = contact.InviterName.Equals(UserId) ? contact.InvitedId : contact.InviterId;
         var dto = _mapper.Map<ContactDto>(contact);
+
+        var onlineState = _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(otherUser));
+        dto.ContactState = onlineState ? AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+
         foreach (var message in dto.DirectMessages)
         {
             if (decryptionErrors.Any(de => de == message.Id))
