@@ -140,7 +140,7 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     public Contact CreateContact(string inviterId, string inviterName, string invitedId, string invitedName, string contactKey)
     {
-        var newConnection = new Contact()
+        var newContact = new Contact()
         {
             InvitedId = invitedId,
             InvitedName = invitedName,
@@ -148,8 +148,8 @@ public class UserRepository : RepositoryBase<SechatContext>
             InviterName = inviterName,
             ContactKey = contactKey
         };
-        _ = _context.Contacts.Add(newConnection);
-        return newConnection;
+        _ = _context.Contacts.Add(newContact);
+        return newContact;
     }
 
     // Profile

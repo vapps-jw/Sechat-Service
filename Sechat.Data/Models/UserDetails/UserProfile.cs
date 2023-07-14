@@ -1,4 +1,5 @@
 ﻿using Sechat.Data.Models.Abstractions;
+using Sechat.Data.Models.CalendarModels;
 using Sechat.Data.Models.ChatModels;
 using Sechat.Data.Models.VideoCalls;
 using System.ComponentModel.DataAnnotations;
@@ -19,4 +20,5 @@ public record UserProfile : BaseTrackedModel<string>
     public List<NotificationSubscription> NotificationSubscriptions { get; set; } = new();
     public List<CallLog> CallLogs { get; set; } = new();
     public List<Blacklisted> Blacklist { get; set; } = new();
+    public List<Calendar> Calendars { get; set; }
 }

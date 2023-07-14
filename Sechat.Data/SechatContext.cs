@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Sechat.Data.Models.CalendarModels;
 using Sechat.Data.Models.ChatModels;
 using Sechat.Data.Models.UserDetails;
 using Sechat.Data.Models.VideoCalls;
@@ -21,6 +22,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<CallLog> CallLogs { get; set; }
     public DbSet<DirectMessage> DirectMessages { get; set; }
     public DbSet<Blacklisted> Blacklist { get; set; }
+    public DbSet<Calendar> Calendars { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -68,6 +70,15 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
         _ = modelBuilder.Entity<UserProfile>()
             .HasMany(x => x.Blacklist)
             .WithOne(x => x.UserProfile)
+            .OnDelete(DeleteBehavior.Cascade);
+        _ = modelBuilder.Entity<UserProfile>()
+            .HasMany(x => x.Calendars)
+            .WithOne(x => x.UserProfile)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        _ = modelBuilder.Entity<Calendar>()
+            .HasMany(x => x.CalendarEvents)
+            .WithOne(x => x.Calendar)
             .OnDelete(DeleteBehavior.Cascade);
 
         _ = modelBuilder.Entity<Contact>()
