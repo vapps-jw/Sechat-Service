@@ -15,8 +15,8 @@ public class CustomResponseHeadersMiddleware : IMiddleware
     {
         try
         {
-            context.Response.Headers.Add("API-RES", "vapps-server-response");
-            context.Response.Headers.Add("X-Developed-By", "JW");
+            context.Response.Headers.Add("API-RES", "sechat-server-response");
+            context.Response.Headers.Add("X-Developed-By", "JWTK");
             await next(context);
         }
         catch (Exception ex)
