@@ -15,7 +15,7 @@ public abstract class SechatControllerBase : ControllerBase
 
     private string GetClaim(string claimType) => User.Claims.FirstOrDefault(x => x.Type.Equals(claimType))?.Value;
 
-    protected E2EData ExtractE2ECookieDataForRoom(string roomId)
+    protected E2EStringData ExtractE2ECookieDataForRoom(string roomId)
     {
         var e2e = Request.Cookies[AppConstants.Cookies.E2E];
         if (string.IsNullOrWhiteSpace(e2e)) return null;
@@ -25,11 +25,11 @@ public abstract class SechatControllerBase : ControllerBase
             PropertyNameCaseInsensitive = true
         };
 
-        var e2eData = JsonSerializer.Deserialize<E2EData[]>(e2e, options);
-        return e2eData.FirstOrDefault(k => k.RoomId.Equals(roomId));
+        var e2eData = JsonSerializer.Deserialize<E2EStringData[]>(e2e, options);
+        return e2eData.FirstOrDefault(k => k.Id.Equals(roomId));
     }
 
-    protected E2EDMData ExtractE2ECookieDataForContact(long contactId)
+    protected E2ENumericData ExtractE2ECookieDataForContact(long contactId)
     {
         var e2e = Request.Cookies[AppConstants.Cookies.E2E_DM];
         if (string.IsNullOrWhiteSpace(e2e)) return null;
@@ -39,21 +39,7 @@ public abstract class SechatControllerBase : ControllerBase
             PropertyNameCaseInsensitive = true
         };
 
-        var e2eData = JsonSerializer.Deserialize<E2EDMData[]>(e2e, options);
-        return e2eData.FirstOrDefault(k => k.ContactId == contactId);
-    }
-
-    protected E2ENotebookData ExtractE2ECookieDataForNoteboook(string notebookId)
-    {
-        var e2e = Request.Cookies[AppConstants.Cookies.E2E_NOTEBOOK];
-        if (string.IsNullOrWhiteSpace(e2e)) return null;
-
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
-        var e2eData = JsonSerializer.Deserialize<E2ENotebookData[]>(e2e, options);
-        return e2eData.FirstOrDefault(k => k.NotebookId == notebookId);
+        var e2eData = JsonSerializer.Deserialize<E2ENumericData[]>(e2e, options);
+        return e2eData.FirstOrDefault(k => k.Id == contactId);
     }
 }
