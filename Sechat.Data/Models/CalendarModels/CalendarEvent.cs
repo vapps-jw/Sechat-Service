@@ -12,6 +12,6 @@ public record CalendarEvent : BaseModel<string>
     public DateTime Start { get; set; }
     public DateTime End { get; set; }
 
-    public long CalendarId { get; set; }
+    public string CalendarId { get; set; }
     public Calendar Calendar { get; set; }
 }
