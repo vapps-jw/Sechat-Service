@@ -65,6 +65,7 @@ public class AccountController : SechatControllerBase
         {
             _userRepository.UpdateUserActivity(UserId);
             _ = await _userRepository.SaveChanges();
+            _logger.LogWarning("User Logged In: {Username}", userCredentials.Username);
             return Ok();
         }
 
