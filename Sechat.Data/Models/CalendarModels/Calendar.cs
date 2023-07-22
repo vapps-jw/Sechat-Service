@@ -2,7 +2,7 @@
 using Sechat.Data.Models.UserDetails;
 
 namespace Sechat.Data.Models.CalendarModels;
-public record Calendar : BaseModel<long>
+public record Calendar : BaseModel<string>
 {
     public List<CalendarEvent> CalendarEvents { get; set; }
 
