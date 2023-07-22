@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using OwaspHeaders.Core.Extensions;
 using Sechat.Service.Configuration;
 using Sechat.Service.Configuration.Installers;
 using Sechat.Service.Hubs;
@@ -30,6 +31,7 @@ if (app.Environment.IsProduction())
 }
 
 app.UseCors(AppConstants.CorsPolicies.WebClient);
+app.UseSecureHeadersMiddleware();
 app.UseSerilogRequestLogging();
 app.UseRouting();
 app.UseRateLimiter();
