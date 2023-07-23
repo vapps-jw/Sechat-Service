@@ -19,8 +19,8 @@ public class RateLimiterInstaller : IServiceInstaller
             {
                 AutoReplenishment = true,
                 SegmentsPerWindow = 6,
-                PermitLimit = 100,
-                QueueLimit = 10,
+                PermitLimit = 6000,
+                QueueLimit = 100,
                 Window = TimeSpan.FromMinutes(1)
             }));
 
