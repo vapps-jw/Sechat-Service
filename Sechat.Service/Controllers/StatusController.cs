@@ -15,15 +15,11 @@ public class StatusController : SechatControllerBase
     public StatusController(ILogger<StatusController> logger) => _logger = logger;
 
     [HttpGet("ping-api")]
-    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
+    [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
     public IActionResult PingApi() => Ok();
 
     [Authorize]
     [HttpGet("ping-authorized")]
-    [EnableRateLimiting(AppConstants.RateLimiting.MinimalRateLimiterPolicy)]
+    [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
     public IActionResult PingAuthorized() => Ok("Authorized");
-
-    [HttpGet("ping-api-global")]
-    public IActionResult PingApiGlobal() => Ok();
-
 }

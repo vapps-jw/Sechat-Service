@@ -48,7 +48,7 @@ public class AppConstants
     }
     public struct RateLimiting
     {
-        public const string MinimalRateLimiterPolicy = nameof(MinimalRateLimiterPolicy);
+        public const string AnonymusRestricted = nameof(AnonymusRestricted);
     }
     public struct StringLengths
     {
