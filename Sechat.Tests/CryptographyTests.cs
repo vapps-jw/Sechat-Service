@@ -47,7 +47,7 @@ public class CryptographyTests
     public void GenerateRandomStringTest()
     {
         var service = new Service.Services.CryptographyService();
-        var text = service.GenerateStringKey();
+        var text = service.GenerateKey();
 
         Assert.NotNull(text);
     }
@@ -58,7 +58,7 @@ public class CryptographyTests
         var service = new Service.Services.CryptographyService();
         var secretString = "test-message";
 
-        var key = service.GenerateStringKey();
+        var key = service.GenerateKey();
 
         var encrypted = service.Encrypt(secretString, key);
         _ = service.Decrypt(encrypted, key, out var decrypted);

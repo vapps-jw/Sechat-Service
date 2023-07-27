@@ -212,7 +212,7 @@ public class ChatHub : SechatHubBase<IChatHub>
                 request.RoomName,
                 UserId,
                 UserName,
-                _cryptographyService.GenerateKey(_cryptographyService.GenerateStringKey()),
+                _cryptographyService.GenerateKey(_cryptographyService.GenerateKey()),
                 request.UserEncrypted);
             if (await _chatRepository.SaveChanges() == 0)
             {

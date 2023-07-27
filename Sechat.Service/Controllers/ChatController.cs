@@ -207,7 +207,7 @@ public class ChatController : SechatControllerBase
 
         if (string.IsNullOrEmpty(contact.ContactKey))
         {
-            var newKey = _cryptographyService.GenerateStringKey();
+            var newKey = _cryptographyService.GenerateKey();
             contact.ContactKey = newKey;
         }
 

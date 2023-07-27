@@ -77,7 +77,7 @@ public class UserController : SechatControllerBase
         var contactExists = _userRepository.ContactExists(UserId, invitedUser.Id);
         if (contactExists) return BadRequest("Contact exists");
 
-        var newKey = _cryptographyService.GenerateStringKey();
+        var newKey = _cryptographyService.GenerateKey();
         var newContact = _userRepository.CreateContact(UserId, UserName, invitedUser.Id, invitedUser.UserName, newKey);
 
         if (await _userRepository.SaveChanges() > 0)

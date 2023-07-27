@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sechat.Data.Repositories;
 using Sechat.Service.Dtos.CookieObjects;
 using Sechat.Service.Services;
+using System.Threading.Tasks;
 
 namespace Sechat.Service.Controllers;
 
@@ -10,11 +12,24 @@ namespace Sechat.Service.Controllers;
 public class CryptoController : SechatControllerBase
 {
     private readonly CryptographyService _cryptographyService;
+    private readonly UserRepository _userRepository;
 
-    public CryptoController(CryptographyService cryptographyService) => _cryptographyService = cryptographyService;
+    public CryptoController(
+        CryptographyService cryptographyService,
+        UserRepository userRepository)
+    {
+        _cryptographyService = cryptographyService;
+        _userRepository = userRepository;
+    }
 
-    [HttpPost("encrypt-string")]
-    public IActionResult Encrypt() => Ok();
+    [HttpPatch("reset-default-key")]
+    public async Task<IActionResult> ResetDefaultKey()
+    {
+        var newKey = _cryptographyService.GenerateKey();
+        _userRepository.UpdatKey(UserId, Data.KeyType.DefaultEncryption, newKey);
+
+        return await _userRepository.SaveChanges() > 0 ? Ok() : Problem();
+    }
 
     [HttpPost("decrypt-message")]
     public IActionResult DecryptMessage([FromBody] MessageDecryptionRequest messageDecryptionRequest)

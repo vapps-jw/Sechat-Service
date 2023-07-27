@@ -207,6 +207,20 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     // Keys
 
+    public void UpdatKey(string userId, KeyType keyType, string value)
+    {
+        var profile = _context.UserProfiles
+            .Include(p => p.Keys)
+            .FirstOrDefault(p => p.Id.Equals(userId));
+
+        var currentKey = profile.Keys.FirstOrDefault(k => k.Type == keyType);
+        if (currentKey is not null)
+        {
+            _ = _context.Keys.Remove(currentKey);
+        }
+        profile.Keys.Add(new Key() { Type = keyType, Value = value });
+    }
+
     public List<Key> GetUserKeys(string userId) => _context.Keys
         .Where(k => k.UserProfileId.Equals(userId))
         .ToList();

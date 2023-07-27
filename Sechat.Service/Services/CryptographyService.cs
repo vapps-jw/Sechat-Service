@@ -188,7 +188,7 @@ public class CryptographyService
         return keyGenerator.GetBytes(32);
     }
 
-    public string GenerateStringKey()
+    public string GenerateKey()
     {
         var salt = RandomNumberGenerator.GetBytes(16);
         var interations = new Random().Next(10000, 30000);
