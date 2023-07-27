@@ -156,9 +156,10 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     public void UpdateUserActivity(string userId)
     {
-        var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(userId));
-        if (profile == null) return;
-        profile.LastActivity = DateTime.UtcNow;
+        _ = _context.UserProfiles
+            .Where(p => p.Id.Equals(userId))
+            .ExecuteUpdate(setters => setters
+                .SetProperty(m => m.LastActivity, DateTime.UtcNow));
     }
 
     public UserProfile GetUserProfile(string id) => _context.UserProfiles
@@ -213,10 +214,13 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Include(p => p.Keys)
             .FirstOrDefault(p => p.Id.Equals(userId));
 
-        var currentKey = profile.Keys.FirstOrDefault(k => k.Type == keyType);
-        if (currentKey is not null)
+        if (profile.Keys.Any())
         {
-            _ = _context.Keys.Remove(currentKey);
+            var currentKey = profile.Keys.FirstOrDefault(k => k.Type == keyType);
+            if (currentKey is not null)
+            {
+                _ = _context.Keys.Remove(currentKey);
+            }
         }
         profile.Keys.Add(new Key() { Type = keyType, Value = value });
     }
@@ -224,6 +228,10 @@ public class UserRepository : RepositoryBase<SechatContext>
     public List<Key> GetUserKeys(string userId) => _context.Keys
         .Where(k => k.UserProfileId.Equals(userId))
         .ToList();
+
+    public bool KeyExists(string userId, KeyType keyType) => _context.Keys
+        .Where(k => k.UserProfileId.Equals(userId))
+        .Any(k => k.Type == keyType);
 
     public string GetUserKey(string userId, KeyType keyType) => _context.Keys
         .Where(k => k.UserProfileId.Equals(userId) && k.Type == keyType)

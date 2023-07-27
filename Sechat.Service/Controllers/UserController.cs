@@ -47,12 +47,23 @@ public class UserController : SechatControllerBase
     [HttpGet("get-profile")]
     public async Task<IActionResult> GetProfile()
     {
+        _userRepository.UpdateUserActivity(UserId);
+
         if (!_userRepository.ProfileExists(UserId))
         {
             _userRepository.CreateUserProfile(UserId, UserName);
             if (await _userRepository.SaveChanges() == 0)
             {
                 return Problem("Profile creation failed");
+            }
+        }
+        if (!_userRepository.KeyExists(UserId, Data.KeyType.DefaultEncryption))
+        {
+            var newKey = _cryptographyService.GenerateKey();
+            _userRepository.UpdatKey(UserId, Data.KeyType.DefaultEncryption, newKey);
+            if (await _userRepository.SaveChanges() == 0)
+            {
+                return Problem("Defauly Key creating failed");
             }
         }
 

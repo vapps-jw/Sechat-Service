@@ -25,6 +25,7 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class AccountController : SechatControllerBase
 {
+    private readonly CryptographyService _cryptographyService;
     private readonly IOptionsMonitor<CorsSettings> _corsSettings;
     private readonly IMapper _mapper;
     private readonly ILogger<AccountController> _logger;
@@ -34,6 +35,7 @@ public class AccountController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public AccountController(
+        CryptographyService cryptographyService,
         IOptionsMonitor<CorsSettings> corsSettings,
         IMapper mapper,
         ILogger<AccountController> logger,
@@ -42,6 +44,7 @@ public class AccountController : SechatControllerBase
         UserRepository userRepository,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
+        _cryptographyService = cryptographyService;
         _corsSettings = corsSettings;
         _mapper = mapper;
         _logger = logger;
@@ -60,11 +63,8 @@ public class AccountController : SechatControllerBase
     public async Task<IActionResult> SignIn([FromBody] UserCredentials userCredentials)
     {
         var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, true);
-
         if (signInResult.Succeeded)
         {
-            _userRepository.UpdateUserActivity(UserId);
-            _ = await _userRepository.SaveChanges();
             _logger.LogWarning("User Logged In: {Username}", userCredentials.Username);
             return Ok();
         }
