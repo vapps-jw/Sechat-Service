@@ -28,7 +28,7 @@ public class CryptoController : SechatControllerBase
         var newKey = _cryptographyService.GenerateKey();
         _userRepository.UpdatKey(UserId, Data.KeyType.DefaultEncryption, newKey);
 
-        return await _userRepository.SaveChanges() > 0 ? Ok() : Problem();
+        return await _userRepository.SaveChanges() > 0 ? Ok("Key reset successfull") : Problem("Issue when resetting the Key");
     }
 
     [HttpPost("decrypt-message")]
