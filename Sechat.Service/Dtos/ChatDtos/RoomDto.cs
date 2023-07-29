@@ -9,7 +9,6 @@ public class RoomDto
     public string CreatorName { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
-    public bool EncryptedByUser { get; set; }
 
     public DateTime LastActivity { get; set; } = DateTime.UtcNow;
     public DateTime Created { get; set; } = DateTime.UtcNow;

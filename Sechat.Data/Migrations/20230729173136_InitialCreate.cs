@@ -109,8 +109,6 @@ namespace Sechat.Data.Migrations
                     CreatorId = table.Column<string>(type: "text", nullable: true),
                     CreatorName = table.Column<string>(type: "text", nullable: true),
                     Name = table.Column<string>(type: "text", nullable: true),
-                    RoomKey = table.Column<byte[]>(type: "bytea", nullable: true),
-                    EncryptedByUser = table.Column<bool>(type: "boolean", nullable: false),
                     Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LastActivity = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -242,6 +240,30 @@ namespace Sechat.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DirectMessages",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    IdSentBy = table.Column<string>(type: "text", nullable: true),
+                    NameSentBy = table.Column<string>(type: "text", nullable: true),
+                    Text = table.Column<string>(type: "text", nullable: true),
+                    WasViewed = table.Column<bool>(type: "boolean", nullable: false),
+                    ContactId = table.Column<long>(type: "bigint", nullable: false),
+                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DirectMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DirectMessages_Contacts_ContactId",
+                        column: x => x.ContactId,
+                        principalTable: "Contacts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Messages",
                 columns: table => new
                 {
@@ -265,14 +287,56 @@ namespace Sechat.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Blacklist",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserName = table.Column<string>(type: "text", nullable: true),
+                    UserProfileId = table.Column<string>(type: "text", nullable: true),
+                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Blacklist", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Blacklist_UserProfiles_UserProfileId",
+                        column: x => x.UserProfileId,
+                        principalTable: "UserProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Calendars",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    UserProfileId = table.Column<string>(type: "text", nullable: true),
+                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Calendars", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Calendars_UserProfiles_UserProfileId",
+                        column: x => x.UserProfileId,
+                        principalTable: "UserProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CallLogs",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CalleeId = table.Column<string>(type: "text", nullable: true),
+                    CalleeName = table.Column<string>(type: "text", nullable: true),
                     VideoCallType = table.Column<int>(type: "integer", nullable: false),
                     VideoCallResult = table.Column<int>(type: "integer", nullable: false),
+                    WasViewed = table.Column<bool>(type: "boolean", nullable: false),
                     UserProfileId = table.Column<string>(type: "text", nullable: true),
                     Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -400,6 +464,31 @@ namespace Sechat.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "CalendarEvent",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    IsAllDay = table.Column<bool>(type: "boolean", nullable: false),
+                    AllDay = table.Column<DateOnly>(type: "date", nullable: false),
+                    Start = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    End = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CalendarId = table.Column<string>(type: "text", nullable: true),
+                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CalendarEvent", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CalendarEvent_Calendars_CalendarId",
+                        column: x => x.CalendarId,
+                        principalTable: "Calendars",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -438,6 +527,26 @@ namespace Sechat.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Blacklist_UserProfileId",
+                table: "Blacklist",
+                column: "UserProfileId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CalendarEvent_CalendarId",
+                table: "CalendarEvent",
+                column: "CalendarId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Calendars_UserProfileId",
+                table: "Calendars",
+                column: "UserProfileId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CallLogs_CalleeId",
+                table: "CallLogs",
+                column: "CalleeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CallLogs_UserProfileId",
                 table: "CallLogs",
                 column: "UserProfileId");
@@ -451,6 +560,16 @@ namespace Sechat.Data.Migrations
                 name: "IX_Contacts_InviterId",
                 table: "Contacts",
                 column: "InviterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DirectMessages_ContactId",
+                table: "DirectMessages",
+                column: "ContactId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DirectMessages_Created",
+                table: "DirectMessages",
+                column: "Created");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Features_Name",
@@ -517,13 +636,19 @@ namespace Sechat.Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Blacklist");
+
+            migrationBuilder.DropTable(
+                name: "CalendarEvent");
+
+            migrationBuilder.DropTable(
                 name: "CallLogs");
 
             migrationBuilder.DropTable(
-                name: "Contacts");
+                name: "DataProtectionKeys");
 
             migrationBuilder.DropTable(
-                name: "DataProtectionKeys");
+                name: "DirectMessages");
 
             migrationBuilder.DropTable(
                 name: "FeatureUserProfile");
@@ -545,6 +670,12 @@ namespace Sechat.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Calendars");
+
+            migrationBuilder.DropTable(
+                name: "Contacts");
 
             migrationBuilder.DropTable(
                 name: "Features");

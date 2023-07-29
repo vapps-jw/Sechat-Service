@@ -24,10 +24,10 @@ public class AppConstants
         public const string Offline = "Offline";
         public const string Unknown = "Unknown";
     }
-    public struct Cookies
+    public struct KeyTypes
     {
-        public const string E2E_NOTEBOOK = "E2E_NOTEBOOK";
-        public const string E2E = "E2E";
+        public const string E2E_MASTER = "E2E_MASTER";
+        public const string E2E_ROOMS = "E2E_ROOMS";
         public const string E2E_DM = "E2E_DM";
     }
     public enum PushNotificationType

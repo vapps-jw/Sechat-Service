@@ -7,6 +7,7 @@ using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
+using Sechat.Service.Dtos.CryptoDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using System;
@@ -165,24 +166,6 @@ public class UserController : SechatControllerBase
         return BadRequest("Can`t do that");
     }
 
-    [HttpPatch("contact-e2e")]
-    public async Task<IActionResult> ChangeEncryption(long contactId, bool e2e)
-    {
-        if (_userRepository.CheckContactWithMessages(contactId, UserId, out var contact))
-        {
-            contact.EncryptedByUser = e2e;
-            contact.DirectMessages.Clear();
-            _ = await _userRepository.SaveChanges();
-
-            await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
-            await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
-            return Ok(_mapper.Map<ContactDto>(contact));
-
-        }
-
-        return BadRequest("Can`t do that");
-    }
-
     [HttpPatch("approve-contact")]
     public async Task<IActionResult> ApproveContact(
         [FromServices] Channel<DefaultNotificationDto> channel,
@@ -200,6 +183,7 @@ public class UserController : SechatControllerBase
 
             await _chatHubContext.Clients.Group(UserId).ConnectionUpdated(contactDto);
             await _chatHubContext.Clients.Group(inviterId).ConnectionUpdated(contactDto);
+            await _chatHubContext.Clients.Group(inviterId).DMKeyRequested(new DMKeyRequest(UserName, contactDto.InviterName, contactDto.Id));
             await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.ContactRequestApproved, inviterId, UserName));
             return Ok();
         }

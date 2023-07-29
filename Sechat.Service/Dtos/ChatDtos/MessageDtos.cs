@@ -9,7 +9,6 @@ public class MessageDto
     public DateTime Created { get; set; } = DateTime.UtcNow;
     public string NameSentBy { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
-    public bool Error { get; set; }
     public bool WasViewed { get; set; }
     public string RoomId { get; set; } = string.Empty;
     public List<MessageViewerDto> MessageViewers { get; set; } = new();
@@ -22,7 +21,6 @@ public class DirectMessageDto
     public string NameSentBy { get; set; } = string.Empty;
     public string IdSentBy { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
-    public bool Error { get; set; }
     public bool WasViewed { get; set; }
     public long ContactId { get; set; }
 }

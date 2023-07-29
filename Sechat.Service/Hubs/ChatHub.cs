@@ -3,12 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
+using Sechat.Service.Dtos.CryptoDtos;
 using Sechat.Service.Services;
-using Sechat.Service.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,13 +61,19 @@ public interface IChatHub
     Task ConnectionDeleted(ResourceId message);
     Task ConnectionUpdated(ContactDto message);
     Task ContactStateChanged(StringUserMessage message);
+
+    // E2E
+
+    Task DMKeyRequested(DMKeyRequest keyRequest);
+    Task DMKeyIncoming(DMSharedKey key);
+
+    Task RoomKeyRequested(RoomKeyRequest keyRequest);
+    Task RoomKeyIncoming(RoomSharedKey key);
 }
 
 [Authorize]
 public class ChatHub : SechatHubBase<IChatHub>
 {
-    private readonly IOptionsMonitor<CryptographySettings> _cryptoSettings;
-    private readonly CryptographyService _cryptographyService;
     private readonly Channel<DefaultNotificationDto> _pushNotificationChannel;
     private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
     private readonly UserRepository _userRepository;
@@ -78,8 +83,6 @@ public class ChatHub : SechatHubBase<IChatHub>
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
-        IOptionsMonitor<CryptographySettings> cryptoSettings,
-        CryptographyService cryptographyService,
         Channel<DefaultNotificationDto> pushNotificationChannel,
         SignalRConnectionsMonitor signalRConnectionsMonitor,
         UserRepository userRepository,
@@ -89,8 +92,6 @@ public class ChatHub : SechatHubBase<IChatHub>
 
         ChatRepository chatRepository)
     {
-        _cryptoSettings = cryptoSettings;
-        _cryptographyService = cryptographyService;
         _pushNotificationChannel = pushNotificationChannel;
         _signalRConnectionsMonitor = signalRConnectionsMonitor;
         _userRepository = userRepository;
@@ -116,6 +117,8 @@ public class ChatHub : SechatHubBase<IChatHub>
             throw new HubException(ex.Message);
         }
     }
+
+    // Video Calls
 
     public async Task SendMicStateChange(StringUserMessage message)
     {
@@ -204,6 +207,8 @@ public class ChatHub : SechatHubBase<IChatHub>
         await Clients.Group(contactId).VideoCallRequested(new StringMessage(UserName));
     }
 
+    // Rooms
+
     public async Task<RoomDto> CreateRoom(CreateRoomMessage request)
     {
         try
@@ -211,9 +216,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             var newRoom = _chatRepository.CreateRoom(
                 request.RoomName,
                 UserId,
-                UserName,
-                _cryptographyService.GenerateKey(_cryptographyService.GenerateKey()),
-                request.UserEncrypted);
+                UserName);
             if (await _chatRepository.SaveChanges() == 0)
             {
                 throw new Exception("Room creation failed");
@@ -279,6 +282,8 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
+    // Contacts
+
     private async Task<string> IsContactAllowed(string userName)
     {
         var contact = await _userManager.FindByNameAsync(userName);
@@ -287,6 +292,38 @@ public class ChatHub : SechatHubBase<IChatHub>
         var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
         return !userContacts.Any(c => c.Equals(contact.Id)) ? string.Empty : contact.Id;
     }
+
+    // E2E
+
+    public async Task RequestDMKey(DMKeyRequest keyRequest)
+    {
+        try
+        {
+            var contactId = await IsContactAllowed(keyRequest.KeyHolder);
+            if (string.IsNullOrEmpty(contactId)) return;
+            await Clients.Group(contactId).DMKeyRequested(keyRequest);
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
+    public async Task ShareDMKey(DMSharedKey key)
+    {
+        try
+        {
+            var contactId = await IsContactAllowed(key.Receipient);
+            if (string.IsNullOrEmpty(contactId)) return;
+            await Clients.Group(contactId).DMKeyIncoming(key);
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
+    // Connections
 
     public override async Task OnConnectedAsync()
     {

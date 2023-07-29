@@ -15,9 +15,6 @@ public record Contact : BaseModel<long>
     [Required]
     public string InvitedName { get; set; } = string.Empty;
 
-    public string ContactKey { get; set; }
-    public bool EncryptedByUser { get; set; }
-
     public bool Blocked { get; set; }
     public string BlockedById { get; set; } = string.Empty;
     public string BlockedByName { get; set; } = string.Empty;

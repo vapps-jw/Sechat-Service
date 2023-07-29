@@ -146,7 +146,6 @@ public class UserRepository : RepositoryBase<SechatContext>
             InvitedName = invitedName,
             InviterId = inviterId,
             InviterName = inviterName,
-            ContactKey = contactKey
         };
         _ = _context.Contacts.Add(newContact);
         return newContact;

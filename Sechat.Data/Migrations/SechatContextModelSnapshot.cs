@@ -426,17 +426,11 @@ namespace Sechat.Data.Migrations
                     b.Property<string>("CreatorName")
                         .HasColumnType("text");
 
-                    b.Property<bool>("EncryptedByUser")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTime>("LastActivity")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
-
-                    b.Property<byte[]>("RoomKey")
-                        .HasColumnType("bytea");
 
                     b.HasKey("Id");
 
@@ -487,14 +481,8 @@ namespace Sechat.Data.Migrations
                     b.Property<string>("BlockedByName")
                         .HasColumnType("text");
 
-                    b.Property<string>("ContactKey")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("EncryptedByUser")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("InvitedId")
                         .IsRequired()

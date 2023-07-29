@@ -12,7 +12,7 @@ using Sechat.Data;
 namespace Sechat.Data.Migrations
 {
     [DbContext(typeof(SechatContext))]
-    [Migration("20230625194523_InitialCreate")]
+    [Migration("20230729173136_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace Sechat.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.5")
+                .HasAnnotation("ProductVersion", "7.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -270,6 +270,95 @@ namespace Sechat.Data.Migrations
                     b.ToTable("RoomUserProfile");
                 });
 
+            modelBuilder.Entity("Sechat.Data.Models.CalendarModels.Calendar", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserProfileId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.ToTable("Calendars");
+                });
+
+            modelBuilder.Entity("Sechat.Data.Models.CalendarModels.CalendarEvent", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("AllDay")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CalendarId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("End")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsAllDay")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Start")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalendarId");
+
+                    b.ToTable("CalendarEvent");
+                });
+
+            modelBuilder.Entity("Sechat.Data.Models.ChatModels.DirectMessage", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("ContactId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdSentBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NameSentBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("WasViewed")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("Created");
+
+                    b.ToTable("DirectMessages");
+                });
+
             modelBuilder.Entity("Sechat.Data.Models.ChatModels.Message", b =>
                 {
                     b.Property<long>("Id")
@@ -340,21 +429,39 @@ namespace Sechat.Data.Migrations
                     b.Property<string>("CreatorName")
                         .HasColumnType("text");
 
-                    b.Property<bool>("EncryptedByUser")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTime>("LastActivity")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
-                    b.Property<byte[]>("RoomKey")
-                        .HasColumnType("bytea");
-
                     b.HasKey("Id");
 
                     b.ToTable("Rooms");
+                });
+
+            modelBuilder.Entity("Sechat.Data.Models.UserDetails.Blacklisted", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserProfileId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.ToTable("Blacklist");
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.UserDetails.Contact", b =>
@@ -523,6 +630,9 @@ namespace Sechat.Data.Migrations
                     b.Property<string>("CalleeId")
                         .HasColumnType("text");
 
+                    b.Property<string>("CalleeName")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
 
@@ -535,7 +645,12 @@ namespace Sechat.Data.Migrations
                     b.Property<int>("VideoCallType")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("WasViewed")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CalleeId");
 
                     b.HasIndex("UserProfileId");
 
@@ -623,6 +738,37 @@ namespace Sechat.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Sechat.Data.Models.CalendarModels.Calendar", b =>
+                {
+                    b.HasOne("Sechat.Data.Models.UserDetails.UserProfile", "UserProfile")
+                        .WithMany("Calendars")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Sechat.Data.Models.CalendarModels.CalendarEvent", b =>
+                {
+                    b.HasOne("Sechat.Data.Models.CalendarModels.Calendar", "Calendar")
+                        .WithMany("CalendarEvents")
+                        .HasForeignKey("CalendarId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Calendar");
+                });
+
+            modelBuilder.Entity("Sechat.Data.Models.ChatModels.DirectMessage", b =>
+                {
+                    b.HasOne("Sechat.Data.Models.UserDetails.Contact", "Contact")
+                        .WithMany("DirectMessages")
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contact");
+                });
+
             modelBuilder.Entity("Sechat.Data.Models.ChatModels.Message", b =>
                 {
                     b.HasOne("Sechat.Data.Models.ChatModels.Room", "Room")
@@ -642,6 +788,16 @@ namespace Sechat.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Message");
+                });
+
+            modelBuilder.Entity("Sechat.Data.Models.UserDetails.Blacklisted", b =>
+                {
+                    b.HasOne("Sechat.Data.Models.UserDetails.UserProfile", "UserProfile")
+                        .WithMany("Blacklist")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.UserDetails.Key", b =>
@@ -674,6 +830,11 @@ namespace Sechat.Data.Migrations
                     b.Navigation("UserProfile");
                 });
 
+            modelBuilder.Entity("Sechat.Data.Models.CalendarModels.Calendar", b =>
+                {
+                    b.Navigation("CalendarEvents");
+                });
+
             modelBuilder.Entity("Sechat.Data.Models.ChatModels.Message", b =>
                 {
                     b.Navigation("MessageViewers");
@@ -684,8 +845,17 @@ namespace Sechat.Data.Migrations
                     b.Navigation("Messages");
                 });
 
+            modelBuilder.Entity("Sechat.Data.Models.UserDetails.Contact", b =>
+                {
+                    b.Navigation("DirectMessages");
+                });
+
             modelBuilder.Entity("Sechat.Data.Models.UserDetails.UserProfile", b =>
                 {
+                    b.Navigation("Blacklist");
+
+                    b.Navigation("Calendars");
+
                     b.Navigation("CallLogs");
 
                     b.Navigation("Keys");

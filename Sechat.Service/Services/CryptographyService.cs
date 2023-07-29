@@ -13,44 +13,6 @@ public class CryptographyService
 
     public record Keys(string Public, string Private);
 
-    public string Encrypt(string plainText, byte[] encryptionKeyBytes, byte[] iv)
-    {
-        byte[] array;
-        using (var aes = Aes.Create())
-        {
-            aes.Key = encryptionKeyBytes;
-            aes.IV = iv;
-
-            var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-
-            using MemoryStream memoryStream = new();
-            using CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write);
-            using (StreamWriter streamWriter = new(cryptoStream))
-            {
-                streamWriter.Write(plainText);
-            }
-
-            array = memoryStream.ToArray();
-        }
-
-        return Convert.ToBase64String(array);
-    }
-
-    public string Decrypt(string cipherText, byte[] encryptionKeyBytes, byte[] iv)
-    {
-        var buffer = Convert.FromBase64String(cipherText);
-
-        using var aes = Aes.Create();
-        aes.Key = encryptionKeyBytes;
-        aes.IV = iv;
-        var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-
-        using MemoryStream memoryStream = new(buffer);
-        using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
-        using StreamReader streamReader = new(cryptoStream);
-        return streamReader.ReadToEnd();
-    }
-
     public string Encrypt(string plainText, string password)
     {
         byte[] encryptedData;
@@ -179,15 +141,6 @@ public class CryptographyService
         return Convert.FromBase64String(pem[base64Start..endIdx]);
     }
 
-    public byte[] GenerateKey(string password)
-    {
-        var salt = RandomNumberGenerator.GetBytes(16);
-        var interations = new Random().Next(10000, 30000);
-
-        using var keyGenerator = new Rfc2898DeriveBytes(password, salt, interations, HashAlgorithmName.SHA256);
-        return keyGenerator.GetBytes(32);
-    }
-
     public string GenerateKey()
     {
         var salt = RandomNumberGenerator.GetBytes(16);
@@ -197,14 +150,6 @@ public class CryptographyService
         crypto.GenerateKey();
         using var keyGenerator = new Rfc2898DeriveBytes(Convert.ToBase64String(crypto.Key), salt, interations, HashAlgorithmName.SHA256);
         return Convert.ToBase64String(keyGenerator.GetBytes(32));
-    }
-
-    public byte[] GenerateKey(string password, string salt, int interations)
-    {
-        var saltBytes = Encoding.UTF8.GetBytes(salt);
-        using var keyGenerator = new Rfc2898DeriveBytes(password, saltBytes, interations, HashAlgorithmName.SHA256);
-
-        return keyGenerator.GetBytes(32);
     }
 
     public byte[] GenerateKey(string password, byte[] salt, int interations)

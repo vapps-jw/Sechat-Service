@@ -185,16 +185,12 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     // Rooms
 
-    public bool RoomEncryptedByUser(string roomId) => _context.Rooms.Where(r => r.Id.Equals(roomId)).Select(r => r.EncryptedByUser).FirstOrDefault();
-
-    public byte[] GetRoomKey(string roomId) => _context.Rooms.Where(r => r.Id.Equals(roomId)).Select(r => r.RoomKey).FirstOrDefault();
-
-    public Room CreateRoom(string roomName, string creatorUserId, string creatorName, byte[] roomKey, bool encryptedByUser)
+    public Room CreateRoom(string roomName, string creatorUserId, string creatorName)
     {
         var profile = _context.UserProfiles.FirstOrDefault(p => p.Id.Equals(creatorUserId));
         if (profile == null) return null;
 
-        var newRoom = new Room() { Id = Guid.NewGuid().ToString(), RoomKey = roomKey, CreatorId = creatorUserId, Name = roomName, CreatorName = creatorName, EncryptedByUser = encryptedByUser };
+        var newRoom = new Room() { Id = Guid.NewGuid().ToString(), CreatorId = creatorUserId, Name = roomName, CreatorName = creatorName };
         newRoom.Members.Add(profile);
 
         _ = _context.Rooms.Add(newRoom);
@@ -212,8 +208,6 @@ public class ChatRepository : RepositoryBase<SechatContext>
             .ThenInclude(m => m.MessageViewers)
         .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
         {
-            EncryptedByUser = r.EncryptedByUser,
-            RoomKey = r.RoomKey,
             LastActivity = r.LastActivity,
             Created = r.Created,
             CreatorName = r.CreatorName,
@@ -233,8 +227,6 @@ public class ChatRepository : RepositoryBase<SechatContext>
             .ThenInclude(m => m.MessageViewers)
         .Select(r => new Room()
         {
-            EncryptedByUser = r.EncryptedByUser,
-            RoomKey = r.RoomKey,
             LastActivity = r.LastActivity,
             Created = r.Created,
             CreatorName = r.CreatorName,
@@ -252,9 +244,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
             .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId)))
             .Select(r => new Room()
             {
-                EncryptedByUser = r.EncryptedByUser,
                 Name = r.Name,
-                RoomKey = r.RoomKey,
                 LastActivity = r.LastActivity,
                 Created = r.Created,
                 CreatorName = r.CreatorName,
