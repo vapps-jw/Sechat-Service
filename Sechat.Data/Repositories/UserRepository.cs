@@ -105,6 +105,13 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Select(uc => uc.InvitedId.Equals(userId) ? uc.InviterId : uc.InvitedId)
             .ToListAsync();
 
+    public bool IsContactAllowed(string userId, string contactId) =>
+        _context.Contacts
+            .Any(uc => ((uc.InvitedId.Equals(userId) && uc.InviterId.Equals(contactId)) ||
+                        (uc.InvitedId.Equals(contactId) && uc.InviterId.Equals(userId))) &&
+                        !uc.Blocked &&
+                        uc.Approved);
+
     public Contact BlockContact(long connectionId, string blockedById, string blockedByName)
     {
         var contact = _context.Contacts.FirstOrDefault(uc => uc.Id == connectionId);

@@ -77,7 +77,33 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetRooms()
     {
         var rooms = await _chatRepository.GetRoomsWithMessages(UserId);
+        foreach (var room in rooms)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
+        }
+
         var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
+
         return Ok(roomDtos);
     }
 
@@ -89,10 +115,29 @@ public class ChatController : SechatControllerBase
             return BadRequest("You dont have access to this room");
         }
 
-        var rooms = await _chatRepository.GetRoomWithMessages(roomId);
-        var roomDtos = _mapper.Map<RoomDto>(rooms);
+        var room = await _chatRepository.GetRoomWithMessages(roomId);
+        foreach (var message in room.Messages)
+        {
+            foreach (var viewer in message.MessageViewers)
+            {
+                viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+            }
+        }
 
-        return Ok(roomDtos);
+        var roomDto = _mapper.Map<RoomDto>(room);
+        foreach (var message in roomDto.Messages)
+        {
+            foreach (var viewer in message.MessageViewers)
+            {
+                if (viewer.User.Equals(UserName))
+                {
+                    message.WasViewed = true;
+                    continue;
+                }
+            }
+        }
+
+        return Ok(roomDto);
     }
 
     [HttpGet("contact/{contactId}")]
@@ -113,7 +158,32 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetRoomsUpdate([FromBody] List<GetRoomUpdate> getRoomUpdates)
     {
         var rooms = await _chatRepository.GetRoomsWithMessages(UserId, getRoomUpdates);
+        foreach (var room in rooms)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
+        }
+
         var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
 
         return Ok(roomDtos);
     }

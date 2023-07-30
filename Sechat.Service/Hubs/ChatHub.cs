@@ -323,6 +323,46 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
+    public async Task RequestRoomKey(RoomKeyRequest keyRequest)
+    {
+        try
+        {
+            if (!_chatRepository.IsRoomAllowed(UserId, keyRequest.Id))
+            {
+                return;
+            }
+
+            var roomMembers = _chatRepository.GetRoomMembersIds(keyRequest.Id);
+            _ = roomMembers.RemoveAll(rm => !_signalRConnectionsMonitor.ConnectedUsers.Contains(rm) || rm.Equals(UserId));
+            foreach (var roomMember in roomMembers)
+            {
+                await Clients.Group(roomMember).RoomKeyRequested(keyRequest);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
+    public async Task ShareRoomKey(RoomSharedKey key)
+    {
+        try
+        {
+            var needKey = await _userManager.FindByNameAsync(key.Receipient);
+            if (!_chatRepository.IsRoomAllowed(needKey.Id, key.Id))
+            {
+                return;
+            }
+
+            await Clients.Group(needKey.Id).RoomKeyIncoming(key);
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
     // Connections
 
     public override async Task OnConnectedAsync()

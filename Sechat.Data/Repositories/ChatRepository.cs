@@ -201,6 +201,8 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public List<string> GetRoomMembersIds(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
 
+    public List<string> GetRoomMembersNames(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.UserName).ToList();
+
     public async Task<List<Room>> GetRoomsWithMessages(string memberUserId)
     {
         var res = await _context.Rooms
