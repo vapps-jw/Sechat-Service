@@ -101,8 +101,13 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     public Task<List<string>> GetAllowedContactsIds(string userId) =>
         _context.Contacts
-            .Where(uc => uc.InvitedId.Equals(userId) || (uc.InviterId.Equals(userId) && !uc.Blocked && uc.Approved))
+            .Where(uc => !uc.Blocked && uc.Approved && (uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId)))
             .Select(uc => uc.InvitedId.Equals(userId) ? uc.InviterId : uc.InvitedId)
+            .ToListAsync();
+
+    public Task<List<Contact>> GetAllowedContacts(string userId) =>
+        _context.Contacts
+            .Where(uc => uc.InvitedId.Equals(userId) || (uc.InviterId.Equals(userId) && !uc.Blocked && uc.Approved))
             .ToListAsync();
 
     public bool IsContactAllowed(string userId, string contactId) =>

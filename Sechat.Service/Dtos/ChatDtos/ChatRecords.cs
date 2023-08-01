@@ -34,7 +34,7 @@ public class IncomingMessageValidation : AbstractValidator<IncomingMessage>
     public IncomingMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(5000);
 }
 
-public record CreateRoomMessage(string RoomName, bool UserEncrypted);
+public record CreateRoomMessage(string RoomName);
 public class CreateRoomMessageValidation : AbstractValidator<CreateRoomMessage>
 {
     public CreateRoomMessageValidation() => _ = RuleFor(x => x.RoomName).NotEmpty().MaximumLength(20);

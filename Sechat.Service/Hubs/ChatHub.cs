@@ -66,9 +66,11 @@ public interface IChatHub
 
     Task DMKeyRequested(DMKeyRequest keyRequest);
     Task DMKeyIncoming(DMSharedKey key);
+    Task DMKeyChainRestoration(DMSharedKey key);
 
     Task RoomKeyRequested(RoomKeyRequest keyRequest);
     Task RoomKeyIncoming(RoomSharedKey key);
+    Task RoomKeyChainRestoration(RoomSharedKey key);
 }
 
 [Authorize]
@@ -323,6 +325,19 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
     }
 
+    public async Task TriggerDMKeyChainRestoration(DMKeyRestorationRequest request)
+    {
+        try
+        {
+            var contactId = await IsContactAllowed(request.KeyHolder);
+            if (string.IsNullOrEmpty(contactId)) return;
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
     public async Task RequestRoomKey(RoomKeyRequest keyRequest)
     {
         try
@@ -356,6 +371,19 @@ public class ChatHub : SechatHubBase<IChatHub>
             }
 
             await Clients.Group(needKey.Id).RoomKeyIncoming(key);
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
+    public async Task TriggerRoomKeyChainRestoration(RoomKeyRestorationRequest request)
+    {
+        try
+        {
+            var contactId = await IsContactAllowed(request.KeyHolder);
+            if (string.IsNullOrEmpty(contactId)) return;
         }
         catch (Exception ex)
         {
