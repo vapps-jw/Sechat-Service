@@ -301,7 +301,8 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
-            var contactId = await IsContactAllowed(keyRequest.KeyHolder);
+            var contactId = keyRequest.Receipient.Equals(UserName) ? UserId : await IsContactAllowed(keyRequest.Receipient);
+
             if (string.IsNullOrEmpty(contactId)) return;
             await Clients.Group(contactId).DMKeyRequested(keyRequest);
         }
@@ -315,7 +316,8 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
-            var contactId = await IsContactAllowed(key.Receipient);
+            var contactId = key.Receipient.Equals(UserName) ? UserId : await IsContactAllowed(key.Receipient);
+
             if (string.IsNullOrEmpty(contactId)) return;
             await Clients.Group(contactId).DMKeyIncoming(key);
         }
@@ -348,7 +350,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             }
 
             var roomMembers = _chatRepository.GetRoomMembersIds(keyRequest.Id);
-            _ = roomMembers.RemoveAll(rm => !_signalRConnectionsMonitor.ConnectedUsers.Contains(rm) || rm.Equals(UserId));
+            _ = roomMembers.RemoveAll(rm => !_signalRConnectionsMonitor.ConnectedUsers.Contains(rm));
             foreach (var roomMember in roomMembers)
             {
                 await Clients.Group(roomMember).RoomKeyRequested(keyRequest);
