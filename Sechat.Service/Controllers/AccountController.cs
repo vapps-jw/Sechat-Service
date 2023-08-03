@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,9 +24,7 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class AccountController : SechatControllerBase
 {
-    private readonly CryptographyService _cryptographyService;
     private readonly IOptionsMonitor<CorsSettings> _corsSettings;
-    private readonly IMapper _mapper;
     private readonly ILogger<AccountController> _logger;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly SignInManager<IdentityUser> _signInManager;
@@ -35,18 +32,14 @@ public class AccountController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public AccountController(
-        CryptographyService cryptographyService,
         IOptionsMonitor<CorsSettings> corsSettings,
-        IMapper mapper,
         ILogger<AccountController> logger,
         UserManager<IdentityUser> userManager,
         SignInManager<IdentityUser> signInManager,
         UserRepository userRepository,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
-        _cryptographyService = cryptographyService;
         _corsSettings = corsSettings;
-        _mapper = mapper;
         _logger = logger;
         _userManager = userManager;
         _signInManager = signInManager;
