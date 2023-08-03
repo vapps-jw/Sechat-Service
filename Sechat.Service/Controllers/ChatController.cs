@@ -58,11 +58,15 @@ public class ChatController : SechatControllerBase
         var contacts = await _userRepository.GetContactsWithMessages(UserId);
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
-        var connectedContacts = contacts
-            .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
-                        _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
-            .Select(c => c.Id)
-            .ToList();
+        var connectedContacts = new List<long>();
+        if (_signalRConnectionsMonitor.ConnectedUsers is not null)
+        {
+            connectedContacts = contacts
+                .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
+                            _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
+                .Select(c => c.Id)
+                .ToList();
+        }
 
         foreach (var contactDto in contactDtos)
         {

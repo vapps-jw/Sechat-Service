@@ -301,7 +301,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
-            var contactId = keyRequest.Receipient.Equals(UserName) ? UserId : await IsContactAllowed(keyRequest.Receipient);
+            var contactId = keyRequest.KeyHolder.Equals(UserName) ? UserId : await IsContactAllowed(keyRequest.KeyHolder);
 
             if (string.IsNullOrEmpty(contactId)) return;
             await Clients.Group(contactId).DMKeyRequested(keyRequest);
