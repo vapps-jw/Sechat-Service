@@ -28,7 +28,7 @@ public class UserController : SechatControllerBase
     private readonly UserRepository _userRepository;
 
     public UserController(
-          CryptographyService cryptographyService,
+        CryptographyService cryptographyService,
         PushNotificationService pushNotificationService,
         IMapper mapper,
         UserManager<IdentityUser> userManager,

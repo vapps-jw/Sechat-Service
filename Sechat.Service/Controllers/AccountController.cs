@@ -53,13 +53,17 @@ public class AccountController : SechatControllerBase
     [AllowAnonymous]
     [HttpPost("login")]
     [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
-    public async Task<IActionResult> SignIn([FromBody] UserCredentials userCredentials)
+    public async Task<IActionResult> SignIn(
+        [FromServices] UserDataService userDataService,
+        [FromBody] UserCredentials userCredentials)
     {
         var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, true);
         if (signInResult.Succeeded)
         {
             _logger.LogWarning("User Logged In: {Username}", userCredentials.Username);
-            return Ok();
+            var user = await _userManager.FindByNameAsync(userCredentials.Username);
+            var profile = await userDataService.GetProfile(user.Id, user.UserName);
+            return Ok(profile);
         }
 
         if (signInResult.IsLockedOut)
@@ -68,7 +72,7 @@ public class AccountController : SechatControllerBase
             return BadRequest("Too many attempts, try later");
         }
 
-        _logger.LogWarning("User failed to Sign In: {Username}", userCredentials.Username);
+        _logger.LogWarning("User failed to Sign In: {Username} Reason: {reason}", userCredentials.Username, signInResult.ToString());
         return BadRequest("Failed to Sign In");
     }
 
