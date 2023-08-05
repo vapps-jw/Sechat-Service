@@ -31,7 +31,7 @@ if (app.Environment.IsProduction())
 }
 
 app.UseCors(AppConstants.CorsPolicies.WebClient);
-//app.UseSecureHeadersMiddleware();
+app.UseSecureHeadersMiddleware();
 app.UseSerilogRequestLogging();
 app.UseRouting();
 app.UseRateLimiter();
