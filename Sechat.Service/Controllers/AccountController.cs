@@ -47,8 +47,8 @@ public class AccountController : SechatControllerBase
         _chatHubContext = chatHubContext;
     }
 
-    [HttpGet("test-secret")]
-    public IActionResult AuthTest() => Ok("SECRET");
+    [HttpGet("is-authorized")]
+    public IActionResult AuthTest() => Ok();
 
     [AllowAnonymous]
     [HttpPost("login")]
