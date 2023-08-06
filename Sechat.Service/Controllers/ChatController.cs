@@ -352,12 +352,10 @@ public class ChatController : SechatControllerBase
         if (_userRepository.CheckContactWithMessages(contactId, UserId, out var contact))
         {
             contact.DirectMessages.Clear();
-            if (await _chatRepository.SaveChanges() > 0)
-            {
-                await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
-                await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
-                return Ok("Chat cleared");
-            }
+            _ = await _chatRepository.SaveChanges();
+            await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
+            await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
+            return Ok("Chat cleared");
         }
 
         return BadRequest("Can`t do that");
