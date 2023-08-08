@@ -48,7 +48,7 @@ public class AccountController : SechatControllerBase
     }
 
     [HttpGet("is-authorized")]
-    public IActionResult AuthTest() => Ok();
+    public IActionResult AuthTest() => Ok("Authorized");
 
     [AllowAnonymous]
     [HttpPost("login")]
