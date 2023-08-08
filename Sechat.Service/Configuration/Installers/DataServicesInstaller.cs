@@ -35,11 +35,15 @@ public class DataServicesInstaller : IServiceInstaller
 
         _ = webApplicationBuilder.Services.AddScoped<ChatRepository>();
         _ = webApplicationBuilder.Services.AddScoped<UserRepository>();
+        _ = webApplicationBuilder.Services.AddScoped<CalendarRepository>();
 
         _ = webApplicationBuilder.Services.AddTransient<CryptographyService>();
         _ = webApplicationBuilder.Services.AddTransient<UserDataService>();
         _ = webApplicationBuilder.Services.AddTransient<ITokenService, TokenService>();
 
-        _ = webApplicationBuilder.Services.AddAutoMapper(typeof(DefaultProfile), typeof(ChatModelsProfile));
+        _ = webApplicationBuilder.Services.AddAutoMapper(
+            typeof(DefaultProfile),
+            typeof(ChatModelsProfile),
+            typeof(CalendarModelsProfile));
     }
 }
