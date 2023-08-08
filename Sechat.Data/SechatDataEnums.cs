@@ -4,6 +4,7 @@ public enum KeyType
     EmailUpdate = 0,
     PasswordReset = 1,
     DefaultEncryption = 2,
+    AuthToken = 3,
 }
 public enum VideoCallType
 {

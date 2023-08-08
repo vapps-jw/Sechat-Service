@@ -43,7 +43,16 @@ public class UserDataService
             _userRepository.UpdatKey(userId, Data.KeyType.DefaultEncryption, newKey);
             if (await _userRepository.SaveChanges() == 0)
             {
-                throw new Exception("Defauly Key creating failed");
+                throw new Exception("Defauly Key creation failed");
+            }
+        }
+        if (!_userRepository.KeyExists(userId, Data.KeyType.AuthToken))
+        {
+            var newKey = _cryptographyService.GenerateKey();
+            _userRepository.UpdatKey(userId, Data.KeyType.AuthToken, newKey);
+            if (await _userRepository.SaveChanges() == 0)
+            {
+                throw new Exception("Auth Key creation failed");
             }
         }
 
