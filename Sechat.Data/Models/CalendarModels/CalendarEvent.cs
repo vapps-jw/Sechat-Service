@@ -5,6 +5,7 @@ public record CalendarEvent : BaseModel<string>
 {
     public string Name { get; set; }
     public string Description { get; set; }
+    public string Color { get; set; }
 
     public bool IsAllDay { get; set; }
     public DateOnly AllDay { get; set; }
