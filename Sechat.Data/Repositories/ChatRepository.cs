@@ -247,11 +247,12 @@ public class ChatRepository : RepositoryBase<SechatContext>
     public async Task<List<Room>> GetRoomsWithNewMessages(List<GetRoomUpdate> getRoomUpdates)
     {
         var rooms = await _context.Rooms
-            .Where(r => getRoomUpdates.Any(u => u.RoomId.Equals(r.Id) && r.Messages.Any(m => m.Id > u.LastMessage)))
-            .Include(r => r.Messages)
+            .Where(r => getRoomUpdates.Any(u => u.RoomId.Equals(r.Id)))
+            .Include(r => r.Messages.Where(dm => getRoomUpdates.First(c => c.RoomId == c.RoomId).LastMessage < dm.Id))
             .ThenInclude(m => m.MessageViewers)
             .ToListAsync();
 
+        _ = rooms.RemoveAll(r => !r.Messages.Any());
         rooms.ForEach(r => r.Messages.OrderBy(m => m.Id));
         return rooms;
     }

@@ -53,7 +53,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contacts")]
-    public async Task<IActionResult> GetContacts()
+    public async Task<IActionResult> Contacts()
     {
         var contacts = await _userRepository.GetContactsWithMessages(UserId);
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
@@ -78,7 +78,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("rooms")]
-    public async Task<IActionResult> GetRooms()
+    public async Task<IActionResult> Rooms()
     {
         var rooms = await _chatRepository.GetRoomsWithMessages(UserId);
         foreach (var room in rooms)
@@ -112,7 +112,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("room/{roomId}")]
-    public async Task<IActionResult> GetRoom(string roomId)
+    public async Task<IActionResult> Room(string roomId)
     {
         if (!_chatRepository.IsRoomAllowed(UserId, roomId))
         {
@@ -145,7 +145,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contact/{contactId}")]
-    public async Task<IActionResult> GetContact(long contactId)
+    public async Task<IActionResult> Contact(long contactId)
     {
         if (!_userRepository.CheckContact(contactId, UserId, out _))
         {
@@ -159,7 +159,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("rooms-update")]
-    public async Task<IActionResult> GetRoomsUpdate([FromBody] List<GetRoomUpdate> getRoomUpdates)
+    public async Task<IActionResult> RoomsUpdate([FromBody] List<GetRoomUpdate> getRoomUpdates)
     {
         foreach (var ru in getRoomUpdates)
         {
@@ -172,7 +172,7 @@ public class ChatController : SechatControllerBase
         var allUserRooms = await _chatRepository.GetRooms(UserId);
         var rooms = await _chatRepository.GetRoomsWithNewMessages(getRoomUpdates);
 
-        var newRooms = allUserRooms.Where(r => getRoomUpdates.Any(ru => ru.RoomId.Equals(r.Id))).ToList();
+        var newRooms = allUserRooms.Where(r => !getRoomUpdates.Any(ru => ru.RoomId.Equals(r.Id))).ToList();
         foreach (var newRoom in newRooms)
         {
             rooms.Add(await _chatRepository.GetRoomWithMessages(newRoom.Id));
@@ -209,12 +209,20 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("contacts-update")]
-    public async Task<IActionResult> GetContactsUpdate([FromBody] List<GetContactUpdate> getContactUpdates)
+    public async Task<IActionResult> ContactsUpdate([FromBody] List<GetContactUpdate> getContactUpdates)
     {
         var contacts = await _userRepository.GetContactsWithMessages(UserId, getContactUpdates);
+        var allUserContacts = await _userRepository.GetContacts(UserId);
+        var newContacts = allUserContacts
+            .Where(uc => !getContactUpdates.Any(update => update.ContactId.Equals(uc.Id)))
+            .ToList();
+
+        if (newContacts.Any())
+        {
+            contacts.AddRange(await _userRepository.GetContactsWithMessages(newContacts.Select(c => c.Id).ToList()));
+        }
 
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
-
         return Ok(contactDtos);
     }
 
