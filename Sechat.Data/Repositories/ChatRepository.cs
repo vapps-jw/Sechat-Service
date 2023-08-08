@@ -221,6 +221,10 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return res;
     }
 
+    public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
+        .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId)))
+        .ToListAsync();
+
     public async Task<Room> GetRoomWithMessages(string roomId)
     {
         var res = await _context.Rooms
@@ -240,40 +244,15 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return res;
     }
 
-    public async Task<List<Room>> GetRoomsWithMessages(string memberUserId, List<GetRoomUpdate> getRoomUpdates)
+    public async Task<List<Room>> GetRoomsWithNewMessages(List<GetRoomUpdate> getRoomUpdates)
     {
         var rooms = await _context.Rooms
-            .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId)))
-            .Select(r => new Room()
-            {
-                Name = r.Name,
-                LastActivity = r.LastActivity,
-                Created = r.Created,
-                CreatorName = r.CreatorName,
-                Id = r.Id,
-                Members = r.Members
-            }).ToListAsync();
+            .Where(r => getRoomUpdates.Any(u => u.RoomId.Equals(r.Id) && r.Messages.Any(m => m.Id > u.LastMessage)))
+            .Include(r => r.Messages)
+            .ThenInclude(m => m.MessageViewers)
+            .ToListAsync();
 
-        foreach (var room in rooms)
-        {
-            var updateData = getRoomUpdates.FirstOrDefault(ru => ru.RoomId.Equals(room.Id));
-            if (updateData is not null)
-            {
-                room.Messages = _context.Messages
-                    .Where(m => m.RoomId.Equals(room.Id))
-                    .Include(m => m.MessageViewers)
-                    .Where(m => m.Id > updateData.LastMessage)
-                    .OrderBy(m => m.Id)
-                    .ToList();
-                continue;
-            }
-
-            room.Messages = _context.Messages
-                .Where(m => m.RoomId.Equals(room.Id))
-                .Include(m => m.MessageViewers)
-                .OrderBy(m => m.Id)
-                .ToList();
-        }
+        rooms.ForEach(r => r.Messages.OrderBy(m => m.Id));
         return rooms;
     }
 

@@ -161,7 +161,23 @@ public class ChatController : SechatControllerBase
     [HttpPost("rooms-update")]
     public async Task<IActionResult> GetRoomsUpdate([FromBody] List<GetRoomUpdate> getRoomUpdates)
     {
-        var rooms = await _chatRepository.GetRoomsWithMessages(UserId, getRoomUpdates);
+        foreach (var ru in getRoomUpdates)
+        {
+            if (_chatRepository.IsRoomAllowed(UserId, ru.RoomId))
+            {
+                return BadRequest("Room not allowed");
+            }
+        }
+
+        var allUserRooms = await _chatRepository.GetRooms(UserId);
+        var rooms = await _chatRepository.GetRoomsWithNewMessages(getRoomUpdates);
+
+        var newRooms = allUserRooms.Where(r => getRoomUpdates.Any(ru => ru.RoomId.Equals(r.Id))).ToList();
+        foreach (var newRoom in newRooms)
+        {
+            rooms.Add(await _chatRepository.GetRoomWithMessages(newRoom.Id));
+        }
+
         foreach (var room in rooms)
         {
             foreach (var message in room.Messages)
@@ -196,6 +212,7 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> GetContactsUpdate([FromBody] List<GetContactUpdate> getContactUpdates)
     {
         var contacts = await _userRepository.GetContactsWithMessages(UserId, getContactUpdates);
+
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
         return Ok(contactDtos);
