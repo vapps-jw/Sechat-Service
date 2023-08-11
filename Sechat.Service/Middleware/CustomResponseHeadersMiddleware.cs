@@ -17,6 +17,9 @@ public class CustomResponseHeadersMiddleware : IMiddleware
         {
             context.Response.Headers.Add("API-RES", "sechat-server-response");
             context.Response.Headers.Add("X-Developed-By", "JWTK");
+            context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+            context.Response.Headers.Add("Access-Control-Allow-Methods", "*");
+            context.Response.Headers.Add("Access-Control-Allow-Headers", "*");
             await next(context);
         }
         catch (Exception ex)

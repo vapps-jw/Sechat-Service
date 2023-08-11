@@ -130,8 +130,8 @@ public class AccountController : SechatControllerBase
 
             foreach (var connection in deleteResult.Connections)
             {
-                await _chatHubContext.Clients.Group(connection.InvitedId).ConnectionDeleted(new ResourceId(connection.Id));
-                await _chatHubContext.Clients.Group(connection.InviterId).ConnectionDeleted(new ResourceId(connection.Id));
+                await _chatHubContext.Clients.Group(connection.InvitedId).ContactDeleted(new ResourceId(connection.Id));
+                await _chatHubContext.Clients.Group(connection.InviterId).ContactDeleted(new ResourceId(connection.Id));
             }
         }
 

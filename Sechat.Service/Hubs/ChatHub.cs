@@ -57,9 +57,9 @@ public interface IChatHub
     Task UserRemovedFromRoom(RoomUserActionMessage message);
 
     // Chat Contacts
-    Task ConnectionRequestReceived(ContactDto message);
-    Task ConnectionDeleted(ResourceId message);
-    Task ConnectionUpdated(ContactDto message);
+    Task ContactRequestReceived(ContactDto message);
+    Task ContactDeleted(ResourceId message);
+    Task ContactUpdated(ContactDto message);
     Task ContactStateChanged(StringUserMessage message);
 
     // E2E
@@ -399,6 +399,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         try
         {
             var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+            _ = _signalRConnectionsMonitor.ConnectedUsers.RemoveAll(u => u is null);
             foreach (var userContact in userContacts)
             {
                 await Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Online));
@@ -417,6 +418,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     public override async Task OnDisconnectedAsync(Exception exception)
     {
         var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+        _ = _signalRConnectionsMonitor.ConnectedUsers.RemoveAll(u => u is null);
         foreach (var userContact in userContacts)
         {
             await Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Offline));

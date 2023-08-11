@@ -94,8 +94,8 @@ public class UserController : SechatControllerBase
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            await _chatHubContext.Clients.Group(invitedUser.Id).ConnectionRequestReceived(_mapper.Map<ContactDto>(newContact));
-            await _chatHubContext.Clients.Group(UserId).ConnectionRequestReceived(_mapper.Map<ContactDto>(newContact));
+            await _chatHubContext.Clients.Group(invitedUser.Id).ContactRequestReceived(_mapper.Map<ContactDto>(newContact));
+            await _chatHubContext.Clients.Group(UserId).ContactRequestReceived(_mapper.Map<ContactDto>(newContact));
             await _pushNotificationService.IncomingContactRequestNotification(invitedUser.Id, UserName);
             return Ok("Invitation sent");
         }
@@ -124,8 +124,8 @@ public class UserController : SechatControllerBase
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            await _chatHubContext.Clients.Group(contact.InvitedId).ConnectionDeleted(new ResourceId(contactId));
-            await _chatHubContext.Clients.Group(contact.InviterId).ConnectionDeleted(new ResourceId(contactId));
+            await _chatHubContext.Clients.Group(contact.InvitedId).ContactDeleted(new ResourceId(contactId));
+            await _chatHubContext.Clients.Group(contact.InviterId).ContactDeleted(new ResourceId(contactId));
             return Ok();
         }
 
@@ -141,8 +141,8 @@ public class UserController : SechatControllerBase
         if (await _userRepository.SaveChanges() > 0)
         {
             var contactDto = _mapper.Map<ContactDto>(contact);
-            await _chatHubContext.Clients.Group(await GetUserId(contactDto.InvitedName)).ConnectionUpdated(contactDto);
-            await _chatHubContext.Clients.Group(await GetUserId(contactDto.InviterName)).ConnectionUpdated(contactDto);
+            await _chatHubContext.Clients.Group(await GetUserId(contactDto.InvitedName)).ContactUpdated(contactDto);
+            await _chatHubContext.Clients.Group(await GetUserId(contactDto.InviterName)).ContactUpdated(contactDto);
             return Ok();
         }
 
@@ -158,8 +158,8 @@ public class UserController : SechatControllerBase
         if (await _userRepository.SaveChanges() > 0)
         {
             var contactDto = _mapper.Map<ContactDto>(contact);
-            await _chatHubContext.Clients.Group(contact.InvitedId).ConnectionUpdated(contactDto);
-            await _chatHubContext.Clients.Group(contact.InviterId).ConnectionUpdated(contactDto);
+            await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdated(contactDto);
+            await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdated(contactDto);
             return Ok();
         }
 
@@ -181,8 +181,8 @@ public class UserController : SechatControllerBase
 
             contactDto.ContactState = AppConstants.ContactState.Online;
 
-            await _chatHubContext.Clients.Group(UserId).ConnectionUpdated(contactDto);
-            await _chatHubContext.Clients.Group(inviterId).ConnectionUpdated(contactDto);
+            await _chatHubContext.Clients.Group(UserId).ContactUpdated(contactDto);
+            await _chatHubContext.Clients.Group(inviterId).ContactUpdated(contactDto);
             await _chatHubContext.Clients.Group(inviterId).DMKeyRequested(new DMKeyRequest(UserName, contactDto.InviterName, contactDto.Id));
             await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.ContactRequestApproved, inviterId, UserName));
             return Ok();
