@@ -82,7 +82,7 @@ public class CryptographyService
     {
         using var rsa = new RSACryptoServiceProvider();
 
-        rsa.ImportSubjectPublicKeyInfo(PemToBer(publicKey, _subjectPublicKeyInfo), out _);
+        rsa.ImportFromPem(publicKey.ToCharArray());
 
         var byteData = Encoding.UTF8.GetBytes(plainText);
         var encryptedData = rsa.Encrypt(byteData, false);
@@ -92,8 +92,7 @@ public class CryptographyService
     public string AsymmetricDecrypt(string cipherText, string privateKey)
     {
         using var rsa = new RSACryptoServiceProvider();
-
-        rsa.ImportRSAPrivateKey(PemToBer(privateKey, _rsaPrivateKey), out _);
+        rsa.ImportFromPem(privateKey.ToCharArray());
 
         var cipherDataAsByte = Convert.FromBase64String(cipherText);
         var encryptedData = rsa.Decrypt(cipherDataAsByte, false);
@@ -102,43 +101,8 @@ public class CryptographyService
 
     public Keys GenerateAsymmetricKeys(int keySize)
     {
-        var rsa = new RSACryptoServiceProvider(keySize);
-        return new Keys(MakePem(rsa.ExportSubjectPublicKeyInfo(), _subjectPublicKeyInfo), MakePem(rsa.ExportRSAPrivateKey(), _rsaPrivateKey));
-    }
-
-    private string MakePem(byte[] ber, string header)
-    {
-        var builder = new StringBuilder("-----BEGIN ");
-        _ = builder.Append(header);
-        _ = builder.AppendLine("-----");
-
-        var base64 = Convert.ToBase64String(ber);
-        var offset = 0;
-        const int LineLength = 64;
-
-        while (offset < base64.Length)
-        {
-            var lineEnd = Math.Min(offset + LineLength, base64.Length);
-            _ = builder.AppendLine(base64[offset..lineEnd]);
-            offset = lineEnd;
-        }
-
-        _ = builder.Append("-----END ");
-        _ = builder.Append(header);
-        _ = builder.AppendLine("-----");
-        return builder.ToString();
-    }
-
-    private byte[] PemToBer(string pem, string header)
-    {
-        var begin = $"-----BEGIN {header}-----";
-        var end = $"-----END {header}-----";
-
-        var beginIdx = pem.IndexOf(begin);
-        var base64Start = beginIdx + begin.Length;
-        var endIdx = pem.IndexOf(end, base64Start);
-
-        return Convert.FromBase64String(pem[base64Start..endIdx]);
+        using var rsa = new RSACryptoServiceProvider(keySize);
+        return new Keys(rsa.ExportRSAPublicKeyPem(), rsa.ExportRSAPrivateKeyPem());
     }
 
     public string GenerateKey()
