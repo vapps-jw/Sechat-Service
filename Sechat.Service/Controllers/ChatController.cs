@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
-using Sechat.Data.QueryModels;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
@@ -23,6 +22,9 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class ChatController : SechatControllerBase
 {
+    private const int _initialMessagesPull = 20;
+    private const int _updateMessagesPull = 10;
+
     private readonly IOptionsMonitor<CryptographySettings> _cryptoSettings;
     private readonly CryptographyService _cryptographyService;
     private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
@@ -52,10 +54,79 @@ public class ChatController : SechatControllerBase
         _chatHubContext = chatHubContext;
     }
 
-    [HttpGet("contacts")]
-    public async Task<IActionResult> Contacts()
+    // Messages handling
+
+    [HttpGet("rooms-initial-load")]
+    public async Task<IActionResult> RoomsInitialLoadAsync()
     {
-        var contacts = await _userRepository.GetContactsWithMessages(UserId);
+        var rooms = await _chatRepository.GetRoomsWithRecentMessages(UserId, _initialMessagesPull);
+        foreach (var room in rooms)
+        {
+            room.Messages = room.Messages.OrderBy(m => m.Id).ToList();
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
+        }
+
+        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return Ok(roomDtos);
+    }
+
+    [HttpGet("room/{roomId}/load-more/{lastId}")]
+    public async Task<IActionResult> LoadMoreRoomMessages(string roomId, long lastId)
+    {
+        var messages = await _chatRepository.GetOldMessagesForRoom(roomId, lastId, _updateMessagesPull);
+        messages = messages.OrderBy(m => m.Id).ToList();
+
+        foreach (var message in messages)
+        {
+            foreach (var viewer in message.MessageViewers)
+            {
+                viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+            }
+        }
+
+        var dtos = _mapper.Map<List<MessageDto>>(messages);
+
+        foreach (var message in dtos)
+        {
+            foreach (var viewer in message.MessageViewers)
+            {
+                if (viewer.User.Equals(UserName))
+                {
+                    message.WasViewed = true;
+                    continue;
+                }
+            }
+        }
+
+        return Ok(dtos);
+    }
+
+    [HttpGet("contacts-initial-load")]
+    public async Task<IActionResult> ContactsInitialLoadAsync()
+    {
+        var contacts = await _userRepository.GetContactsWithRecentMessages(UserId, _initialMessagesPull);
+        contacts.ForEach(c => c.DirectMessages = c.DirectMessages.OrderBy(m => m.Id).ToList());
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
         var connectedContacts = new List<long>();
@@ -77,159 +148,56 @@ public class ChatController : SechatControllerBase
         return Ok(contactDtos);
     }
 
-    [HttpGet("rooms")]
-    public async Task<IActionResult> Rooms()
+    [HttpGet("contact/{contactId}/load-more/{lastId}")]
+    public async Task<IActionResult> LoadMoreContactMessages(long contactId, long lastId)
     {
-        var rooms = await _chatRepository.GetRoomsWithMessages(UserId);
-        foreach (var room in rooms)
-        {
-            foreach (var message in room.Messages)
-            {
-                foreach (var viewer in message.MessageViewers)
-                {
-                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
-                }
-            }
-        }
+        var messages = await _userRepository.GetOldMessagesForContact(contactId, lastId, _updateMessagesPull);
+        messages = messages.OrderBy(m => m.Id).ToList();
+        var dtos = _mapper.Map<List<DirectMessageDto>>(messages);
 
-        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
-        foreach (var room in roomDtos)
-        {
-            foreach (var message in room.Messages)
-            {
-                foreach (var viewer in message.MessageViewers)
-                {
-                    if (viewer.User.Equals(UserName))
-                    {
-                        message.WasViewed = true;
-                        continue;
-                    }
-                }
-            }
-        }
-
-        return Ok(roomDtos);
+        return Ok(dtos);
     }
 
-    [HttpGet("room/{roomId}")]
-    public async Task<IActionResult> Room(string roomId)
-    {
-        if (!_chatRepository.IsRoomAllowed(UserId, roomId))
-        {
-            return BadRequest("You dont have access to this room");
-        }
+    // Rooms
 
-        var room = await _chatRepository.GetRoomWithMessages(roomId);
-        foreach (var message in room.Messages)
-        {
-            foreach (var viewer in message.MessageViewers)
-            {
-                viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
-            }
-        }
+    //[HttpGet("rooms")]
+    //public async Task<IActionResult> Rooms()
+    //{
+    //    var rooms = await _chatRepository.GetRoomsWithMessages(UserId);
+    //    foreach (var room in rooms)
+    //    {
+    //        foreach (var message in room.Messages)
+    //        {
+    //            foreach (var viewer in message.MessageViewers)
+    //            {
+    //                viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+    //            }
+    //        }
+    //    }
 
-        var roomDto = _mapper.Map<RoomDto>(room);
-        foreach (var message in roomDto.Messages)
-        {
-            foreach (var viewer in message.MessageViewers)
-            {
-                if (viewer.User.Equals(UserName))
-                {
-                    message.WasViewed = true;
-                    continue;
-                }
-            }
-        }
+    //    var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+    //    foreach (var room in roomDtos)
+    //    {
+    //        foreach (var message in room.Messages)
+    //        {
+    //            foreach (var viewer in message.MessageViewers)
+    //            {
+    //                if (viewer.User.Equals(UserName))
+    //                {
+    //                    message.WasViewed = true;
+    //                    continue;
+    //                }
+    //            }
+    //        }
+    //    }
 
-        return Ok(roomDto);
-    }
-
-    [HttpGet("contact/{contactId}")]
-    public async Task<IActionResult> Contact(long contactId)
-    {
-        if (!_userRepository.CheckContact(contactId, UserId, out _))
-        {
-            return BadRequest("Contact not allowed");
-        }
-
-        var contact = await _userRepository.GetContactWithMessages(contactId);
-        var contactDto = _mapper.Map<ContactDto>(contact);
-
-        return Ok(contactDto);
-    }
-
-    [HttpPost("rooms-update")]
-    public async Task<IActionResult> RoomsUpdate([FromBody] List<GetRoomUpdate> getRoomUpdates)
-    {
-        foreach (var ru in getRoomUpdates)
-        {
-            if (_chatRepository.IsRoomAllowed(UserId, ru.RoomId))
-            {
-                return BadRequest("Room not allowed");
-            }
-        }
-
-        var allUserRooms = await _chatRepository.GetRooms(UserId);
-        var rooms = await _chatRepository.GetRoomsWithNewMessages(getRoomUpdates);
-
-        var newRooms = allUserRooms.Where(r => !getRoomUpdates.Any(ru => ru.RoomId.Equals(r.Id))).ToList();
-        foreach (var newRoom in newRooms)
-        {
-            rooms.Add(await _chatRepository.GetRoomWithMessages(newRoom.Id));
-        }
-
-        foreach (var room in rooms)
-        {
-            foreach (var message in room.Messages)
-            {
-                foreach (var viewer in message.MessageViewers)
-                {
-                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
-                }
-            }
-        }
-
-        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
-        foreach (var room in roomDtos)
-        {
-            foreach (var message in room.Messages)
-            {
-                foreach (var viewer in message.MessageViewers)
-                {
-                    if (viewer.User.Equals(UserName))
-                    {
-                        message.WasViewed = true;
-                        continue;
-                    }
-                }
-            }
-        }
-
-        return Ok(roomDtos);
-    }
-
-    [HttpPost("contacts-update")]
-    public async Task<IActionResult> ContactsUpdate([FromBody] List<GetContactUpdate> getContactUpdates)
-    {
-        var contacts = await _userRepository.GetContactsWithMessages(UserId, getContactUpdates);
-        var allUserContacts = await _userRepository.GetContacts(UserId);
-        var newContacts = allUserContacts
-            .Where(uc => !getContactUpdates.Any(update => update.ContactId.Equals(uc.Id)))
-            .ToList();
-
-        if (newContacts.Any())
-        {
-            contacts.AddRange(await _userRepository.GetContactsWithMessages(newContacts.Select(c => c.Id).ToList()));
-        }
-
-        var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
-        return Ok(contactDtos);
-    }
+    //    return Ok(roomDtos);
+    //}
 
     [HttpPost("send-message")]
     public async Task<IActionResult> SendMessage(
-        [FromServices] Channel<DefaultNotificationDto> channel,
-        [FromBody] IncomingMessage incomingMessageDto)
+    [FromServices] Channel<DefaultNotificationDto> channel,
+    [FromBody] IncomingMessage incomingMessageDto)
     {
         if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
         {
@@ -264,32 +232,6 @@ public class ChatController : SechatControllerBase
         return Ok();
     }
 
-    [HttpPost("send-direct-message")]
-    public async Task<IActionResult> SendDirectMessage(
-    [FromServices] Channel<DefaultNotificationDto> channel,
-    [FromBody] IncomingDirectMessage incomingMessageDto)
-    {
-        var recipient = await _userManager.FindByNameAsync(incomingMessageDto.Recipient);
-        var contact = _userRepository.GetContact(UserId, recipient.Id);
-
-        if (contact.Blocked) return BadRequest("User blocked");
-        if (!contact.Approved) return BadRequest("Contact was not approved");
-
-        var res = _chatRepository.CreateDirectMessage(UserId, incomingMessageDto.Text, contact.Id);
-        if (await _chatRepository.SaveChanges() == 0)
-        {
-            return BadRequest("Message not sent");
-        }
-
-        var messageDto = _mapper.Map<DirectMessageDto>(res);
-
-        await _chatHubContext.Clients.Group(UserId).DirectMessageIncoming(messageDto);
-        await _chatHubContext.Clients.Group(recipient.Id).DirectMessageIncoming(messageDto);
-        await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingDirectMessage, recipient.Id, UserName));
-
-        return Ok();
-    }
-
     [HttpPatch("messages-viewed")]
     public async Task<IActionResult> MessagesViewed([FromBody] ResourceGuid resourceGuid)
     {
@@ -319,25 +261,6 @@ public class ChatController : SechatControllerBase
         return BadRequest("Message not deleted");
     }
 
-    [HttpDelete("direct-message/{contactId}/{messageId}")]
-    public async Task<IActionResult> DeleteDirectMessage(long contactId, long messageId)
-    {
-        if (!_chatRepository.DirectMessageExists(messageId)) return BadRequest("Message does not exits");
-        if (!_chatRepository.IsDirectMessageAuthor(messageId, UserId)) return BadRequest("Not your message");
-
-        var contact = await _userRepository.GetContact(contactId);
-        if (contact.Blocked) return BadRequest("User blocked");
-        if (!contact.Approved) return BadRequest("Contact was not approved");
-
-        if (await _chatRepository.DeleteDirectMessage(contactId, messageId) > 0)
-        {
-            await _chatHubContext.Clients.Group(contact.InvitedId).DirectMessageDeleted(new DirectMessageId(messageId, contactId));
-            await _chatHubContext.Clients.Group(contact.InviterId).DirectMessageDeleted(new DirectMessageId(messageId, contactId));
-            return Ok();
-        }
-        return BadRequest("Message not deleted");
-    }
-
     [HttpPatch("message-viewed/{roomId}/{messageId}")]
     public async Task<IActionResult> MessageViewed(string roomId, long messageId)
     {
@@ -349,54 +272,6 @@ public class ChatController : SechatControllerBase
         {
             await _chatHubContext.Clients.Group(roomId).MessageWasViewed(new RoomMessageUserActionMessage(roomId, messageId, UserName));
         }
-
-        return Ok();
-    }
-
-    [HttpPatch("direct-message-viewed/{contactId}/{messageId}")]
-    public async Task<IActionResult> DirectMessageViewed(long contactId, long messageId)
-    {
-        if (!_userRepository.CheckContact(contactId, UserId, out var contact))
-        {
-            return BadRequest("You cant do that");
-        }
-
-        _chatRepository.MarkDirectMessageAsViewed(UserId, contactId, messageId);
-        if (await _chatRepository.SaveChanges() > 0)
-        {
-            var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
-            await _chatHubContext.Clients.Group(recipientId).DirectMessageWasViewed(new DirectMessageViewed(contactId, messageId));
-        }
-
-        return Ok();
-    }
-
-    [HttpDelete("direct-messages/{contactId}")]
-    public async Task<IActionResult> DirectMessages(long contactId)
-    {
-        if (_userRepository.CheckContactWithMessages(contactId, UserId, out var contact))
-        {
-            contact.DirectMessages.Clear();
-            _ = await _chatRepository.SaveChanges();
-            await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
-            await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
-            return Ok("Chat cleared");
-        }
-
-        return BadRequest("Can`t do that");
-    }
-
-    [HttpPatch("direct-messages-viewed")]
-    public async Task<IActionResult> DirectMessagesViewed([FromBody] ResourceId resourceId)
-    {
-        if (!_userRepository.CheckContact(resourceId.Id, UserId, out var contact))
-        {
-            return BadRequest("You cant do that");
-        }
-
-        _chatRepository.MarkDirectMessagesAsViewed(UserId, resourceId.Id);
-        var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
-        await _chatHubContext.Clients.Group(recipientId).DirectMessagesWereViewed(new DirectMessagesViewed(resourceId.Id));
 
         return Ok();
     }
@@ -466,5 +341,139 @@ public class ChatController : SechatControllerBase
         }
 
         return BadRequest();
+    }
+
+    // Contacts
+
+    //[HttpGet("contacts")]
+    //public async Task<IActionResult> Contacts()
+    //{
+    //    var contacts = await _userRepository.GetContactsWithMessages(UserId);
+    //    var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
+
+    //    var connectedContacts = new List<long>();
+    //    if (_signalRConnectionsMonitor.ConnectedUsers is not null)
+    //    {
+    //        connectedContacts = contacts
+    //            .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
+    //                        _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
+    //            .Select(c => c.Id)
+    //            .ToList();
+    //    }
+
+    //    foreach (var contactDto in contactDtos)
+    //    {
+    //        contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
+    //            AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+    //    }
+
+    //    return Ok(contactDtos);
+    //}
+
+    [HttpGet("contact/{contactId}")]
+    public async Task<IActionResult> Contact(long contactId)
+    {
+        if (!_userRepository.CheckContact(contactId, UserId, out _))
+        {
+            return BadRequest("Contact not allowed");
+        }
+
+        var contact = await _userRepository.GetContactWithRecentMessages(contactId, _initialMessagesPull);
+        var contactDto = _mapper.Map<ContactDto>(contact);
+
+        return Ok(contactDto);
+    }
+
+    [HttpPost("send-direct-message")]
+    public async Task<IActionResult> SendDirectMessage(
+    [FromServices] Channel<DefaultNotificationDto> channel,
+    [FromBody] IncomingDirectMessage incomingMessageDto)
+    {
+        var recipient = await _userManager.FindByNameAsync(incomingMessageDto.Recipient);
+        var contact = _userRepository.GetContact(UserId, recipient.Id);
+
+        if (contact.Blocked) return BadRequest("User blocked");
+        if (!contact.Approved) return BadRequest("Contact was not approved");
+
+        var res = _chatRepository.CreateDirectMessage(UserId, incomingMessageDto.Text, contact.Id);
+        if (await _chatRepository.SaveChanges() == 0)
+        {
+            return BadRequest("Message not sent");
+        }
+
+        var messageDto = _mapper.Map<DirectMessageDto>(res);
+
+        await _chatHubContext.Clients.Group(UserId).DirectMessageIncoming(messageDto);
+        await _chatHubContext.Clients.Group(recipient.Id).DirectMessageIncoming(messageDto);
+        await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingDirectMessage, recipient.Id, UserName));
+
+        return Ok();
+    }
+
+    [HttpDelete("direct-message/{contactId}/{messageId}")]
+    public async Task<IActionResult> DeleteDirectMessage(long contactId, long messageId)
+    {
+        if (!_chatRepository.DirectMessageExists(messageId)) return BadRequest("Message does not exits");
+        if (!_chatRepository.IsDirectMessageAuthor(messageId, UserId)) return BadRequest("Not your message");
+
+        var contact = await _userRepository.GetContact(contactId);
+        if (contact.Blocked) return BadRequest("User blocked");
+        if (!contact.Approved) return BadRequest("Contact was not approved");
+
+        if (await _chatRepository.DeleteDirectMessage(contactId, messageId) > 0)
+        {
+            await _chatHubContext.Clients.Group(contact.InvitedId).DirectMessageDeleted(new DirectMessageId(messageId, contactId));
+            await _chatHubContext.Clients.Group(contact.InviterId).DirectMessageDeleted(new DirectMessageId(messageId, contactId));
+            return Ok();
+        }
+        return BadRequest("Message not deleted");
+    }
+
+    [HttpPatch("direct-message-viewed/{contactId}/{messageId}")]
+    public async Task<IActionResult> DirectMessageViewed(long contactId, long messageId)
+    {
+        if (!_userRepository.CheckContact(contactId, UserId, out var contact))
+        {
+            return BadRequest("You cant do that");
+        }
+
+        _chatRepository.MarkDirectMessageAsViewed(UserId, contactId, messageId);
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
+            await _chatHubContext.Clients.Group(recipientId).DirectMessageWasViewed(new DirectMessageViewed(contactId, messageId));
+        }
+
+        return Ok();
+    }
+
+    [HttpDelete("direct-messages/{contactId}")]
+    public async Task<IActionResult> DirectMessages(long contactId)
+    {
+        if (_userRepository.CheckContactWithMessages(contactId, UserId, out var contact))
+        {
+            contact.DirectMessages.Clear();
+            _ = await _chatRepository.SaveChanges();
+            await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
+            await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
+            return Ok("Chat cleared");
+        }
+
+        return BadRequest("Can`t do that");
+    }
+
+    [HttpPatch("direct-messages-viewed")]
+    public async Task<IActionResult> DirectMessagesViewed([FromBody] ResourceId resourceId)
+    {
+        if (!_userRepository.CheckContact(resourceId.Id, UserId, out var contact))
+        {
+            return BadRequest("You cant do that");
+        }
+
+        _chatRepository.MarkDirectMessagesAsViewed(UserId, resourceId.Id);
+        var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
+        await _chatHubContext.Clients.Group(recipientId).DirectMessagesWereViewed(new DirectMessagesViewed(resourceId.Id));
+
+        return Ok();
     }
 }

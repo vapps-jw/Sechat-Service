@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Sechat.Data.Models.ChatModels;
 using Sechat.Data.Models.UserDetails;
 using Sechat.Data.Projections;
-using Sechat.Data.QueryModels;
 
 namespace Sechat.Data.Repositories;
 
@@ -85,24 +85,30 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
             .ToListAsync();
 
-    public Task<List<Contact>> GetContactsWithMessages(List<long> contactIds) =>
-        _context.Contacts
-            .Where(uc => contactIds.Any(cid => cid == uc.Id))
-            .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
-            .ToListAsync();
+    public Task<List<Contact>> GetContactsWithRecentMessages(string userId, int initalTake) =>
+    _context.Contacts
+        .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
+        .Include(c => c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake))
+        .ToListAsync();
 
     public Task<Contact> GetContact(long contactId) =>
         _context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
 
-    public Task<Contact> GetContactWithMessages(long contactId) =>
+    //public Task<Contact> GetContactWithMessages(long contactId) =>
+    //    _context.Contacts
+    //        .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
+    //        .FirstOrDefaultAsync(c => c.Id == contactId);
+
+    public Task<Contact> GetContactWithRecentMessages(long contactId, int initalTake) =>
         _context.Contacts
-            .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
+            .Include(c => c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake))
             .FirstOrDefaultAsync(c => c.Id == contactId);
 
-    public Task<List<Contact>> GetContactsWithMessages(string userId, List<GetContactUpdate> contactsToUpdate) =>
-        _context.Contacts
-            .Where(uc => contactsToUpdate.Any(ctu => ctu.ContactId == uc.Id) && (uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId)))
-            .Include(c => c.DirectMessages.Where(dm => contactsToUpdate.First(c => c.ContactId == c.ContactId).LastMessage < dm.Id))
+    public Task<List<DirectMessage>> GetOldMessagesForContact(long contactId, long lastMessage, int take) =>
+        _context.DirectMessages
+            .Where(dm => dm.ContactId == contactId && dm.Id < lastMessage)
+            .OrderByDescending(m => m.Id)
+            .Take(take)
             .ToListAsync();
 
     public Task<List<string>> GetAllowedContactsIds(string userId) =>
@@ -110,18 +116,6 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Where(uc => !uc.Blocked && uc.Approved && (uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId)))
             .Select(uc => uc.InvitedId.Equals(userId) ? uc.InviterId : uc.InvitedId)
             .ToListAsync();
-
-    public Task<List<Contact>> GetAllowedContacts(string userId) =>
-        _context.Contacts
-            .Where(uc => uc.InvitedId.Equals(userId) || (uc.InviterId.Equals(userId) && !uc.Blocked && uc.Approved))
-            .ToListAsync();
-
-    public bool IsContactAllowed(string userId, string contactId) =>
-        _context.Contacts
-            .Any(uc => ((uc.InvitedId.Equals(userId) && uc.InviterId.Equals(contactId)) ||
-                        (uc.InvitedId.Equals(contactId) && uc.InviterId.Equals(userId))) &&
-                        !uc.Blocked &&
-                        uc.Approved);
 
     public Contact BlockContact(long connectionId, string blockedById, string blockedByName)
     {
@@ -242,28 +236,9 @@ public class UserRepository : RepositoryBase<SechatContext>
         profile.Keys.Add(new Key() { Type = keyType, Value = value });
     }
 
-    public List<Key> GetUserKeys(string userId) => _context.Keys
-        .Where(k => k.UserProfileId.Equals(userId))
-        .ToList();
-
     public bool KeyExists(string userId, KeyType keyType) => _context.Keys
         .Where(k => k.UserProfileId.Equals(userId))
         .Any(k => k.Type == keyType);
-
-    public string GetUserKey(string userId, KeyType keyType) => _context.Keys
-        .Where(k => k.UserProfileId.Equals(userId) && k.Type == keyType)
-        .Select(k => k.Value)
-        .FirstOrDefault();
-
-    public void UpdateEmailConfirmationKey(string userId, string key)
-    {
-        var userProfile = _context.UserProfiles
-            .Include(p => p.Keys)
-            .FirstOrDefault(p => p.Id == userId);
-
-        _ = userProfile.Keys.RemoveAll(k => k.Type == KeyType.EmailUpdate);
-        userProfile.Keys.Add(new Key() { Type = KeyType.EmailUpdate, Value = key });
-    }
 
     // Notifications
 
@@ -278,6 +253,7 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     public void RemovePushNotificationSubscriptions(string userId) =>
         _context.NotificationSubscriptions.RemoveRange(_context.NotificationSubscriptions.Where(s => s.UserProfileId.Equals(userId)));
+
     public void RemovePushNotificationSubscription(int subId) =>
         _context.NotificationSubscriptions.Remove(_context.NotificationSubscriptions.FirstOrDefault(s => s.Id == subId));
 

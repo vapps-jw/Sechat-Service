@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sechat.Data.Models.ChatModels;
 using Sechat.Data.Models.VideoCalls;
-using Sechat.Data.QueryModels;
 
 namespace Sechat.Data.Repositories;
 
@@ -201,9 +200,27 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     public List<string> GetRoomMembersIds(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.Id).ToList();
 
-    public List<string> GetRoomMembersNames(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.UserName).ToList();
+    //public List<string> GetRoomMembersNames(string roomId) => _context.Rooms.Include(r => r.Members).FirstOrDefault(r => r.Id.Equals(roomId))?.Members.Select(m => m.UserName).ToList();
 
-    public async Task<List<Room>> GetRoomsWithMessages(string memberUserId)
+    //public async Task<List<Room>> GetRoomsWithMessages(string memberUserId)
+    //{
+    //    var res = await _context.Rooms
+    //    .Include(r => r.Messages)
+    //        .ThenInclude(m => m.MessageViewers)
+    //    .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
+    //    {
+    //        LastActivity = r.LastActivity,
+    //        Created = r.Created,
+    //        CreatorName = r.CreatorName,
+    //        Id = r.Id,
+    //        Members = r.Members,
+    //        Messages = r.Messages.OrderBy(m => m.Id).ToList(),
+    //        Name = r.Name
+    //    }).ToListAsync();
+    //    return res;
+    //}
+
+    public async Task<List<Room>> GetRoomsWithRecentMessages(string memberUserId, int initialTake)
     {
         var res = await _context.Rooms
         .Include(r => r.Messages)
@@ -215,47 +232,55 @@ public class ChatRepository : RepositoryBase<SechatContext>
             CreatorName = r.CreatorName,
             Id = r.Id,
             Members = r.Members,
-            Messages = r.Messages.OrderBy(m => m.Id).ToList(),
+            Messages = r.Messages.OrderByDescending(m => m.Id).Take(initialTake).ToList(),
             Name = r.Name
         }).ToListAsync();
         return res;
     }
 
-    public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
-        .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId)))
-        .ToListAsync();
-
-    public async Task<Room> GetRoomWithMessages(string roomId)
-    {
-        var res = await _context.Rooms
-        .Where(r => r.Id.Equals(roomId))
-        .Include(r => r.Messages)
-            .ThenInclude(m => m.MessageViewers)
-        .Select(r => new Room()
-        {
-            LastActivity = r.LastActivity,
-            Created = r.Created,
-            CreatorName = r.CreatorName,
-            Id = r.Id,
-            Members = r.Members,
-            Messages = r.Messages.OrderBy(m => m.Id).ToList(),
-            Name = r.Name
-        }).FirstOrDefaultAsync();
-        return res;
-    }
-
-    public async Task<List<Room>> GetRoomsWithNewMessages(List<GetRoomUpdate> getRoomUpdates)
-    {
-        var rooms = await _context.Rooms
-            .Where(r => getRoomUpdates.Any(u => u.RoomId.Equals(r.Id)))
-            .Include(r => r.Messages.Where(dm => getRoomUpdates.First(c => c.RoomId == c.RoomId).LastMessage < dm.Id))
-            .ThenInclude(m => m.MessageViewers)
+    public Task<List<Message>> GetOldMessagesForRoom(string roomId, long lastMessage, int take) =>
+        _context.Messages
+            .Include(m => m.MessageViewers)
+            .Where(m => m.RoomId.Equals(roomId) && m.Id < lastMessage)
+            .OrderByDescending(m => m.Id)
+            .Take(take)
             .ToListAsync();
 
-        _ = rooms.RemoveAll(r => !r.Messages.Any());
-        rooms.ForEach(r => r.Messages.OrderBy(m => m.Id));
-        return rooms;
-    }
+    //public Task<List<Room>> GetRooms(string memberUserId) => _context.Rooms
+    //    .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId)))
+    //    .ToListAsync();
+
+    //public async Task<Room> GetRoomWithMessages(string roomId)
+    //{
+    //    var res = await _context.Rooms
+    //    .Where(r => r.Id.Equals(roomId))
+    //    .Include(r => r.Messages)
+    //        .ThenInclude(m => m.MessageViewers)
+    //    .Select(r => new Room()
+    //    {
+    //        LastActivity = r.LastActivity,
+    //        Created = r.Created,
+    //        CreatorName = r.CreatorName,
+    //        Id = r.Id,
+    //        Members = r.Members,
+    //        Messages = r.Messages.OrderBy(m => m.Id).ToList(),
+    //        Name = r.Name
+    //    }).FirstOrDefaultAsync();
+    //    return res;
+    //}
+
+    //public async Task<List<Room>> GetRoomsWithNewMessages(List<GetRoomUpdate> getRoomUpdates)
+    //{
+    //    var rooms = await _context.Rooms
+    //        .Where(r => getRoomUpdates.Any(u => u.RoomId.Equals(r.Id)))
+    //        .Include(r => r.Messages.Where(dm => getRoomUpdates.First(c => c.RoomId == c.RoomId).LastMessage < dm.Id))
+    //        .ThenInclude(m => m.MessageViewers)
+    //        .ToListAsync();
+
+    //    _ = rooms.RemoveAll(r => !r.Messages.Any());
+    //    rooms.ForEach(r => r.Messages.OrderBy(m => m.Id));
+    //    return rooms;
+    //}
 
     public Room AddToRoom(string roomId, string userId)
     {
@@ -293,13 +318,13 @@ public class ChatRepository : RepositoryBase<SechatContext>
         .SelectMany(r => r.Members)
         .Any(m => m.Id.Equals(userId));
 
-    public bool IsRoomsMember(string userId, List<string> roomId) =>
-        _context.Rooms.Where(r => roomId.Contains(r.Id)).All(r => r.Members.Any(m => m.Id.Equals(userId)));
+    //public bool IsRoomsMember(string userId, List<string> roomId) =>
+    //    _context.Rooms.Where(r => roomId.Contains(r.Id)).All(r => r.Members.Any(m => m.Id.Equals(userId)));
 
-    public Task<Room> GetRoomWithNewMessages(string roomId, DateTime lastMessage) => _context.Rooms
-        .Where(r => roomId.Contains(r.Id))
-        .Include(r => r.Messages.Where(m => m.Created > lastMessage))
-        .FirstOrDefaultAsync();
+    //public Task<Room> GetRoomWithNewMessages(string roomId, DateTime lastMessage) => _context.Rooms
+    //    .Where(r => roomId.Contains(r.Id))
+    //    .Include(r => r.Messages.Where(m => m.Created > lastMessage))
+    //    .FirstOrDefaultAsync();
 
     public Task<int> DeleteRoom(string roomId, string creatorUserId) => _context.Rooms
         .Where(r => r.Id.Equals(roomId) && r.CreatorId.Equals(creatorUserId))
