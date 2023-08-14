@@ -79,11 +79,11 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
             .ToListAsync();
 
-    public Task<List<Contact>> GetContactsWithMessages(string userId) =>
-        _context.Contacts
-            .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
-            .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
-            .ToListAsync();
+    //public Task<List<Contact>> GetContactsWithMessages(string userId) =>
+    //    _context.Contacts
+    //        .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
+    //        .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
+    //        .ToListAsync();
 
     public Task<List<Contact>> GetContactsWithRecentMessages(string userId, int initalTake) =>
     _context.Contacts
