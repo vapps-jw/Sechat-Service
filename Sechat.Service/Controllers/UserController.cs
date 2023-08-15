@@ -49,7 +49,7 @@ public class UserController : SechatControllerBase
     public async Task<IActionResult> GetProfile()
     {
         _userRepository.UpdateUserActivity(UserId);
-
+        _ = await _userRepository.SaveChanges();
         if (!_userRepository.ProfileExists(UserId))
         {
             _userRepository.CreateUserProfile(UserId, UserName);

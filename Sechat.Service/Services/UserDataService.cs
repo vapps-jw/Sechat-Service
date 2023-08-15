@@ -29,6 +29,7 @@ public class UserDataService
     public async Task<UserProfileProjection> GetProfile(string userId, string userName)
     {
         _userRepository.UpdateUserActivity(userId);
+        _ = await _userRepository.SaveChanges();
         if (!_userRepository.ProfileExists(userId))
         {
             _userRepository.CreateUserProfile(userId, userName);

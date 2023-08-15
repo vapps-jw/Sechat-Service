@@ -7,7 +7,7 @@ internal class MockedApi : WebApplicationFactory<Service.Program>
 {
     private readonly string _environment;
 
-    public MockedApi(string environment = AppConstants.CustomEnvironments.TestEnv) => _environment = environment;
+    public MockedApi(string environment = AppConstants.CustomEnvironments.Test) => _environment = environment;
 
     protected override IHost CreateHost(IHostBuilder builder)
     {

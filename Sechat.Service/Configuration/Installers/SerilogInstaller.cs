@@ -11,7 +11,7 @@ public class SerilogInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder)
     {
-        if (webApplicationBuilder.Environment.IsDevelopment())
+        if (webApplicationBuilder.Environment.IsDevelopment() || webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test))
         {
             _ = webApplicationBuilder.Host.UseSerilog((context, config) => { _ = config.WriteTo.Console(); });
         }

@@ -8,7 +8,7 @@ public class AppConstants
     }
     public struct CustomEnvironments
     {
-        public const string TestEnv = nameof(TestEnv);
+        public const string Test = nameof(Test);
     }
     public struct PushNotificationTitles
     {

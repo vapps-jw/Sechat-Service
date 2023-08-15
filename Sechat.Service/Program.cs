@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using OwaspHeaders.Core.Extensions;
 using Sechat.Service.Configuration;
@@ -9,8 +10,14 @@ using Sechat.Service.Middleware;
 using Sechat.Service.Utilities;
 using Serilog;
 using System;
+using static Sechat.Service.Configuration.AppConstants;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Environment.EnvironmentName.Equals(CustomEnvironments.Test))
+{
+    _ = builder.Configuration.AddUserSecrets<Program>();
+}
 
 // Install Services
 builder.InstallServices(typeof(IServiceInstaller).Assembly);
@@ -47,7 +54,7 @@ app.MapHub<ChatHub>("/chat-hub");
 
 DbManager.PrepareDatabase(app);
 
-if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.TestEnv))
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test))
 {
     await DbManager.SeedData(app);
 }

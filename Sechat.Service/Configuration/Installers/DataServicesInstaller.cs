@@ -16,7 +16,7 @@ public class DataServicesInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder)
     {
-        _ = webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.TestEnv)
+        _ = webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test)
             ? webApplicationBuilder.Services.AddDbContextFactory<SechatContext>(options =>
                  options.UseInMemoryDatabase(Guid.NewGuid().ToString()))
             : webApplicationBuilder.Services.AddDbContextFactory<SechatContext>(options =>

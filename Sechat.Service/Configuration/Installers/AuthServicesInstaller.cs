@@ -34,7 +34,7 @@ public class AuthServicesInstaller : IServiceInstaller
             .AddDefaultTokenProviders();
         }
 
-        if (webApplicationBuilder.Environment.IsDevelopment() || webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.TestEnv))
+        if (webApplicationBuilder.Environment.IsDevelopment() || webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test))
         {
             _ = webApplicationBuilder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
