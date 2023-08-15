@@ -70,7 +70,7 @@ public class CalendarController : SechatControllerBase
             public CalendarEventDtoValidation()
             {
                 _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
-                _ = RuleFor(x => x.Description).NotEmpty().MaximumLength(AppConstants.StringLengths.DescriptionMax);
+                _ = RuleFor(x => x.Description).NotEmpty().MaximumLength(AppConstants.StringLengths.TextMax);
                 _ = RuleFor(x => x.IsAllDay).NotNull();
                 _ = RuleFor(x => x.Start).NotNull();
                 _ = RuleFor(x => x.End).NotNull();

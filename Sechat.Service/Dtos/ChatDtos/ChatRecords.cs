@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Sechat.Service.Configuration;
 using System;
 using System.Collections.Generic;
 
@@ -21,6 +22,10 @@ public record DirectMessagesViewed(long ContactId);
 public record DirectMessageViewed(long ContactId, long MessageId);
 public record IncomingDirectMessage(string Text, string Recipient);
 
+public class IncomingDirectMessageValidation : AbstractValidator<IncomingDirectMessage>
+{
+    public IncomingDirectMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(AppConstants.StringLengths.TextMax);
+}
 // Rooms
 
 public record MessageId(long Id, string RoomId);
@@ -31,7 +36,7 @@ public record IncomingMessage(string Text, string RoomId);
 
 public class IncomingMessageValidation : AbstractValidator<IncomingMessage>
 {
-    public IncomingMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(5000);
+    public IncomingMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(AppConstants.StringLengths.TextMax);
 }
 
 public record CreateRoomMessage(string RoomName);
