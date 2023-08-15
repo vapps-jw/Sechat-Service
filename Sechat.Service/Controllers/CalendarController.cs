@@ -40,41 +40,42 @@ public class CalendarController : SechatControllerBase
     [HttpDelete("calendar-event/{eventId}")]
     public IActionResult DeleteEvent(string eventId) => Ok();
 
-    public class CalendarControllerForms
+}
+
+public class CalendarControllerForms
+{
+    public class CreateCalendarForm
     {
-        public class CreateCalendarForm
-        {
-            public string Name { get; set; }
-        }
-        public class CreateCalendarFormValidation : AbstractValidator<CreateCalendarForm>
-        {
-            public CreateCalendarFormValidation() => _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
-        }
+        public string Name { get; set; }
+    }
+    public class CreateCalendarFormValidation : AbstractValidator<CreateCalendarForm>
+    {
+        public CreateCalendarFormValidation() => _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
+    }
 
-        public class UpdateCalendarForm
+    public class UpdateCalendarForm
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+    public class UpdateCalendarFormValidation : AbstractValidator<UpdateCalendarForm>
+    {
+        public UpdateCalendarFormValidation()
         {
-            public string Id { get; set; }
-            public string Name { get; set; }
+            _ = RuleFor(x => x.Id).NotEmpty();
+            _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
         }
-        public class UpdateCalendarFormValidation : AbstractValidator<UpdateCalendarForm>
-        {
-            public UpdateCalendarFormValidation()
-            {
-                _ = RuleFor(x => x.Id).NotEmpty();
-                _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
-            }
-        }
+    }
 
-        public class CalendarEventDtoValidation : AbstractValidator<CalendarEventDto>
+    public class CalendarEventDtoValidation : AbstractValidator<CalendarEventDto>
+    {
+        public CalendarEventDtoValidation()
         {
-            public CalendarEventDtoValidation()
-            {
-                _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
-                _ = RuleFor(x => x.Description).NotEmpty().MaximumLength(AppConstants.StringLengths.TextMax);
-                _ = RuleFor(x => x.IsAllDay).NotNull();
-                _ = RuleFor(x => x.Start).NotNull();
-                _ = RuleFor(x => x.End).NotNull();
-            }
+            _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
+            _ = RuleFor(x => x.Description).NotEmpty().MaximumLength(AppConstants.StringLengths.TextMax);
+            _ = RuleFor(x => x.IsAllDay).NotNull();
+            _ = RuleFor(x => x.Start).NotNull();
+            _ = RuleFor(x => x.End).NotNull();
         }
     }
 }
