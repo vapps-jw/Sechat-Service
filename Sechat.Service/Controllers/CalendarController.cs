@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
-using static Sechat.Service.Controllers.CalendarController.CalendarControllerForms;
+using Sechat.Service.Dtos.CalendarDtos;
 
 namespace Sechat.Service.Controllers;
 
@@ -24,21 +24,21 @@ public class CalendarController : SechatControllerBase
     public IActionResult DeleteCalendar(string calendarId) => Ok();
 
     [HttpPatch("{calendarId}")]
-    public IActionResult UpdateCalendar(string calendarId) => Ok();
+    public IActionResult UpdateCalendar([FromBody] CalendarControllerForms.CreateCalendarForm form, string calendarId) => Ok();
 
     [HttpPost()]
-    public IActionResult CreateCalendar([FromBody] CreateCalendarForm createCalendarForm) => Ok();
+    public IActionResult CreateCalendar([FromBody] CalendarControllerForms.CreateCalendarForm form) => Ok();
 
     // Events
 
     [HttpPost("calendar-event")]
-    public IActionResult CreateEvent() => Ok();
+    public IActionResult CreateEvent([FromBody] CalendarEventDto dto) => Ok();
 
     [HttpPatch("calendar-event")]
-    public IActionResult UpdateEvent() => Ok();
+    public IActionResult UpdateEvent([FromBody] CalendarEventDto dto) => Ok();
 
-    [HttpDelete("calendar-event")]
-    public IActionResult DeleteEvent() => Ok();
+    [HttpDelete("calendar-event/{eventId}")]
+    public IActionResult DeleteEvent(string eventId) => Ok();
 
     public class CalendarControllerForms
     {
@@ -62,6 +62,18 @@ public class CalendarController : SechatControllerBase
             {
                 _ = RuleFor(x => x.Id).NotEmpty();
                 _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
+            }
+        }
+
+        public class CalendarEventDtoValidation : AbstractValidator<CalendarEventDto>
+        {
+            public CalendarEventDtoValidation()
+            {
+                _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
+                _ = RuleFor(x => x.Description).NotEmpty().MaximumLength(AppConstants.StringLengths.DescriptionMax);
+                _ = RuleFor(x => x.IsAllDay).NotNull();
+                _ = RuleFor(x => x.Start).NotNull();
+                _ = RuleFor(x => x.End).NotNull();
             }
         }
     }

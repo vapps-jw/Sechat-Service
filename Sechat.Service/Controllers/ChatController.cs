@@ -160,40 +160,6 @@ public class ChatController : SechatControllerBase
 
     // Rooms
 
-    //[HttpGet("rooms")]
-    //public async Task<IActionResult> Rooms()
-    //{
-    //    var rooms = await _chatRepository.GetRoomsWithMessages(UserId);
-    //    foreach (var room in rooms)
-    //    {
-    //        foreach (var message in room.Messages)
-    //        {
-    //            foreach (var viewer in message.MessageViewers)
-    //            {
-    //                viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
-    //            }
-    //        }
-    //    }
-
-    //    var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
-    //    foreach (var room in roomDtos)
-    //    {
-    //        foreach (var message in room.Messages)
-    //        {
-    //            foreach (var viewer in message.MessageViewers)
-    //            {
-    //                if (viewer.User.Equals(UserName))
-    //                {
-    //                    message.WasViewed = true;
-    //                    continue;
-    //                }
-    //            }
-    //        }
-    //    }
-
-    //    return Ok(roomDtos);
-    //}
-
     [HttpPost("send-message")]
     public async Task<IActionResult> SendMessage(
     [FromServices] Channel<DefaultNotificationDto> channel,
@@ -344,31 +310,6 @@ public class ChatController : SechatControllerBase
     }
 
     // Contacts
-
-    //[HttpGet("contacts")]
-    //public async Task<IActionResult> Contacts()
-    //{
-    //    var contacts = await _userRepository.GetContactsWithMessages(UserId);
-    //    var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
-
-    //    var connectedContacts = new List<long>();
-    //    if (_signalRConnectionsMonitor.ConnectedUsers is not null)
-    //    {
-    //        connectedContacts = contacts
-    //            .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
-    //                        _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
-    //            .Select(c => c.Id)
-    //            .ToList();
-    //    }
-
-    //    foreach (var contactDto in contactDtos)
-    //    {
-    //        contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
-    //            AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
-    //    }
-
-    //    return Ok(contactDtos);
-    //}
 
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> Contact(long contactId)

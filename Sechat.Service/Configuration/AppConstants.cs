@@ -53,6 +53,7 @@ public class AppConstants
     public struct StringLengths
     {
         public const int NameMax = 50;
+        public const int DescriptionMax = 3000;
         public const int PasswordMax = 20;
         public const int PasswordMin = 8;
         public const int UserNameMax = 10;
