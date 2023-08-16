@@ -8,10 +8,9 @@ public record CalendarEvent : BaseModel<string>
     public string Color { get; set; }
 
     public bool IsAllDay { get; set; }
-    public DateOnly AllDay { get; set; }
 
-    public DateTime Start { get; set; }
-    public DateTime End { get; set; }
+    public string Start { get; set; }
+    public string End { get; set; }
 
     public string CalendarId { get; set; }
     public Calendar Calendar { get; set; }
