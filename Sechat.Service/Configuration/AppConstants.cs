@@ -16,6 +16,7 @@ public class AppConstants
         public const string NewDirectMessage = "Direct Message";
         public const string NewInvitation = "New Invitation";
         public const string InvitationApproved = "Invitation Approved";
+        public const string EventReminder = "Event Reminder";
         public const string VideoCall = "Video Call";
     }
     public struct ContactState

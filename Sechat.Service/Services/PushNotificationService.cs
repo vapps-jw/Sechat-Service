@@ -216,4 +216,40 @@ public class PushNotificationService
             }
         }
     }
+
+    public async Task EventReminderNotification(string recipientId, string message)
+    {
+        var subs = _userRepository.GetSubscriptions(recipientId);
+        if (!subs.Any()) return;
+
+        foreach (var sub in subs)
+        {
+            var subscription = new PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
+            var vapidDetails = new VapidDetails($"mailto:{_sechatEmails.Value.Master}", _vapidKeys.Value.PublicKey, _vapidKeys.Value.PrivateKey);
+
+            var webPushClient = new WebPushClient();
+            try
+            {
+                var payload = JsonSerializer.Serialize(new
+                {
+                    title = AppConstants.PushNotificationTitles.EventReminder,
+                    options = new
+                    {
+                        body = message
+                    }
+                });
+
+                await webPushClient.SendNotificationAsync(subscription, payload, vapidDetails);
+            }
+            catch (WebPushException exception)
+            {
+                if (exception.Message.Contains("Subscription no longer valid", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    await RemoveInvalidSubscription(sub.Id);
+                    return;
+                }
+                _logger.LogError(exception, exception.Message);
+            }
+        }
+    }
 }
