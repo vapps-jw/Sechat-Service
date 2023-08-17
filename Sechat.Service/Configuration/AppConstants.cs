@@ -19,6 +19,10 @@ public class AppConstants
         public const string EventReminder = "Event Reminder";
         public const string VideoCall = "Video Call";
     }
+    public struct CaheProfiles
+    {
+        public const string NoCache = "NoCache";
+    }
     public struct ContactState
     {
         public const string Online = "Online";
