@@ -57,7 +57,7 @@ public class ChatController : SechatControllerBase
     // Messages handling
 
     [HttpGet("rooms-initial-load")]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public async Task<IActionResult> RoomsInitialLoadAsync()
     {
         var rooms = await _chatRepository.GetRoomsWithRecentMessages(UserId, _initialMessagesPull);
@@ -93,7 +93,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("room/{roomId}/load-more/{lastId}")]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public async Task<IActionResult> LoadMoreRoomMessages(string roomId, long lastId)
     {
         var messages = await _chatRepository.GetOldMessagesForRoom(roomId, lastId, _updateMessagesPull);
@@ -125,7 +125,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contacts-initial-load")]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public async Task<IActionResult> ContactsInitialLoadAsync()
     {
         var contacts = await _userRepository.GetContactsWithRecentMessages(UserId, _initialMessagesPull);
@@ -152,7 +152,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contact/{contactId}/load-more/{lastId}")]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public async Task<IActionResult> LoadMoreContactMessages(long contactId, long lastId)
     {
         var messages = await _userRepository.GetOldMessagesForContact(contactId, lastId, _updateMessagesPull);
@@ -316,7 +316,7 @@ public class ChatController : SechatControllerBase
     // Contacts
 
     [HttpGet("contact/{contactId}")]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public async Task<IActionResult> Contact(long contactId)
     {
         if (!_userRepository.CheckContact(contactId, UserId, out _))

@@ -34,7 +34,7 @@ public class CallController : SechatControllerBase
     }
 
     [HttpGet("logs/{lastLog:long?}")]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public IActionResult GetCallLogs(long lastLog = 0)
     {
         if (lastLog != 0)
@@ -73,7 +73,7 @@ public class CallController : SechatControllerBase
     }
 
     [HttpGet("log/{callLogId:long?}")]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public IActionResult GetCallLog(long callLogId)
     {
         var callLog = _chatRepository.GetCallLog(callLogId, UserId);

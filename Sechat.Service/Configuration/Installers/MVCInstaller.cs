@@ -10,7 +10,7 @@ public class MVCInstaller : IServiceInstaller
     {
         _ = webApplicationBuilder.Services.AddControllers(option =>
         {
-            option.CacheProfiles.Add(AppConstants.CaheProfiles.NoCache,
+            option.CacheProfiles.Add(AppConstants.CacheProfiles.NoCache,
                new CacheProfile()
                {
                    Duration = 0,
@@ -19,7 +19,3 @@ public class MVCInstaller : IServiceInstaller
         });
     }
 }
-
-//context.Response.Headers[HeaderNames.CacheControl] = "max-age=0,no-cache,must-revalidate";
-//            context.Response.Headers[HeaderNames.Expires] = "Tue, 01 Jan 1970 00:00:00 GMT";
-//            context.Response.Headers[HeaderNames.Pragma] = "no-cache";

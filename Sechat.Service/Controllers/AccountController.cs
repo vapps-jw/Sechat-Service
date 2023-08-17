@@ -79,7 +79,7 @@ public class AccountController : SechatControllerBase
     [AllowAnonymous]
     [HttpPost("register")]
     [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public async Task<IActionResult> SignUp([FromBody] UserCredentials userCredentials)
     {
         var user = new IdentityUser(userCredentials.Username)
@@ -98,7 +98,7 @@ public class AccountController : SechatControllerBase
     }
 
     [HttpPost("logout")]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public async Task<IActionResult> Logout()
     {
         await _signInManager.SignOutAsync();
@@ -149,7 +149,7 @@ public class AccountController : SechatControllerBase
     }
 
     [HttpPost("change-password")]
-    [ResponseCache(CacheProfileName = AppConstants.CaheProfiles.NoCache)]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public async Task<IActionResult> ChangePassword([FromBody] PasswordForm passwordForm)
     {
         var currentUser = await _userManager.FindByIdAsync(UserId);

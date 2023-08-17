@@ -19,7 +19,7 @@ public class AppConstants
         public const string EventReminder = "Event Reminder";
         public const string VideoCall = "Video Call";
     }
-    public struct CaheProfiles
+    public struct CacheProfiles
     {
         public const string NoCache = "NoCache";
     }
