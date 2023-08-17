@@ -43,9 +43,8 @@ public class UserController : SechatControllerBase
         _userRepository = userRepository;
     }
 
-    private async Task<string> GetUserId(string userName) => (await _userManager.FindByNameAsync(userName))?.Id;
-
     [HttpGet("get-profile")]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public async Task<IActionResult> GetProfile()
     {
         _userRepository.UpdateUserActivity(UserId);
@@ -190,4 +189,6 @@ public class UserController : SechatControllerBase
 
         return BadRequest("Can`t do that");
     }
+
+    private async Task<string> GetUserId(string userName) => (await _userManager.FindByNameAsync(userName))?.Id;
 }
