@@ -48,6 +48,7 @@ public class AccountController : SechatControllerBase
     }
 
     [HttpGet("is-authorized")]
+    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public IActionResult AuthTest() => Ok("Authorized");
 
     [AllowAnonymous]
