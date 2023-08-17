@@ -10,11 +10,10 @@ using Sechat.Service.Middleware;
 using Sechat.Service.Utilities;
 using Serilog;
 using System;
-using static Sechat.Service.Configuration.AppConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (builder.Environment.EnvironmentName.Equals(CustomEnvironments.Test))
+if (builder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test))
 {
     _ = builder.Configuration.AddUserSecrets<Program>();
 }
