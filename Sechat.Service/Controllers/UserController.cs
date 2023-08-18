@@ -43,8 +43,7 @@ public class UserController : SechatControllerBase
         _userRepository = userRepository;
     }
 
-    [HttpPost("get-profile")]
-    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
+    [HttpGet("get-profile")]
     public async Task<IActionResult> GetProfile()
     {
         _userRepository.UpdateUserActivity(UserId);

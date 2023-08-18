@@ -18,7 +18,6 @@ public class CalendarController : SechatControllerBase
     // Calendar
 
     [HttpGet("{calendarId}")]
-    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
     public IActionResult GetCalendar(string calendarId) => Ok();
 
     [HttpDelete("{calendarId}")]
