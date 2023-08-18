@@ -21,19 +21,13 @@ public class AppConstants
     }
     public struct CacheProfiles
     {
-        public const string NoCache = "NoCache";
+        public const string NoStore = nameof(NoStore);
     }
     public struct ContactState
     {
-        public const string Online = "Online";
-        public const string Offline = "Offline";
-        public const string Unknown = "Unknown";
-    }
-    public struct KeyTypes
-    {
-        public const string E2E_MASTER = "E2E_MASTER";
-        public const string E2E_ROOMS = "E2E_ROOMS";
-        public const string E2E_DM = "E2E_DM";
+        public const string Online = nameof(Online);
+        public const string Offline = nameof(Offline);
+        public const string Unknown = nameof(Unknown);
     }
     public enum PushNotificationType
     {

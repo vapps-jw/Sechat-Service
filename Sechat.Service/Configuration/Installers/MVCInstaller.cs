@@ -10,7 +10,7 @@ public class MVCInstaller : IServiceInstaller
     {
         _ = webApplicationBuilder.Services.AddControllers(option =>
         {
-            option.CacheProfiles.Add(AppConstants.CacheProfiles.NoCache,
+            option.CacheProfiles.Add(AppConstants.CacheProfiles.NoStore,
                new CacheProfile()
                {
                    Duration = 0,
