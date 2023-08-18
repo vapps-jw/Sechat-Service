@@ -27,7 +27,6 @@ public class CustomResponseHeadersMiddleware : IMiddleware
             {
                 if (context.Response.StatusCode == 405)
                 {
-                    context.Response.StatusCode = 405;
                     context.Response.Headers[HeaderNames.CacheControl] = "no-store";
                     context.Response.Headers.Add("SECHAT-AUTH", "Forbidden");
                 }
