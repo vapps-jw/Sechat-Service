@@ -47,10 +47,6 @@ public class AccountController : SechatControllerBase
         _chatHubContext = chatHubContext;
     }
 
-    [HttpGet("is-authorized")]
-    [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoCache)]
-    public IActionResult AuthTest() => Ok("Authorized");
-
     [AllowAnonymous]
     [HttpPost("login")]
     [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]

@@ -33,7 +33,7 @@ public class MinimalRateLimiterPolicy : IRateLimiterPolicy<string>
 
     public Func<OnRejectedContext, CancellationToken, ValueTask> OnRejected { get; } = async (context, _) =>
     {
-        context.HttpContext.Response.StatusCode = 429;
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<RateLimiterInstaller>>();
         logger.LogWarning("Server Overloaded by {user}",
             context.HttpContext.User.Identity?.Name ?? context.HttpContext.Connection.RemoteIpAddress.ToString() ?? context.HttpContext.Request.Headers.Host.ToString());

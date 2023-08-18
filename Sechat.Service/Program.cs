@@ -42,11 +42,11 @@ app.UseSerilogRequestLogging();
 app.UseRouting();
 app.UseRateLimiter();
 
-app.UseAuthentication();
-app.UseAuthorization();
-
 app.UseMiddleware<CustomResponseHeadersMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapDefaultControllerRoute();
 app.MapHub<ChatHub>("/chat-hub");

@@ -14,7 +14,8 @@ public class MVCInstaller : IServiceInstaller
                new CacheProfile()
                {
                    Duration = 0,
-                   Location = ResponseCacheLocation.None
+                   Location = ResponseCacheLocation.Any,
+                   NoStore = true
                });
         });
     }
