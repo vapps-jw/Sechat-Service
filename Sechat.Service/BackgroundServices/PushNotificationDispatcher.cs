@@ -53,6 +53,9 @@ public class PushNotificationDispatcher : BackgroundService
                     case Configuration.AppConstants.PushNotificationType.IncomingDirectMessage:
                         await ns.IncomingDirectMessageNotification(msg.RecipientId, msg.BodyData);
                         break;
+                    case Configuration.AppConstants.PushNotificationType.EventReminder:
+                        await ns.EventReminderNotification(msg.RecipientId, msg.BodyData);
+                        break;
                     default:
                         break;
                 }
