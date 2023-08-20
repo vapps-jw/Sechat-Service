@@ -36,6 +36,7 @@ public class AppConstants
         IncomingDirectMessage,
         IncomingContactRequest,
         ContactRequestApproved,
+        EventReminder,
     }
     public struct ContentTypes
     {
