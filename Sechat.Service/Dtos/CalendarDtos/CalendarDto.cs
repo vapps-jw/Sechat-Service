@@ -8,6 +8,14 @@ public class CalendarDto
     public List<CalendarEventDto> CalendarEventDtos { get; set; } = new();
 }
 
+public class ReminderDto
+{
+    public long Id { get; set; }
+    public DateTime Remind { get; set; }
+
+    public string CalendarEventId { get; set; }
+}
+
 public class CalendarEventDto
 {
     public string Id { get; set; }

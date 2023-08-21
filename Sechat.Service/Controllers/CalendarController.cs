@@ -59,12 +59,19 @@ public class CalendarController : SechatControllerBase
         return await _calendarRepository.SaveChanges() > 0 ? Ok() : BadRequest();
     }
 
-    [HttpPatch("event")]
+    [HttpPut("event")]
     public IActionResult UpdateEvent([FromBody] CalendarEventDto dto) => Ok();
 
     [HttpDelete("event/{eventId}")]
     public IActionResult DeleteEvent(string eventId) => Ok();
 
+    // Reminders
+
+    [HttpPost("event/{eventId}/reminder")]
+    public IActionResult AddReminder([FromBody] ReminderDto reminder, string eventId) => Ok();
+
+    [HttpDelete("event/{eventId}/{reminderId}")]
+    public IActionResult DeleteReminder(string eventId, long reminderId) => Ok();
 }
 
 public class CalendarControllerForms
