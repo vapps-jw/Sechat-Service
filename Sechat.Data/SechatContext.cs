@@ -23,6 +23,8 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<DirectMessage> DirectMessages { get; set; }
     public DbSet<Blacklisted> Blacklist { get; set; }
     public DbSet<Calendar> Calendars { get; set; }
+    public DbSet<CalendarEvent> CalendarEvents { get; set; }
+    public DbSet<Reminder> Reminders { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -79,6 +81,11 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
         _ = modelBuilder.Entity<Calendar>()
             .HasMany(x => x.CalendarEvents)
             .WithOne(x => x.Calendar)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        _ = modelBuilder.Entity<CalendarEvent>()
+            .HasMany(x => x.Reminders)
+            .WithOne(x => x.CalendarEvent)
             .OnDelete(DeleteBehavior.Cascade);
 
         _ = modelBuilder.Entity<Contact>()
