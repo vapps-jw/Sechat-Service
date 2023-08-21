@@ -44,36 +44,10 @@ public class UserController : SechatControllerBase
     }
 
     [HttpGet("get-profile")]
-    public async Task<IActionResult> GetProfile()
+    public async Task<IActionResult> GetProfile([FromServices] UserDataService userDataService)
     {
-        _userRepository.UpdateUserActivity(UserId);
-        _ = await _userRepository.SaveChanges();
-        if (!_userRepository.ProfileExists(UserId))
-        {
-            _userRepository.CreateUserProfile(UserId, UserName);
-            if (await _userRepository.SaveChanges() == 0)
-            {
-                return Problem("Profile creation failed");
-            }
-        }
-        if (!_userRepository.KeyExists(UserId, Data.KeyType.DefaultEncryption))
-        {
-            var newKey = _cryptographyService.GenerateKey();
-            _userRepository.UpdatKey(UserId, Data.KeyType.DefaultEncryption, newKey);
-            if (await _userRepository.SaveChanges() == 0)
-            {
-                return Problem("Defauly Key creating failed");
-            }
-        }
-
-        var user = await _userManager.FindByNameAsync(UserName);
-        var profileProjection = _mapper.Map<UserProfileProjection>(_userRepository.GetUserProfile(UserId));
-        profileProjection.UserId = UserId;
-        profileProjection.UserName = UserName;
-        profileProjection.Email = user.Email;
-        profileProjection.EmailConfirmed = user.EmailConfirmed;
-
-        return Ok(profileProjection);
+        var profile = await userDataService.GetProfile(UserId, UserName);
+        return Ok(profile);
     }
 
     [HttpPost("request-contact")]

@@ -211,8 +211,8 @@ public class UserRepository : RepositoryBase<SechatContext>
             connections);
     }
 
-    public bool ProfileExists(string id) => _context.UserProfiles
-        .Any(p => p.Id.Equals(id));
+    public bool ProfileExists(string userId) => _context.UserProfiles
+        .Any(p => p.Id.Equals(userId));
 
     public int CountUserProfiles() => _context.UserProfiles.Count();
 

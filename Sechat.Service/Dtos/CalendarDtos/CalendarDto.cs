@@ -5,10 +5,7 @@ namespace Sechat.Service.Dtos.CalendarDtos;
 
 public class CalendarDto
 {
-    public string Id { get; set; }
-    public string Name { get; set; }
-
-    public List<CalendarEventDto> CalendarEventDtos { get; set; }
+    public List<CalendarEventDto> CalendarEventDtos { get; set; } = new();
 }
 
 public class CalendarEventDto
@@ -16,6 +13,7 @@ public class CalendarEventDto
     public string Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
+    public string Color { get; set; }
 
     public bool IsAllDay { get; set; }
     public DateOnly AllDay { get; set; }

@@ -1,43 +1,68 @@
-﻿using FluentValidation;
+﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sechat.Data.Models.CalendarModels;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos.CalendarDtos;
+using System.Threading.Tasks;
 
 namespace Sechat.Service.Controllers;
 
 [Authorize]
 [Route("[controller]")]
+[ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class CalendarController : SechatControllerBase
 {
+    private readonly IMapper _mapper;
     private readonly CalendarRepository _calendarRepository;
 
-    public CalendarController(CalendarRepository calendarRepository) => _calendarRepository = calendarRepository;
+    public CalendarController(
+        IMapper mapper,
+        CalendarRepository calendarRepository)
+    {
+        _mapper = mapper;
+        _calendarRepository = calendarRepository;
+    }
 
     // Calendar
 
-    [HttpGet("{calendarId}")]
-    public IActionResult GetCalendar(string calendarId) => Ok();
+    [HttpGet()]
+    public IActionResult GetCalendar()
+    {
+        var calendar = _calendarRepository.GetCalendar(UserId);
+        if (calendar is null) return BadRequest();
 
-    [HttpDelete("{calendarId}")]
-    public IActionResult DeleteCalendar(string calendarId) => Ok();
+        var dto = _mapper.Map<CalendarDto>(calendar);
+        return Ok(dto);
+    }
 
-    [HttpPatch("{calendarId}")]
-    public IActionResult UpdateCalendar([FromBody] CalendarControllerForms.CreateCalendarForm form, string calendarId) => Ok();
+    [HttpDelete()]
+    public async Task<IActionResult> ClearCalendar()
+    {
+        var calendar = _calendarRepository.GetCalendar(UserId);
+        if (calendar is null) return BadRequest();
+        calendar.CalendarEvents.Clear();
+        _ = await _calendarRepository.SaveChanges();
 
-    [HttpPost()]
-    public IActionResult CreateCalendar([FromBody] CalendarControllerForms.CreateCalendarForm form) => Ok();
+        return Ok();
+    }
 
     // Events
 
-    [HttpPost("calendar-event")]
-    public IActionResult CreateEvent([FromBody] CalendarEventDto dto) => Ok();
+    [HttpPost("event")]
+    public async Task<IActionResult> CreateEvent([FromBody] CalendarEventDto dto)
+    {
+        var calendarEvent = _mapper.Map<CalendarEvent>(dto);
+        _calendarRepository.AddEvent(UserId, calendarEvent);
+        return await _calendarRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+    }
 
-    [HttpPatch("calendar-event")]
+    [HttpPatch("event")]
     public IActionResult UpdateEvent([FromBody] CalendarEventDto dto) => Ok();
 
-    [HttpDelete("calendar-event/{eventId}")]
+    [HttpDelete("event/{eventId}")]
     public IActionResult DeleteEvent(string eventId) => Ok();
 
 }

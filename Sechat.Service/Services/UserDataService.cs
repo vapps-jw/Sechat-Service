@@ -9,17 +9,20 @@ namespace Sechat.Service.Services;
 
 public class UserDataService
 {
+    private readonly CalendarRepository _calendarRepository;
     private readonly CryptographyService _cryptographyService;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IMapper _mapper;
     private readonly UserRepository _userRepository;
 
     public UserDataService(
-         CryptographyService cryptographyService,
+        CalendarRepository calendarRepository,
+        CryptographyService cryptographyService,
         UserManager<IdentityUser> userManager,
         IMapper mapper,
         UserRepository userRepository)
     {
+        _calendarRepository = calendarRepository;
         _cryptographyService = cryptographyService;
         _userManager = userManager;
         _mapper = mapper;
@@ -36,6 +39,14 @@ public class UserDataService
             if (await _userRepository.SaveChanges() == 0)
             {
                 throw new Exception("Profile creation failed");
+            }
+        }
+        if (!_calendarRepository.CalendarExists(userId))
+        {
+            _calendarRepository.CreateCalendar(userId);
+            if (await _userRepository.SaveChanges() == 0)
+            {
+                throw new Exception("Calendar creation failed");
             }
         }
         if (!_userRepository.KeyExists(userId, Data.KeyType.DefaultEncryption))

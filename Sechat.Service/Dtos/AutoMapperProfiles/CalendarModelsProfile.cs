@@ -9,7 +9,8 @@ public class CalendarModelsProfile : Profile
 
     public CalendarModelsProfile()
     {
-        _ = CreateMap<Calendar, Calendar>();
+        _ = CreateMap<Calendar, CalendarDto>();
         _ = CreateMap<CalendarEvent, CalendarEventDto>();
+        _ = CreateMap<CalendarEventDto, CalendarEvent>();
     }
 }
