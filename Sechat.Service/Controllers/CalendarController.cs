@@ -2,10 +2,11 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sechat.Data;
 using Sechat.Data.Models.CalendarModels;
-using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos.CalendarDtos;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Controllers;
@@ -15,15 +16,15 @@ namespace Sechat.Service.Controllers;
 [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class CalendarController : SechatControllerBase
 {
+    private readonly SechatContext _context;
     private readonly IMapper _mapper;
-    private readonly CalendarRepository _calendarRepository;
 
     public CalendarController(
-        IMapper mapper,
-        CalendarRepository calendarRepository)
+        SechatContext context,
+        IMapper mapper)
     {
+        _context = context;
         _mapper = mapper;
-        _calendarRepository = calendarRepository;
     }
 
     // Calendar
@@ -31,7 +32,7 @@ public class CalendarController : SechatControllerBase
     [HttpGet()]
     public IActionResult GetCalendar()
     {
-        var calendar = _calendarRepository.GetCalendar(UserId);
+        var calendar = _context.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
         if (calendar is null) return BadRequest();
 
         var dto = _mapper.Map<CalendarDto>(calendar);
@@ -41,10 +42,11 @@ public class CalendarController : SechatControllerBase
     [HttpDelete()]
     public async Task<IActionResult> ClearCalendar()
     {
-        var calendar = _calendarRepository.GetCalendar(UserId);
+        var calendar = _context.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
         if (calendar is null) return BadRequest();
+
         calendar.CalendarEvents.Clear();
-        _ = await _calendarRepository.SaveChanges();
+        _ = await _context.SaveChangesAsync();
 
         return Ok();
     }
@@ -55,15 +57,29 @@ public class CalendarController : SechatControllerBase
     public async Task<IActionResult> CreateEvent([FromBody] CalendarEventDto dto)
     {
         var calendarEvent = _mapper.Map<CalendarEvent>(dto);
-        _calendarRepository.AddEvent(UserId, calendarEvent);
-        return await _calendarRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+        var calendar = _context.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
+        calendar.CalendarEvents.Add(calendarEvent);
+        return await _context.SaveChangesAsync() > 0 ? Ok() : BadRequest();
     }
 
     [HttpPut("event")]
-    public IActionResult UpdateEvent([FromBody] CalendarEventDto dto) => Ok();
+    public async Task<IActionResult> UpdateEvent([FromBody] CalendarEventDto dto)
+    {
+        var ce = _mapper.Map<CalendarEvent>(dto);
+        _ = _context.CalendarEvents.Update(ce);
+
+        return await _context.SaveChangesAsync() > 0 ? Ok() : BadRequest();
+    }
 
     [HttpDelete("event/{eventId}")]
-    public IActionResult DeleteEvent(string eventId) => Ok();
+    public async Task<IActionResult> DeleteEventAsync(string eventId)
+    {
+        var ce = _context.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId));
+        if (ce is null) return BadRequest();
+
+        _ = _context.CalendarEvents.Remove(ce);
+        return await _context.SaveChangesAsync() > 0 ? Ok() : BadRequest();
+    }
 
     // Reminders
 

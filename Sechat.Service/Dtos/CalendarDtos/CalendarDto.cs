@@ -5,7 +5,7 @@ namespace Sechat.Service.Dtos.CalendarDtos;
 
 public class CalendarDto
 {
-    public List<CalendarEventDto> CalendarEventDtos { get; set; } = new();
+    public List<CalendarEventDto> CalendarEvents { get; set; } = new();
 }
 
 public class ReminderDto
@@ -28,4 +28,6 @@ public class CalendarEventDto
 
     public DateTime Start { get; set; }
     public DateTime End { get; set; }
+
+    public List<ReminderDto> Reminders { get; set; }
 }
