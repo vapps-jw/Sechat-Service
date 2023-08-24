@@ -38,6 +38,22 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
             context.Response.ContentType = AppConstants.ContentTypes.Json;
             await context.Response.WriteAsync(json);
         }
+        catch (OperationCanceledException ex)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+            var problem = new ProblemDetails()
+            {
+                Status = (int)HttpStatusCode.InternalServerError,
+                Type = "Request Cancelled",
+                Title = "Request Cancelled",
+                Detail = ex.Message,
+            };
+
+            var json = JsonSerializer.Serialize(problem);
+            context.Response.ContentType = AppConstants.ContentTypes.Json;
+            await context.Response.WriteAsync(json);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);

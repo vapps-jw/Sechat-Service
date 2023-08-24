@@ -7,7 +7,8 @@ public record CalendarEvent : BaseModel<string>
     public string Description { get; set; }
     public string Color { get; set; }
 
-    public bool IsAllDay { get; set; }
+    public string IsAllDay { get; set; }
+    public string Day { get; set; }
 
     public string Start { get; set; }
     public string End { get; set; }

@@ -19,15 +19,16 @@ public class ReminderDto
 public class CalendarEventDto
 {
     public string Id { get; set; }
+
     public string Name { get; set; }
     public string Description { get; set; }
     public string Color { get; set; }
 
-    public bool IsAllDay { get; set; }
-    public DateOnly AllDay { get; set; }
+    public string IsAllDay { get; set; }
+    public string Day { get; set; }
 
-    public DateTime Start { get; set; }
-    public DateTime End { get; set; }
+    public string Start { get; set; }
+    public string End { get; set; }
 
     public List<ReminderDto> Reminders { get; set; }
 }
