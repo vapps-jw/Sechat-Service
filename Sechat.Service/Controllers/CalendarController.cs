@@ -57,17 +57,17 @@ public class CalendarController : SechatControllerBase
 
     // Events
 
-    [HttpPost("event")]
-    public async Task<IActionResult> CreateEvent(CancellationToken cancellationToken, [FromBody] CalendarEventDto dto)
-    {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+    //[HttpPost("event")]
+    //public async Task<IActionResult> CreateEvent(CancellationToken cancellationToken, [FromBody] CalendarEventDto dto)
+    //{
+    //    using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var calendarEvent = _mapper.Map<CalendarEvent>(dto);
-        var calendar = ctx.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
-        calendar.CalendarEvents.Add(calendarEvent);
+    //    var calendarEvent = _mapper.Map<CalendarEvent>(dto);
+    //    var calendar = ctx.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
+    //    calendar.CalendarEvents.Add(calendarEvent);
 
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
-    }
+    //    return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
+    //}
 
     [HttpPut("event")]
     public async Task<IActionResult> UpdateEvent(CancellationToken cancellationToken, [FromBody] CalendarEventDto dto)
