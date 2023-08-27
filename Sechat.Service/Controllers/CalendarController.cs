@@ -35,7 +35,11 @@ public class CalendarController : SechatControllerBase
     public async Task<IActionResult> GetCalendar(CancellationToken cancellationToken)
     {
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-        var calendar = ctx.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
+        var calendar = ctx.Calendars
+            .Where(c => c.UserProfileId.Equals(UserId))
+            .Include(c => c.CalendarEvents)
+            .ThenInclude(ce => ce.Reminders)
+            .FirstOrDefault();
         if (calendar is null) return BadRequest();
 
         var dto = _mapper.Map<CalendarDto>(calendar);
