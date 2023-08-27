@@ -132,13 +132,6 @@ public class CalendarControllerForms
 
     public class CalendarEventDtoValidation : AbstractValidator<CalendarEventDto>
     {
-        public CalendarEventDtoValidation()
-        {
-            _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
-            _ = RuleFor(x => x.Description).NotEmpty().MaximumLength(AppConstants.StringLengths.TextMax);
-            _ = RuleFor(x => x.IsAllDay).NotNull();
-            _ = RuleFor(x => x.Start).NotNull();
-            _ = RuleFor(x => x.End).NotNull();
-        }
+        public CalendarEventDtoValidation() => _ = RuleFor(x => x.Data).NotNull().NotEmpty();
     }
 }
