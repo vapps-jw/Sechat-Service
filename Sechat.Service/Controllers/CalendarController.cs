@@ -7,9 +7,11 @@ using Sechat.Data;
 using Sechat.Data.Models.CalendarModels;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos.CalendarDtos;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static Sechat.Service.Controllers.CalendarControllerForms;
 
 namespace Sechat.Service.Controllers;
 
@@ -61,35 +63,53 @@ public class CalendarController : SechatControllerBase
 
     // Events
 
-    //[HttpPost("event")]
-    //public async Task<IActionResult> CreateEvent(CancellationToken cancellationToken, [FromBody] CalendarEventDto dto)
-    //{
-    //    using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-
-    //    var calendarEvent = _mapper.Map<CalendarEvent>(dto);
-    //    var calendar = ctx.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
-    //    calendar.CalendarEvents.Add(calendarEvent);
-
-    //    return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
-    //}
-
-    [HttpPut("event")]
-    public async Task<IActionResult> UpdateEvent(CancellationToken cancellationToken, [FromBody] CalendarEventDto dto)
+    [HttpGet("event/{eventId}", Name = nameof(GetEvent))]
+    public async Task<IActionResult> GetEvent(CancellationToken cancellationToken, string eventId)
     {
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var ce = _mapper.Map<CalendarEvent>(dto);
-        _ = ctx.CalendarEvents.Update(ce);
+        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId));
+        if (ce is null) return BadRequest();
+        _ = ctx.CalendarEvents.Remove(ce);
 
         return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
     }
+
+    [HttpPost("event")]
+    public async Task<IActionResult> CreateEvent(CancellationToken cancellationToken, [FromBody] NewEventForm form)
+    {
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var calendar = ctx.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
+        var newEvent = new CalendarEvent()
+        {
+            Id = Guid.NewGuid().ToString(),
+            Data = form.Data,
+        };
+
+        calendar.CalendarEvents.Add(newEvent);
+
+        var response = CreatedAtRoute(nameof(GetEvent), new { eventId = newEvent.Id }, _mapper.Map<CalendarEventDto>(newEvent));
+        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? response : BadRequest();
+    }
+
+    //[HttpPut("event/{eventId}")]
+    //public async Task<IActionResult> UpdateEvent(CancellationToken cancellationToken, [FromBody] CalendarEventDto dto, string eventId)
+    //{
+    //    using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+    //    var existingEvent = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(dto.Id) && e.Calendar.UserProfileId.Equals(UserId));
+    //    if (existingEvent is null) return BadRequest();
+    //    existingEvent.Data = dto.Data;
+    //    return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
+    //}
 
     [HttpDelete("event/{eventId}")]
     public async Task<IActionResult> DeleteEventAsync(CancellationToken cancellationToken, string eventId)
     {
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId));
+        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId));
         if (ce is null) return BadRequest();
         _ = ctx.CalendarEvents.Remove(ce);
 
@@ -107,31 +127,12 @@ public class CalendarController : SechatControllerBase
 
 public class CalendarControllerForms
 {
-    public class CreateCalendarForm
+    public class NewEventForm
     {
-        public string Name { get; set; }
+        public string Data { get; set; }
     }
-    public class CreateCalendarFormValidation : AbstractValidator<CreateCalendarForm>
+    public class NewEventFormValidation : AbstractValidator<NewEventForm>
     {
-        public CreateCalendarFormValidation() => _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
-    }
-
-    public class UpdateCalendarForm
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-    }
-    public class UpdateCalendarFormValidation : AbstractValidator<UpdateCalendarForm>
-    {
-        public UpdateCalendarFormValidation()
-        {
-            _ = RuleFor(x => x.Id).NotEmpty();
-            _ = RuleFor(x => x.Name).NotEmpty().MaximumLength(AppConstants.StringLengths.NameMax);
-        }
-    }
-
-    public class CalendarEventDtoValidation : AbstractValidator<CalendarEventDto>
-    {
-        public CalendarEventDtoValidation() => _ = RuleFor(x => x.Data).NotNull().NotEmpty();
+        public NewEventFormValidation() => _ = RuleFor(x => x.Data).NotNull().NotEmpty().MaximumLength(AppConstants.StringLengths.DataStoreMax);
     }
 }

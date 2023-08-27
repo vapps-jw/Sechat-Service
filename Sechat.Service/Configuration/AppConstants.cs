@@ -54,6 +54,7 @@ public class AppConstants
     {
         public const int NameMax = 50;
         public const int TextMax = 3000;
+        public const int DataStoreMax = 5000;
         public const int PasswordMax = 20;
         public const int PasswordMin = 8;
         public const int UserNameMax = 10;
