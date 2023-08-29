@@ -21,14 +21,26 @@ public class DataServicesInstaller : IServiceInstaller
         //_ = webApplicationBuilder.Services.AddMarten(opts =>
         //{
         //    opts.Connection(webApplicationBuilder.Configuration.GetConnectionString("DocumentStore"));
-        //    opts.DatabaseSchemaName = "document-db";
 
         //    opts.AutoCreateSchemaObjects = webApplicationBuilder.Environment.IsProduction() ? AutoCreate.CreateOrUpdate : AutoCreate.All;
         //    opts.UseDefaultSerialization(
         //        serializerType: SerializerType.SystemTextJson,
-        //        enumStorage: EnumStorage.AsString,
         //        casing: Casing.CamelCase
-        //        );
+        //    );
+
+        //    opts.CreateDatabasesForTenants(c =>
+        //    {
+        //        _ = c.MaintenanceDatabase(webApplicationBuilder.Configuration.GetConnectionString("DocumentMaintenance"));
+        //        _ = c.ForTenant()
+        //            .CheckAgainstPgDatabase()
+        //            .WithOwner("postgres")
+        //            .WithEncoding("UTF-8")
+        //            .ConnectionLimit(-1)
+        //            .OnDatabaseCreated(_ =>
+        //            {
+
+        //            });
+        //    });
         //    _ = opts.Schema.For<CalendarDocument>();
         //})
         //.ApplyAllDatabaseChangesOnStartup()
