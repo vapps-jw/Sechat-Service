@@ -16,6 +16,24 @@ public class DataServicesInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder)
     {
+
+        // todo: check usecases
+        //_ = webApplicationBuilder.Services.AddMarten(opts =>
+        //{
+        //    opts.Connection(webApplicationBuilder.Configuration.GetConnectionString("DocumentStore"));
+        //    opts.DatabaseSchemaName = "document-db";
+
+        //    opts.AutoCreateSchemaObjects = webApplicationBuilder.Environment.IsProduction() ? AutoCreate.CreateOrUpdate : AutoCreate.All;
+        //    opts.UseDefaultSerialization(
+        //        serializerType: SerializerType.SystemTextJson,
+        //        enumStorage: EnumStorage.AsString,
+        //        casing: Casing.CamelCase
+        //        );
+        //    _ = opts.Schema.For<CalendarDocument>();
+        //})
+        //.ApplyAllDatabaseChangesOnStartup()
+        //.AssertDatabaseMatchesConfigurationOnStartup();
+
         _ = webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test)
             ? webApplicationBuilder.Services.AddDbContextFactory<SechatContext>(options =>
                  options.UseInMemoryDatabase(Guid.NewGuid().ToString()))
@@ -45,5 +63,6 @@ public class DataServicesInstaller : IServiceInstaller
             typeof(DefaultProfile),
             typeof(ChatModelsProfile),
             typeof(CalendarModelsProfile));
+
     }
 }

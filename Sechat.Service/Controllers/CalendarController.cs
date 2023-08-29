@@ -104,7 +104,7 @@ public class CalendarController : SechatControllerBase
     //    return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
     //}
 
-    [HttpDelete("event/{eventId}")]
+    [HttpDelete("event")]
     public async Task<IActionResult> DeleteEventAsync(CancellationToken cancellationToken, string eventId)
     {
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
