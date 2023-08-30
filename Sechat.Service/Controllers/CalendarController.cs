@@ -39,6 +39,7 @@ public class CalendarController : SechatControllerBase
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
         var calendar = ctx.Calendars
             .Where(c => c.UserProfileId.Equals(UserId))
+            .AsSplitQuery()
             .Include(c => c.CalendarEvents)
             .ThenInclude(ce => ce.Reminders)
             .FirstOrDefault();
@@ -93,16 +94,16 @@ public class CalendarController : SechatControllerBase
         return await ctx.SaveChangesAsync(cancellationToken) > 0 ? response : BadRequest();
     }
 
-    //[HttpPut("event/{eventId}")]
-    //public async Task<IActionResult> UpdateEvent(CancellationToken cancellationToken, [FromBody] CalendarEventDto dto, string eventId)
-    //{
-    //    using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+    [HttpPut("event")]
+    public async Task<IActionResult> UpdateEvent(CancellationToken cancellationToken, [FromBody] CalendarEventDto dto)
+    {
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
-    //    var existingEvent = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(dto.Id) && e.Calendar.UserProfileId.Equals(UserId));
-    //    if (existingEvent is null) return BadRequest();
-    //    existingEvent.Data = dto.Data;
-    //    return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
-    //}
+        var existingEvent = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(dto.Id) && e.Calendar.UserProfileId.Equals(UserId));
+        if (existingEvent is null) return BadRequest();
+        existingEvent.Data = dto.Data;
+        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
+    }
 
     [HttpDelete("event")]
     public async Task<IActionResult> DeleteEventAsync(CancellationToken cancellationToken, string eventId)
