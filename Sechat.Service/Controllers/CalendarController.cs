@@ -119,7 +119,7 @@ public class CalendarController : SechatControllerBase
     // Reminders
 
     [HttpPost("event/{eventId}/reminder")]
-    public IActionResult AddReminder([FromBody] ReminderDto reminder, string eventId) => Ok();
+    public IActionResult AddReminder([FromBody] NewReminderForm reminder, string eventId) => Ok();
 
     [HttpDelete("event/{eventId}/{reminderId}")]
     public IActionResult DeleteReminder(string eventId, long reminderId) => Ok();
@@ -134,5 +134,14 @@ public class CalendarControllerForms
     public class NewEventFormValidation : AbstractValidator<NewEventForm>
     {
         public NewEventFormValidation() => _ = RuleFor(x => x.Data).NotNull().NotEmpty().MaximumLength(AppConstants.StringLengths.DataStoreMax);
+    }
+
+    public class NewReminderForm
+    {
+        public DateTime Remind { get; set; }
+    }
+    public class NewReminderFormValidation : AbstractValidator<NewReminderForm>
+    {
+        public NewReminderFormValidation() => _ = RuleFor(x => x.Remind).NotNull().NotEmpty();
     }
 }
