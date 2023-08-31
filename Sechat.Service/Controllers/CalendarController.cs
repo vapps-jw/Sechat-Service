@@ -56,7 +56,7 @@ public class CalendarController : SechatControllerBase
         var calendar = ctx.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
         if (calendar is null) return BadRequest();
 
-        calendar.CalendarEvents.Clear();
+        ctx.CalendarEvents.RemoveRange(ctx.CalendarEvents.Where(ce => ce.CalendarId.Equals(calendar.Id)));
         _ = await ctx.SaveChangesAsync(cancellationToken);
 
         return Ok();
