@@ -12,5 +12,6 @@ public class CalendarModelsProfile : Profile
         _ = CreateMap<Calendar, CalendarDto>();
         _ = CreateMap<CalendarEvent, CalendarEventDto>();
         _ = CreateMap<CalendarEventDto, CalendarEvent>();
+        _ = CreateMap<Reminder, ReminderDto>();
     }
 }

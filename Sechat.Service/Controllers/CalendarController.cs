@@ -119,15 +119,15 @@ public class CalendarController : SechatControllerBase
 
     // Reminders
 
-    [HttpPost("event/{eventId}/reminder")]
-    public async Task<IActionResult> AddReminder(CancellationToken cancellationToken, [FromBody] NewReminderForm reminder, string eventId)
+    [HttpPost("event/reminder")]
+    public async Task<IActionResult> CreateReminder(CancellationToken cancellationToken, [FromBody] NewReminderForm reminder)
     {
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId));
+        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(reminder.EventId) && e.Calendar.UserProfileId.Equals(UserId));
         if (ce is null) return BadRequest();
 
-        var newReminder = new Reminder() { Remind = reminder.Remind };
+        var newReminder = new Reminder() { Remind = reminder.Remind.ToUniversalTime() };
         ce.Reminders.Add(newReminder);
 
         return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(_mapper.Map<ReminderDto>(newReminder)) : BadRequest();
@@ -165,10 +165,15 @@ public class CalendarControllerForms
 
     public class NewReminderForm
     {
+        public string EventId { get; set; }
         public DateTime Remind { get; set; }
     }
     public class NewReminderFormValidation : AbstractValidator<NewReminderForm>
     {
-        public NewReminderFormValidation() => _ = RuleFor(x => x.Remind).NotNull().NotEmpty();
+        public NewReminderFormValidation()
+        {
+            _ = RuleFor(x => x.Remind).NotNull().NotEmpty();
+            _ = RuleFor(x => x.EventId).NotNull().NotEmpty();
+        }
     }
 }

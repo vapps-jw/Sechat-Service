@@ -89,6 +89,8 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
             .OnDelete(DeleteBehavior.Cascade);
         _ = modelBuilder.Entity<Reminder>()
             .HasIndex(c => c.Remind);
+        _ = modelBuilder.Entity<Reminder>()
+            .HasIndex(c => c.Reminded);
 
         _ = modelBuilder.Entity<Contact>()
             .HasIndex(c => c.InviterId);

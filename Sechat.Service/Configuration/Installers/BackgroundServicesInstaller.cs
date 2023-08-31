@@ -10,6 +10,7 @@ public class BackgroundServicesInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder)
     {
+        _ = webApplicationBuilder.Services.AddHostedService<ReminderNotifications>();
         _ = webApplicationBuilder.Services.AddHostedService<AccountsCleaner>();
         _ = webApplicationBuilder.Services.AddHostedService<MessageCleaner>();
         _ = webApplicationBuilder.Services.AddHostedService<PushNotificationDispatcher>();

@@ -34,7 +34,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("UserProfilesId");
 
-                    b.ToTable("FeatureUserProfile");
+                    b.ToTable("FeatureUserProfile", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
@@ -53,7 +53,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DataProtectionKeys");
+                    b.ToTable("DataProtectionKeys", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -264,7 +264,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("RoomsId");
 
-                    b.ToTable("RoomUserProfile");
+                    b.ToTable("RoomUserProfile", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.CalendarModels.Calendar", b =>
@@ -283,7 +283,7 @@ namespace Sechat.Data.Migrations
                     b.HasIndex("UserProfileId")
                         .IsUnique();
 
-                    b.ToTable("Calendars");
+                    b.ToTable("Calendars", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.CalendarModels.CalendarEvent", b =>
@@ -304,7 +304,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("CalendarId");
 
-                    b.ToTable("CalendarEvents");
+                    b.ToTable("CalendarEvents", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.CalendarModels.Reminder", b =>
@@ -336,7 +336,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("Remind");
 
-                    b.ToTable("Reminders");
+                    b.ToTable("Reminders", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.ChatModels.DirectMessage", b =>
@@ -371,7 +371,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("Created");
 
-                    b.ToTable("DirectMessages");
+                    b.ToTable("DirectMessages", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.ChatModels.Message", b =>
@@ -403,7 +403,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("RoomId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.ChatModels.MessageViewer", b =>
@@ -427,7 +427,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("MessageViewers");
+                    b.ToTable("MessageViewers", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.ChatModels.Room", b =>
@@ -452,7 +452,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Rooms");
+                    b.ToTable("Rooms", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.UserDetails.Blacklisted", b =>
@@ -476,7 +476,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("UserProfileId");
 
-                    b.ToTable("Blacklist");
+                    b.ToTable("Blacklist", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.UserDetails.Contact", b =>
@@ -524,7 +524,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("InviterId");
 
-                    b.ToTable("Contacts");
+                    b.ToTable("Contacts", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.UserDetails.Feature", b =>
@@ -548,7 +548,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("Name");
 
-                    b.ToTable("Features");
+                    b.ToTable("Features", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.UserDetails.Key", b =>
@@ -575,7 +575,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("UserProfileId");
 
-                    b.ToTable("Keys");
+                    b.ToTable("Keys", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.UserDetails.NotificationSubscription", b =>
@@ -605,7 +605,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("UserProfileId");
 
-                    b.ToTable("NotificationSubscriptions");
+                    b.ToTable("NotificationSubscriptions", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.UserDetails.UserProfile", b =>
@@ -631,7 +631,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserProfiles");
+                    b.ToTable("UserProfiles", (string)null);
                 });
 
             modelBuilder.Entity("Sechat.Data.Models.VideoCalls.CallLog", b =>
@@ -669,7 +669,7 @@ namespace Sechat.Data.Migrations
 
                     b.HasIndex("UserProfileId");
 
-                    b.ToTable("CallLogs");
+                    b.ToTable("CallLogs", (string)null);
                 });
 
             modelBuilder.Entity("FeatureUserProfile", b =>
