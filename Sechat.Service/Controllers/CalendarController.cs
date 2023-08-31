@@ -120,10 +120,36 @@ public class CalendarController : SechatControllerBase
     // Reminders
 
     [HttpPost("event/{eventId}/reminder")]
-    public IActionResult AddReminder([FromBody] NewReminderForm reminder, string eventId) => Ok();
+    public async Task<IActionResult> AddReminder(CancellationToken cancellationToken, [FromBody] NewReminderForm reminder, string eventId)
+    {
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId));
+        if (ce is null) return BadRequest();
+
+        var newReminder = new Reminder() { Remind = reminder.Remind };
+        ce.Reminders.Add(newReminder);
+
+        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(_mapper.Map<ReminderDto>(newReminder)) : BadRequest();
+    }
 
     [HttpDelete("event/{eventId}/{reminderId}")]
-    public IActionResult DeleteReminder(string eventId, long reminderId) => Ok();
+    public async Task<IActionResult> DeleteReminder(CancellationToken cancellationToken, string eventId, long reminderId)
+    {
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var ce = ctx.CalendarEvents
+            .Where(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId))
+            .Include(e => e.Reminders)
+            .FirstOrDefault();
+        if (ce is null) return BadRequest();
+
+        var reminderToDelete = ce.Reminders.FirstOrDefault(r => r.Id == reminderId);
+        if (reminderToDelete is null) return BadRequest();
+
+        _ = ctx.Reminders.Remove(reminderToDelete);
+        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
+    }
 }
 
 public class CalendarControllerForms
