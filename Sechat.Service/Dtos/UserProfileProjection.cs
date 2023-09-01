@@ -4,10 +4,11 @@ namespace Sechat.Service.Dtos;
 
 public class UserProfileProjection
 {
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public bool EmailConfirmed { get; set; } = false;
+    public string UserId { get; set; }
+    public string UserName { get; set; }
+    public string Email { get; set; }
+    public bool EmailConfirmed { get; set; }
+    public bool InvitationsAllowed { get; set; }
 
     public DateTime LastActivity { get; set; } = DateTime.UtcNow;
     public DateTime Created { get; set; } = DateTime.UtcNow;
