@@ -13,6 +13,7 @@ public record UserProfile : BaseTrackedModel<string>
 
     public bool PrivacyPolicyAccepted { get; set; }
     public bool ToSAccepted { get; set; }
+    public bool InvitationsAllowed { get; set; }
 
     public List<Feature> Features { get; set; } = new();
     public List<Room> Rooms { get; set; } = new();

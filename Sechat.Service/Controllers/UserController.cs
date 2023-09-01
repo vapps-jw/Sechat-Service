@@ -51,12 +51,18 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPost("request-contact")]
-    public async Task<IActionResult> ContactRequest([FromBody] ConnectionRequestDto invitationDto)
+    public async Task<IActionResult> Invite([FromBody] ConnectionRequestDto invitationDto)
     {
-        if (UserName.Equals(invitationDto.Username)) return BadRequest("You cant invite yourself :)");
+        if (UserName.Equals(invitationDto.Username)) return BadRequest("You cant invite yourself");
 
         var invitedUser = await _userManager.FindByNameAsync(invitationDto.Username);
-        if (invitedUser is null) return BadRequest("No one was invited");
+        if (invitedUser is null) return BadRequest("Something went wrong");
+
+        var invitedProfile = _userRepository.GetUserProfile(invitedUser.Id);
+        if (!invitedProfile.InvitationsAllowed)
+        {
+            return BadRequest("User dont want to be invited");
+        }
 
         var contactExists = _userRepository.ContactExists(UserId, invitedUser.Id);
         if (contactExists) return BadRequest("Contact exists");

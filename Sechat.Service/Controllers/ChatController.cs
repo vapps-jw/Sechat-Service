@@ -158,6 +158,8 @@ public class ChatController : SechatControllerBase
         return Ok(dtos);
     }
 
+    // Updates
+
     // Rooms
 
     [HttpPost("send-message")]
