@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -144,6 +145,16 @@ public class UserController : SechatControllerBase
         return BadRequest("Can`t do that");
     }
 
+    [HttpPatch("allow-invitations")]
+    public async Task<IActionResult> AllowInvitations([FromBody] UserControllerForms.FlagForm flagForm)
+    {
+        var profile = _userRepository.GetUserProfile(UserId);
+        if (profile is null) return BadRequest();
+        profile.InvitationsAllowed = flagForm.Flag;
+
+        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+    }
+
     [HttpPatch("approve-contact")]
     public async Task<IActionResult> ApproveContact(
         [FromServices] Channel<DefaultNotificationDto> channel,
@@ -170,4 +181,17 @@ public class UserController : SechatControllerBase
     }
 
     private async Task<string> GetUserId(string userName) => (await _userManager.FindByNameAsync(userName))?.Id;
+
+}
+
+public class UserControllerForms
+{
+    public class FlagForm
+    {
+        public bool Flag { get; set; }
+    }
+    public class FlagFormValidation : AbstractValidator<FlagForm>
+    {
+        public FlagFormValidation() => _ = RuleFor(x => x.Flag).NotNull().NotEmpty();
+    }
 }
