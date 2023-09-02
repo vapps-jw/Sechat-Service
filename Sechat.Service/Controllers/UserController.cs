@@ -149,10 +149,10 @@ public class UserController : SechatControllerBase
     public async Task<IActionResult> AllowInvitations([FromBody] UserControllerForms.FlagForm flagForm)
     {
         var profile = _userRepository.GetUserProfile(UserId);
-        if (profile is null) return BadRequest();
+        if (profile is null) return BadRequest("Profile does not exit");
         profile.InvitationsAllowed = flagForm.Flag;
 
-        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest();
+        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest("Something went wrong");
     }
 
     [HttpPatch("approve-contact")]
