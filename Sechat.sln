@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Domain", "Sechat.Dom
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.TestConsole", "Sechat.TestConsole\Sechat.TestConsole.csproj", "{AB93C6AE-D8DB-4A4C-B501-762AA036558E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sechat.App", "Sechat.App\Sechat.App.csproj", "{3468838C-DDB4-45D2-946B-4C3B7C57624D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,15 @@ Global
 		{AB93C6AE-D8DB-4A4C-B501-762AA036558E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AB93C6AE-D8DB-4A4C-B501-762AA036558E}.Test|Any CPU.ActiveCfg = Release|Any CPU
 		{AB93C6AE-D8DB-4A4C-B501-762AA036558E}.Test|Any CPU.Build.0 = Release|Any CPU
+		{3468838C-DDB4-45D2-946B-4C3B7C57624D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3468838C-DDB4-45D2-946B-4C3B7C57624D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3468838C-DDB4-45D2-946B-4C3B7C57624D}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{3468838C-DDB4-45D2-946B-4C3B7C57624D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3468838C-DDB4-45D2-946B-4C3B7C57624D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3468838C-DDB4-45D2-946B-4C3B7C57624D}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{3468838C-DDB4-45D2-946B-4C3B7C57624D}.Test|Any CPU.ActiveCfg = Debug|Any CPU
+		{3468838C-DDB4-45D2-946B-4C3B7C57624D}.Test|Any CPU.Build.0 = Debug|Any CPU
+		{3468838C-DDB4-45D2-946B-4C3B7C57624D}.Test|Any CPU.Deploy.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
