@@ -17,7 +17,6 @@ public class ReminderNotifications : BackgroundService
     private readonly Channel<DefaultNotificationDto> _channel;
     private readonly ILogger<ReminderNotifications> _logger;
     private readonly IDbContextFactory<SechatContext> _contextFactory;
-    private readonly int _checkInterval = 5;
 
     public ReminderNotifications(
         Channel<DefaultNotificationDto> channel,
@@ -33,7 +32,8 @@ public class ReminderNotifications : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromSeconds(_checkInterval), CancellationToken.None);
+            var pt = new PeriodicTimer(TimeSpan.FromSeconds(5));
+            _ = await pt.WaitForNextTickAsync();
             try
             {
                 using var ctx = await _contextFactory.CreateDbContextAsync(stoppingToken);

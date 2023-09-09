@@ -26,12 +26,13 @@ public class AccountsCleaner : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromDays(_cleanInterval), CancellationToken.None);
+            var pt = new PeriodicTimer(TimeSpan.FromDays(1));
+            _ = await pt.WaitForNextTickAsync();
             try
             {
                 using var ctx = await _contextFactory.CreateDbContextAsync(stoppingToken);
 
-                var profilesToDelete = ctx.UserProfiles.Where(p => p.LastActivity <= DateTime.UtcNow.AddMonths(-24)).ToList();
+                var profilesToDelete = ctx.UserProfiles.Where(p => p.LastActivity <= DateTime.UtcNow.AddMonths(-12)).ToList();
                 if (!profilesToDelete.Any()) continue;
 
                 var ids = profilesToDelete.Select(p => p.Id).ToList();
