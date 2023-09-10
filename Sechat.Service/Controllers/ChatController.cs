@@ -127,7 +127,33 @@ public class ChatController : SechatControllerBase
     {
         var contacts = await _userRepository.GetContactsWithRecentMessages(UserId, _initialMessagesPull);
         contacts.ForEach(c => c.DirectMessages = c.DirectMessages.OrderBy(m => m.Id).ToList());
+
+        var ids = contacts
+            .Select(c => new { id = c.InviterId, name = c.InviterName })
+            .Concat(contacts.Select(c => new { id = c.InvitedId, name = c.InvitedName }))
+            .Distinct()
+            .Where(i => !i.id.Equals(UserId))
+            .ToList();
+
+        var pictures = _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList());
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
+
+        foreach (var dto in contactDtos)
+        {
+            if (dto.InviterName.Equals(UserName))
+            {
+                var imageId = ids.FirstOrDefault(i => i.name.Equals(dto.InvitedName));
+                dto.ProfileImage = pictures[imageId.id];
+                continue;
+            }
+
+            if (dto.InvitedName.Equals(UserName))
+            {
+                var imageId = ids.FirstOrDefault(i => i.name.Equals(dto.InviterName));
+                dto.ProfileImage = pictures[imageId.id];
+                continue;
+            }
+        }
 
         var connectedContacts = new List<long>();
         if (_signalRConnectionsMonitor.ConnectedUsers is not null)
@@ -329,8 +355,8 @@ public class ChatController : SechatControllerBase
 
     [HttpPost("send-direct-message")]
     public async Task<IActionResult> SendDirectMessage(
-    [FromServices] Channel<DefaultNotificationDto> channel,
-    [FromBody] IncomingDirectMessage incomingMessageDto)
+        [FromServices] Channel<DefaultNotificationDto> channel,
+        [FromBody] IncomingDirectMessage incomingMessageDto)
     {
         var recipient = await _userManager.FindByNameAsync(incomingMessageDto.Recipient);
         var contact = _userRepository.GetContact(UserId, recipient.Id);

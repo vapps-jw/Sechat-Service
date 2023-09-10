@@ -86,10 +86,10 @@ public class UserRepository : RepositoryBase<SechatContext>
     //        .ToListAsync();
 
     public Task<List<Contact>> GetContactsWithRecentMessages(string userId, int initalTake) =>
-    _context.Contacts
-        .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
-        .Include(c => c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake))
-        .ToListAsync();
+        _context.Contacts
+            .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
+            .Include(c => c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake))
+            .ToListAsync();
 
     public Task<Contact> GetContact(long contactId) =>
         _context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
@@ -164,6 +164,16 @@ public class UserRepository : RepositoryBase<SechatContext>
     }
 
     // Profile
+
+    public Dictionary<string, string> GetProfilePictures(List<string> userIds) =>
+        _context.UserProfiles
+            .Where(p => userIds.Contains(p.Id))
+            .ToDictionary(p => p.Id, p => p.ProfilePicture);
+
+    public string GetProfilePicture(string userId) =>
+        _context.UserProfiles
+            .FirstOrDefault(p => p.Id.Equals(userId))
+            .ProfilePicture;
 
     public void UpdateUserActivity(string userId)
     {

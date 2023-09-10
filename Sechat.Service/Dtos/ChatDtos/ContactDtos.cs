@@ -11,6 +11,7 @@ public class ContactDto
     public string ContactState { get; set; } = AppConstants.ContactState.Unknown;
     public string InviterName { get; set; } = string.Empty;
     public string InvitedName { get; set; } = string.Empty;
+    public string ProfileImage { get; set; } = string.Empty;
     public bool Blocked { get; set; }
     public string BlockedByName { get; set; } = string.Empty;
     public bool Verified { get; set; }

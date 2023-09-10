@@ -85,8 +85,15 @@ public class UserController : SechatControllerBase
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            await _chatHubContext.Clients.Group(invitedUser.Id).ContactRequestReceived(_mapper.Map<ContactDto>(newContact));
-            await _chatHubContext.Clients.Group(UserId).ContactRequestReceived(_mapper.Map<ContactDto>(newContact));
+            var contactDto = _mapper.Map<ContactDto>(newContact);
+            contactDto.ProfileImage = _userRepository.GetProfilePicture(invitedUser.Id);
+
+            contactDto.ProfileImage = _userRepository.GetProfilePicture(UserId);
+            await _chatHubContext.Clients.Group(invitedUser.Id).ContactRequestReceived(contactDto);
+
+            contactDto.ProfileImage = _userRepository.GetProfilePicture(invitedUser.Id);
+            await _chatHubContext.Clients.Group(UserId).ContactRequestReceived(contactDto);
+
             await _pushNotificationService.IncomingContactRequestNotification(invitedUser.Id, UserName);
             return Ok("Invitation sent");
         }
