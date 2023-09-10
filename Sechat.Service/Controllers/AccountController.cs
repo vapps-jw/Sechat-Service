@@ -195,11 +195,11 @@ public class AccountController : SechatControllerBase
         var currentUser = await _userManager.FindByEmailAsync(passwordResetForm.Email);
         if (currentUser is null)
         {
-            return BadRequest("Something went wrong");
+            return BadRequest(AppConstants.ApiResponseMessages.DefaultFail);
         }
         var confirmResult = await _userManager.ResetPasswordAsync(currentUser, passwordResetForm.Token, passwordResetForm.NewPassword);
 
-        return !confirmResult.Succeeded ? BadRequest("Something went wrong") : Ok("Password has been changed");
+        return !confirmResult.Succeeded ? BadRequest(AppConstants.ApiResponseMessages.DefaultFail) : Ok("Password has been changed");
     }
 
     [HttpPost("update-email")]

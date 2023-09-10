@@ -14,6 +14,7 @@ public record UserProfile : BaseTrackedModel<string>
     public bool PrivacyPolicyAccepted { get; set; } = true;
     public bool ToSAccepted { get; set; }
     public bool InvitationsAllowed { get; set; } = true;
+    public string ProfilePicture { get; set; } = string.Empty;
 
     public List<Feature> Features { get; set; } = new();
     public List<Room> Rooms { get; set; } = new();

@@ -19,6 +19,12 @@ public class AppConstants
         public const string EventReminder = "Event Reminder";
         public const string VideoCall = "Video Call";
     }
+
+    public struct ApiResponseMessages
+    {
+        public const string DefaultFail = "Something went wrong";
+    }
+
     public struct CacheProfiles
     {
         public const string NoStore = nameof(NoStore);

@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Sechat.Data;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
@@ -11,9 +14,15 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Dtos.CryptoDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Processing;
 using System;
+using System.IO;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using static Sechat.Service.Controllers.UserControllerForms;
 
 namespace Sechat.Service.Controllers;
 
@@ -21,6 +30,7 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class UserController : SechatControllerBase
 {
+    private readonly IDbContextFactory<SechatContext> _contextFactory;
     private readonly CryptographyService _cryptographyService;
     private readonly PushNotificationService _pushNotificationService;
     private readonly IMapper _mapper;
@@ -29,6 +39,7 @@ public class UserController : SechatControllerBase
     private readonly UserRepository _userRepository;
 
     public UserController(
+        IDbContextFactory<SechatContext> contextFactory,
         CryptographyService cryptographyService,
         PushNotificationService pushNotificationService,
         IMapper mapper,
@@ -36,6 +47,7 @@ public class UserController : SechatControllerBase
         IHubContext<ChatHub, IChatHub> chatHubContext,
         UserRepository userRepository)
     {
+        _contextFactory = contextFactory;
         _cryptographyService = cryptographyService;
         _pushNotificationService = pushNotificationService;
         _mapper = mapper;
@@ -57,7 +69,7 @@ public class UserController : SechatControllerBase
         if (UserName.Equals(invitationDto.Username)) return BadRequest("You cant invite yourself");
 
         var invitedUser = await _userManager.FindByNameAsync(invitationDto.Username);
-        if (invitedUser is null) return BadRequest("Something went wrong");
+        if (invitedUser is null) return BadRequest(AppConstants.ApiResponseMessages.DefaultFail);
 
         var invitedProfile = _userRepository.GetUserProfile(invitedUser.Id);
         if (!invitedProfile.InvitationsAllowed)
@@ -152,7 +164,7 @@ public class UserController : SechatControllerBase
         if (profile is null) return BadRequest("Profile does not exit");
         profile.InvitationsAllowed = flagForm.Flag;
 
-        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest("Something went wrong");
+        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest(AppConstants.ApiResponseMessages.DefaultFail);
     }
 
     [HttpPatch("approve-contact")]
@@ -180,12 +192,43 @@ public class UserController : SechatControllerBase
         return BadRequest("Can`t do that");
     }
 
+    [HttpPatch("profile-picture")]
+    public async Task<IActionResult> PrepareProfilePicture(IFormFile image, CancellationToken cancellationToken)
+    {
+        if (image is null) return BadRequest("Image not detected");
+
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        var user = await ctx.UserProfiles.FirstOrDefaultAsync(x => x.Id.Equals(UserId), cancellationToken);
+
+        await using var stream = new MemoryStream();
+        using var imageProcessor = await Image.LoadAsync(image.OpenReadStream(), cancellationToken);
+
+        imageProcessor.Mutate(x => x.Resize(48, 48));
+        await imageProcessor.SaveAsync(stream, new PngEncoder(), cancellationToken);
+        var imageData = Convert.ToBase64String(stream.ToArray());
+
+        user.ProfilePicture = imageData;
+
+        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(new ProcessedImageResponse(imageData)) : BadRequest(AppConstants.ApiResponseMessages.DefaultFail);
+    }
+
     private async Task<string> GetUserId(string userName) => (await _userManager.FindByNameAsync(userName))?.Id;
 
 }
 
 public class UserControllerForms
 {
+    public record ProcessedImageResponse(string Data);
+
+    public class ProfileImageForm
+    {
+        public string Data { get; set; }
+    }
+    public class ProfileImageFormValidation : AbstractValidator<ProfileImageForm>
+    {
+        public ProfileImageFormValidation() => _ = RuleFor(x => x.Data).NotNull().NotEmpty();
+    }
+
     public class FlagForm
     {
         public bool Flag { get; set; }
