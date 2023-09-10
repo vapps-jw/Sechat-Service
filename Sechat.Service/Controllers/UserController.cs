@@ -145,7 +145,7 @@ public class UserController : SechatControllerBase
         return BadRequest("Can`t do that");
     }
 
-    [HttpPatch("allow-invitations")]
+    [HttpPatch("invitations-permission")]
     public async Task<IActionResult> AllowInvitations([FromBody] UserControllerForms.FlagForm flagForm)
     {
         var profile = _userRepository.GetUserProfile(UserId);
@@ -192,6 +192,6 @@ public class UserControllerForms
     }
     public class FlagFormValidation : AbstractValidator<FlagForm>
     {
-        public FlagFormValidation() => _ = RuleFor(x => x.Flag).NotNull().NotEmpty();
+        public FlagFormValidation() => _ = RuleFor(x => x.Flag).NotNull();
     }
 }
