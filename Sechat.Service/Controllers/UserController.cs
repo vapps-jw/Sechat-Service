@@ -210,7 +210,7 @@ public class UserController : SechatControllerBase
         await using var stream = new MemoryStream();
         using var imageProcessor = await Image.LoadAsync(image.OpenReadStream(), cancellationToken);
 
-        imageProcessor.Mutate(x => x.Resize(48, 48));
+        imageProcessor.Mutate(x => x.Resize(48, 48, KnownResamplers.Lanczos3));
         await imageProcessor.SaveAsync(stream, new PngEncoder(), cancellationToken);
         var imageData = Convert.ToBase64String(stream.ToArray());
 
