@@ -34,7 +34,7 @@ public class AuthServicesInstaller : IServiceInstaller
             .AddDefaultTokenProviders();
         }
 
-        if (webApplicationBuilder.Environment.IsDevelopment() || webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test))
+        if (webApplicationBuilder.Environment.IsDevelopment() || webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironment.Test))
         {
             _ = webApplicationBuilder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
@@ -45,8 +45,8 @@ public class AuthServicesInstaller : IServiceInstaller
                 options.Password.RequireUppercase = false;
 
                 options.Lockout.AllowedForNewUsers = true;
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+                options.Lockout.MaxFailedAccessAttempts = 50;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromSeconds(5);
             })
             .AddEntityFrameworkStores<SechatContext>()
             .AddDefaultTokenProviders();
@@ -63,5 +63,13 @@ public class AuthServicesInstaller : IServiceInstaller
         _ = webApplicationBuilder.Services
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        _ = webApplicationBuilder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy(AppConstants.AuthorizationPolicy.AdminPolicy, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireClaim(AppConstants.ClaimType.Role,
+                    AppConstants.Role.Admin));
+        });
     }
 }

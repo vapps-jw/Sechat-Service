@@ -14,7 +14,7 @@ public class PasswordResetFormValidation : AbstractValidator<PasswordResetForm>
 {
     public PasswordResetFormValidation()
     {
-        _ = RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(AppConstants.StringLengths.PasswordMin).MaximumLength(AppConstants.StringLengths.PasswordMax);
+        _ = RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(AppConstants.StringLength.PasswordMin).MaximumLength(AppConstants.StringLength.PasswordMax);
         _ = RuleFor(x => x.Email).NotEmpty().EmailAddress();
         _ = RuleFor(x => x.Token).NotEmpty();
     }

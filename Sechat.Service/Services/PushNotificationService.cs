@@ -52,7 +52,7 @@ public class PushNotificationService
             {
                 var payload = JsonSerializer.Serialize(new
                 {
-                    title = AppConstants.PushNotificationTitles.VideoCall,
+                    title = AppConstants.PushNotificationTitle.VideoCall,
                     options = new
                     {
                         body = $"Call from {callerName}"
@@ -88,7 +88,7 @@ public class PushNotificationService
             {
                 var payload = JsonSerializer.Serialize(new
                 {
-                    title = AppConstants.PushNotificationTitles.NewMessage,
+                    title = AppConstants.PushNotificationTitle.NewMessage,
                     options = new
                     {
                         body = roomName
@@ -124,7 +124,7 @@ public class PushNotificationService
             {
                 var payload = JsonSerializer.Serialize(new
                 {
-                    title = AppConstants.PushNotificationTitles.NewDirectMessage,
+                    title = AppConstants.PushNotificationTitle.NewDirectMessage,
                     options = new
                     {
                         body = senderName
@@ -160,7 +160,7 @@ public class PushNotificationService
             {
                 var payload = JsonSerializer.Serialize(new
                 {
-                    title = AppConstants.PushNotificationTitles.NewInvitation,
+                    title = AppConstants.PushNotificationTitle.NewInvitation,
                     options = new
                     {
                         body = $"Contact request from {inviterName}"
@@ -196,7 +196,7 @@ public class PushNotificationService
             {
                 var payload = JsonSerializer.Serialize(new
                 {
-                    title = AppConstants.PushNotificationTitles.InvitationApproved,
+                    title = AppConstants.PushNotificationTitle.InvitationApproved,
                     options = new
                     {
                         body = $"{approverName} accepted your invitation"
@@ -232,7 +232,7 @@ public class PushNotificationService
             {
                 var payload = JsonSerializer.Serialize(new
                 {
-                    title = AppConstants.PushNotificationTitles.EventReminder,
+                    title = AppConstants.PushNotificationTitle.EventReminder,
                     options = new
                     {
                         body = message

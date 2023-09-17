@@ -46,7 +46,7 @@ public class DataServicesInstaller : IServiceInstaller
         //.ApplyAllDatabaseChangesOnStartup()
         //.AssertDatabaseMatchesConfigurationOnStartup();
 
-        _ = webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test)
+        _ = webApplicationBuilder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironment.Test)
             ? webApplicationBuilder.Services.AddDbContextFactory<SechatContext>(options =>
                  options.UseInMemoryDatabase(Guid.NewGuid().ToString()))
             : webApplicationBuilder.Services.AddDbContextFactory<SechatContext>(options =>

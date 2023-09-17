@@ -69,7 +69,7 @@ public class UserController : SechatControllerBase
         if (UserName.Equals(invitationDto.Username)) return BadRequest("You cant invite yourself");
 
         var invitedUser = await _userManager.FindByNameAsync(invitationDto.Username);
-        if (invitedUser is null) return BadRequest(AppConstants.ApiResponseMessages.DefaultFail);
+        if (invitedUser is null) return BadRequest(AppConstants.ApiResponseMessage.DefaultFail);
 
         var invitedProfile = _userRepository.GetUserProfile(invitedUser.Id);
         if (!invitedProfile.InvitationsAllowed)
@@ -171,7 +171,7 @@ public class UserController : SechatControllerBase
         if (profile is null) return BadRequest("Profile does not exit");
         profile.InvitationsAllowed = flagForm.Flag;
 
-        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest(AppConstants.ApiResponseMessages.DefaultFail);
+        return await _userRepository.SaveChanges() > 0 ? Ok() : BadRequest(AppConstants.ApiResponseMessage.DefaultFail);
     }
 
     [HttpPatch("approve-contact")]
@@ -216,7 +216,7 @@ public class UserController : SechatControllerBase
 
         user.ProfilePicture = imageData;
 
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(new ProcessedImageResponse(imageData)) : BadRequest(AppConstants.ApiResponseMessages.DefaultFail);
+        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(new ProcessedImageResponse(imageData)) : BadRequest(AppConstants.ApiResponseMessage.DefaultFail);
     }
 
     private async Task<string> GetUserId(string userName) => (await _userManager.FindByNameAsync(userName))?.Id;

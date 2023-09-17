@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Sechat.Data;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
@@ -16,6 +18,7 @@ using Sechat.Service.Settings;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Controllers;
@@ -24,6 +27,7 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class AccountController : SechatControllerBase
 {
+    private readonly IDbContextFactory<SechatContext> _contextFactory;
     private readonly IOptionsMonitor<CorsSettings> _corsSettings;
     private readonly ILogger<AccountController> _logger;
     private readonly UserManager<IdentityUser> _userManager;
@@ -32,6 +36,7 @@ public class AccountController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public AccountController(
+        IDbContextFactory<SechatContext> contextFactory,
         IOptionsMonitor<CorsSettings> corsSettings,
         ILogger<AccountController> logger,
         UserManager<IdentityUser> userManager,
@@ -39,6 +44,7 @@ public class AccountController : SechatControllerBase
         UserRepository userRepository,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
+        _contextFactory = contextFactory;
         _corsSettings = corsSettings;
         _logger = logger;
         _userManager = userManager;
@@ -76,8 +82,15 @@ public class AccountController : SechatControllerBase
     [AllowAnonymous]
     [HttpPost("register")]
     [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
-    public async Task<IActionResult> SignUp([FromBody] UserCredentials userCredentials)
+    public async Task<IActionResult> SignUp([FromBody] UserCredentials userCredentials, CancellationToken cancellationToken)
     {
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        var result = ctx.GlobalSettings.FirstOrDefault(s => s.Id.Equals(AppGlobalSettings.SettingName.RegistrationStatus));
+        if (result.Value.Equals(AppGlobalSettings.RegistrationStatus.Forbidden))
+        {
+            return BadRequest("New User registration turned off temporarily");
+        }
+
         var user = new IdentityUser(userCredentials.Username)
         {
             LockoutEnabled = true
@@ -195,11 +208,11 @@ public class AccountController : SechatControllerBase
         var currentUser = await _userManager.FindByEmailAsync(passwordResetForm.Email);
         if (currentUser is null)
         {
-            return BadRequest(AppConstants.ApiResponseMessages.DefaultFail);
+            return BadRequest(AppConstants.ApiResponseMessage.DefaultFail);
         }
         var confirmResult = await _userManager.ResetPasswordAsync(currentUser, passwordResetForm.Token, passwordResetForm.NewPassword);
 
-        return !confirmResult.Succeeded ? BadRequest(AppConstants.ApiResponseMessages.DefaultFail) : Ok("Password has been changed");
+        return !confirmResult.Succeeded ? BadRequest(AppConstants.ApiResponseMessage.DefaultFail) : Ok("Password has been changed");
     }
 
     [HttpPost("update-email")]

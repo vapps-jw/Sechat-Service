@@ -13,7 +13,7 @@ using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (builder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test))
+if (builder.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironment.Test))
 {
     _ = builder.Configuration.AddUserSecrets<Program>();
 }
@@ -36,7 +36,7 @@ if (app.Environment.IsProduction())
     _ = app.UseHsts();
 }
 
-app.UseCors(AppConstants.CorsPolicies.WebClient);
+app.UseCors(AppConstants.CorsPolicy.WebClient);
 app.UseSecureHeadersMiddleware();
 app.UseSerilogRequestLogging();
 app.UseRouting();
@@ -51,11 +51,13 @@ app.UseAuthorization();
 app.MapDefaultControllerRoute();
 app.MapHub<ChatHub>("/chat-hub");
 
-DbManager.PrepareDatabase(app);
+DBSetup.PrepareDatabase(app);
+await UsersSetup.PrepareAdmins(app);
+await GlobalSettingsSetup.InitializeGlobalSettings(app);
 
-if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironments.Test))
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName.Equals(AppConstants.CustomEnvironment.Test))
 {
-    await DbManager.SeedData(app);
+    await DBSetup.SeedData(app);
 }
 
 Console.WriteLine("--> Running App...");

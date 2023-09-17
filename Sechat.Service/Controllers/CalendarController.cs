@@ -160,7 +160,7 @@ public class CalendarControllerForms
     }
     public class NewEventFormValidation : AbstractValidator<NewEventForm>
     {
-        public NewEventFormValidation() => _ = RuleFor(x => x.Data).NotNull().NotEmpty().MaximumLength(AppConstants.StringLengths.DataStoreMax);
+        public NewEventFormValidation() => _ = RuleFor(x => x.Data).NotNull().NotEmpty().MaximumLength(AppConstants.StringLength.DataStoreMax);
     }
 
     public class NewReminderForm

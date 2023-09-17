@@ -24,7 +24,7 @@ public record IncomingDirectMessage(string Text, string Recipient);
 
 public class IncomingDirectMessageValidation : AbstractValidator<IncomingDirectMessage>
 {
-    public IncomingDirectMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(AppConstants.StringLengths.Max);
+    public IncomingDirectMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(AppConstants.StringLength.Max);
 }
 // Rooms
 
@@ -36,7 +36,7 @@ public record IncomingMessage(string Text, string RoomId);
 
 public class IncomingMessageValidation : AbstractValidator<IncomingMessage>
 {
-    public IncomingMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(AppConstants.StringLengths.Max);
+    public IncomingMessageValidation() => _ = RuleFor(x => x.Text).NotEmpty().MaximumLength(AppConstants.StringLength.Max);
 }
 
 public record CreateRoomMessage(string RoomName);

@@ -6,11 +6,13 @@ public class AppConstants
     {
         public const string SecretSettings = @"secrets/appsettings.secrets.json";
     }
-    public struct CustomEnvironments
+
+    public struct CustomEnvironment
     {
         public const string Test = nameof(Test);
     }
-    public struct PushNotificationTitles
+
+    public struct PushNotificationTitle
     {
         public const string NewMessage = "New Message";
         public const string NewDirectMessage = "Direct Message";
@@ -20,21 +22,38 @@ public class AppConstants
         public const string VideoCall = "Video Call";
     }
 
-    public struct ApiResponseMessages
+    public struct ApiResponseMessage
     {
         public const string DefaultFail = "Something went wrong";
+    }
+
+    public struct AuthorizationPolicy
+    {
+        public const string AdminPolicy = nameof(AdminPolicy);
+    }
+
+    public struct ClaimType
+    {
+        public const string Role = nameof(Role);
+    }
+
+    public struct Role
+    {
+        public const string Admin = nameof(Admin);
     }
 
     public struct CacheProfiles
     {
         public const string NoStore = nameof(NoStore);
     }
+
     public struct ContactState
     {
         public const string Online = nameof(Online);
         public const string Offline = nameof(Offline);
         public const string Unknown = nameof(Unknown);
     }
+
     public enum PushNotificationType
     {
         IncomingVideoCall,
@@ -44,19 +63,23 @@ public class AppConstants
         ContactRequestApproved,
         EventReminder,
     }
+
     public struct ContentTypes
     {
         public const string Json = "application/json";
     }
-    public struct CorsPolicies
+
+    public struct CorsPolicy
     {
         public const string WebClient = nameof(WebClient);
     }
+
     public struct RateLimiting
     {
         public const string AnonymusRestricted = nameof(AnonymusRestricted);
     }
-    public struct StringLengths
+
+    public struct StringLength
     {
         public const int NameMax = 50;
         public const int TextMax = 3000;

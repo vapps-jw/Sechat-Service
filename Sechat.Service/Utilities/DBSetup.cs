@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Sechat.Service.Utilities;
 
-public static class DbManager
+public static class DBSetup
 {
     public static void PrepareDatabase(IApplicationBuilder app)
     {

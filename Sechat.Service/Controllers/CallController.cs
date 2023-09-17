@@ -151,6 +151,6 @@ public class CallControllerForms
 
     public class CaleeNameFormValidation : AbstractValidator<CaleeNameForm>
     {
-        public CaleeNameFormValidation() => _ = RuleFor(x => x.CaleeName).NotEmpty().MaximumLength(AppConstants.StringLengths.UserNameMax);
+        public CaleeNameFormValidation() => _ = RuleFor(x => x.CaleeName).NotEmpty().MaximumLength(AppConstants.StringLength.UserNameMax);
     }
 }
