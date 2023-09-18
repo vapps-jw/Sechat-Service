@@ -24,8 +24,8 @@ public class ImagesController : SechatControllerBase
         await using var stream = new MemoryStream();
         using var imageProcessor = await Image.LoadAsync(image.OpenReadStream(), cancellationToken);
 
-        var maxH = 400;
-        var maxW = 200;
+        var maxH = 500;
+        var maxW = 300;
 
         var width = imageProcessor.Width;
         var height = imageProcessor.Height;
@@ -48,7 +48,7 @@ public class ImagesController : SechatControllerBase
             })
         );
 
-        await imageProcessor.SaveAsync(stream, new JpegEncoder() { Quality = 60 }, cancellationToken);
+        await imageProcessor.SaveAsync(stream, new JpegEncoder() { Quality = 80 }, cancellationToken);
         var imageData = Convert.ToBase64String(stream.ToArray());
 
         return Ok(new ProcessedImageResponse($"data:image/jepg;base64,{imageData}"));
