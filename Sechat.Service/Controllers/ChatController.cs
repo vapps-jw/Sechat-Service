@@ -20,6 +20,7 @@ namespace Sechat.Service.Controllers;
 
 [Authorize]
 [Route("[controller]")]
+[ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class ChatController : SechatControllerBase
 {
     private const int _initialMessagesPull = 20;

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Sechat.Data.Models.UserDetails;
 using Sechat.Data.Repositories;
+using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
 using System.Threading.Tasks;
 
@@ -11,6 +12,7 @@ namespace Sechat.Service.Controllers;
 
 [Authorize]
 [Route("[controller]")]
+[ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class NotificationsController : SechatControllerBase
 {
     private readonly UserRepository _userRepository;

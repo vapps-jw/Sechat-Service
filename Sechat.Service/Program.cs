@@ -48,6 +48,9 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// TODO: look into refactoring to minimal apis
+//app.MapCalendarEndpoints();
+
 app.MapDefaultControllerRoute();
 app.MapHub<ChatHub>("/chat-hub");
 

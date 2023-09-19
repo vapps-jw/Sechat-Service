@@ -14,6 +14,7 @@ namespace Sechat.Service.Controllers;
 
 [Authorize(AppConstants.AuthorizationPolicy.AdminPolicy)]
 [Route("[controller]")]
+[ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class AdminController : SechatControllerBase
 {
     private readonly ILogger<AdminController> _logger;

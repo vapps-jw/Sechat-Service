@@ -28,6 +28,7 @@ namespace Sechat.Service.Controllers;
 
 [Authorize]
 [Route("[controller]")]
+[ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class UserController : SechatControllerBase
 {
     private readonly IDbContextFactory<SechatContext> _contextFactory;

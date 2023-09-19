@@ -7,6 +7,7 @@ using Sechat.Service.Configuration;
 namespace Sechat.Service.Controllers;
 
 [Route("[controller]")]
+[ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class StatusController : SechatControllerBase
 {
 

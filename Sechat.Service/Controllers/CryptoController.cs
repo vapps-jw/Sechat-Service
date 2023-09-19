@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sechat.Data.Repositories;
+using Sechat.Service.Configuration;
 using Sechat.Service.Services;
 using System.Threading.Tasks;
 
@@ -8,6 +9,7 @@ namespace Sechat.Service.Controllers;
 
 [Authorize]
 [Route("[controller]")]
+[ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class CryptoController : SechatControllerBase
 {
     private readonly CryptographyService _cryptographyService;

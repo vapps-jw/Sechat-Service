@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sechat.Service.Configuration;
 using Sechat.Service.Services.HttpClients;
 using System.Threading.Tasks;
 using static Sechat.Service.Controllers.LinkPreviewControllerForms;
@@ -9,6 +10,7 @@ namespace Sechat.Service.Controllers;
 
 [Authorize]
 [Route("[controller]")]
+[ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class LinkPreviewController : SechatControllerBase
 {
     [HttpPost()]

@@ -14,6 +14,7 @@ namespace Sechat.Service.Controllers;
 
 [Authorize]
 [Route("[controller]")]
+[ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class CallController : SechatControllerBase
 {
     private readonly UserManager<IdentityUser> _userManager;
