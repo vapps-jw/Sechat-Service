@@ -31,6 +31,7 @@ namespace Sechat.Service.Controllers;
 [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class UserController : SechatControllerBase
 {
+    private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
     private readonly IDbContextFactory<SechatContext> _contextFactory;
     private readonly CryptographyService _cryptographyService;
     private readonly PushNotificationService _pushNotificationService;
@@ -40,6 +41,7 @@ public class UserController : SechatControllerBase
     private readonly UserRepository _userRepository;
 
     public UserController(
+        SignalRConnectionsMonitor signalRConnectionsMonitor,
         IDbContextFactory<SechatContext> contextFactory,
         CryptographyService cryptographyService,
         PushNotificationService pushNotificationService,
@@ -48,6 +50,7 @@ public class UserController : SechatControllerBase
         IHubContext<ChatHub, IChatHub> chatHubContext,
         UserRepository userRepository)
     {
+        _signalRConnectionsMonitor = signalRConnectionsMonitor;
         _contextFactory = contextFactory;
         _cryptographyService = cryptographyService;
         _pushNotificationService = pushNotificationService;
@@ -157,7 +160,11 @@ public class UserController : SechatControllerBase
         if (await _userRepository.SaveChanges() > 0)
         {
             var contactDto = _mapper.Map<ContactDto>(contact);
+
+            contactDto.ContactState = _signalRConnectionsMonitor.IsUserOnline(contact.InvitedId);
             await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdated(contactDto);
+
+            contactDto.ContactState = _signalRConnectionsMonitor.IsUserOnline(contact.InviterId);
             await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdated(contactDto);
             return Ok();
         }

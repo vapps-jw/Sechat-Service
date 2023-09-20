@@ -12,7 +12,7 @@ public record UserProfile : BaseTrackedModel<string>
     public string UserName { get; set; } = string.Empty;
 
     public bool PrivacyPolicyAccepted { get; set; } = true;
-    public bool ToSAccepted { get; set; }
+    public bool ToSAccepted { get; set; } = true;
     public bool InvitationsAllowed { get; set; } = true;
     public string ProfilePicture { get; set; } = string.Empty;
 

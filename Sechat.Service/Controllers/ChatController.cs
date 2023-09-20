@@ -3,14 +3,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Options;
 using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
-using Sechat.Service.Settings;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Channels;
@@ -24,10 +22,8 @@ namespace Sechat.Service.Controllers;
 public class ChatController : SechatControllerBase
 {
     private const int _initialMessagesPull = 20;
-    private const int _updateMessagesPull = 10;
+    private const int _updateMessagesPull = 20;
 
-    private readonly IOptionsMonitor<CryptographySettings> _cryptoSettings;
-    private readonly CryptographyService _cryptographyService;
     private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
@@ -36,8 +32,6 @@ public class ChatController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public ChatController(
-        IOptionsMonitor<CryptographySettings> cryptoSettings,
-        CryptographyService cryptographyService,
         SignalRConnectionsMonitor signalRConnectionsMonitor,
         UserManager<IdentityUser> userManager,
         UserRepository userRepository,
@@ -45,8 +39,6 @@ public class ChatController : SechatControllerBase
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
-        _cryptoSettings = cryptoSettings;
-        _cryptographyService = cryptographyService;
         _signalRConnectionsMonitor = signalRConnectionsMonitor;
         _userManager = userManager;
         _userRepository = userRepository;
