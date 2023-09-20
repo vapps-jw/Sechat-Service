@@ -25,6 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Sechat.Algo\Sechat.Algo.csproj" />
 		<ProjectReference Include="..\Sechat.Service\Sechat.Service.csproj" />
 	</ItemGroup>
 
