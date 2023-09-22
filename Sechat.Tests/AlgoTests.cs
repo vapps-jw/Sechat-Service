@@ -1,4 +1,6 @@
-﻿using Sechat.Algo.BST;
+﻿using FluentAssertions;
+using Sechat.Algo;
+using Sechat.Algo.BST;
 
 namespace Sechat.Tests;
 public class AlgoTests
@@ -11,7 +13,7 @@ public class AlgoTests
         var ints = Enumerable.Range(0, 50000).OrderBy(i => rand.Next());
         var tests = new Dictionary<int, bool>();
 
-        var bt = new BinarySearchTree<int>();
+        var bt = new SechatBinarySearchTree<int>();
         foreach (var i in ints)
         {
             tests.Add(i, false);
@@ -24,5 +26,46 @@ public class AlgoTests
         }
 
         Assert.All(tests, (t) => Assert.True(t.Value));
+    }
+
+    [Fact]
+    public void ArrayBSearch()
+    {
+        var arr = Enumerable.Range(1, 10).ToArray();
+
+        for (var i = 1; i < arr.Length; i++)
+        {
+            var res = arr.SechatBinarySearch(i);
+            Assert.Equal(i, arr[res]);
+        }
+
+        var notFound = arr.SechatBinarySearch(0);
+        Assert.Equal(-1, notFound);
+    }
+
+    [Fact]
+    public void LinqBSearch()
+    {
+        var lst = Enumerable.Range(1, 10).ToList();
+
+        for (var i = 1; i < lst.Count - 1; i++)
+        {
+            _ = lst.SechatBinarySearch(i => i, i, out var res);
+            Assert.Equal(i, res);
+        }
+
+        var notFound = lst.SechatBinarySearch(i => i, 0, out var nf);
+        Assert.False(notFound);
+
+    }
+
+    [Fact]
+    public void QuickSort()
+    {
+        var rand = new Random();
+        var lst = Enumerable.Range(0, 20).Distinct().OrderBy(i => rand.Next()).ToList();
+        lst.SechatQuickSort(i => i, 0, lst.Count - 1);
+
+        _ = lst.Should().BeInAscendingOrder();
     }
 }

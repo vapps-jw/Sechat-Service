@@ -1,5 +1,5 @@
 ﻿namespace Sechat.Algo.BST;
-public class BinarySearchTree<T> : BinaryTree<T> where T : IComparable<T>
+public class SechatBinarySearchTree<T> : BinaryTree<T> where T : IComparable<T>
 {
     public bool Contains(T data, out T item)
     {
