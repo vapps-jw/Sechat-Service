@@ -6,6 +6,29 @@ namespace Sechat.Tests;
 public class AlgoTests
 {
     [Fact]
+    public void AvlTest()
+    {
+        var random = new Random();
+        var rand = new Random();
+        var ints = Enumerable.Range(0, 200).OrderBy(i => rand.Next());
+        var tests = new Dictionary<int, bool>();
+
+        var bt = new SechatAVLBinarySearchTree<int>();
+        foreach (var i in ints)
+        {
+            tests.Add(i, false);
+            bt.AddAndBalance(i);
+        }
+
+        foreach (var test in tests)
+        {
+            tests[test.Key] = bt.Contains(test.Key, out var _);
+        }
+
+        Assert.All(tests, (t) => Assert.True(t.Value));
+
+    }
+    [Fact]
     public void BstTest()
     {
         var random = new Random();
@@ -17,7 +40,7 @@ public class AlgoTests
         foreach (var i in ints)
         {
             tests.Add(i, false);
-            bt.AddTo(i);
+            bt.Add(i);
         }
 
         foreach (var test in tests)

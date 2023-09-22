@@ -5,7 +5,7 @@ public class SechatBinarySearchTree<T> : BinaryTree<T> where T : IComparable<T>
     {
         var node = Root;
         item = default;
-        while (node != null)
+        while (node is not null)
         {
             var result = data.CompareTo(node.Data);
             if (result == 0)
@@ -21,7 +21,7 @@ public class SechatBinarySearchTree<T> : BinaryTree<T> where T : IComparable<T>
         return false;
     }
 
-    public void AddTo(T data)
+    public void Add(T data)
     {
         var parent = GetParentForNewNode(data);
         var newNode = new BinaryTreeNode<T>() { Data = data, Parent = parent };
@@ -62,27 +62,6 @@ public class SechatBinarySearchTree<T> : BinaryTree<T> where T : IComparable<T>
                 }
             }
         }
-    }
-
-    public void Add(T data)
-    {
-        var parent = GetParentForNewNode(data);
-        var node = new BinaryTreeNode<T>() { Data = data, Parent = parent };
-
-        if (parent == null)
-        {
-            Root = node;
-        }
-        else if (data.CompareTo(parent.Data) < 0)
-        {
-            parent.Left = node;
-        }
-        else
-        {
-            parent.Right = node;
-        }
-
-        Count++;
     }
 
     private BinaryTreeNode<T> GetParentForNewNode(T data)
