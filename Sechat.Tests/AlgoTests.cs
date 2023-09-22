@@ -68,4 +68,14 @@ public class AlgoTests
 
         _ = lst.Should().BeInAscendingOrder();
     }
+
+    [Fact]
+    public void MergeSort()
+    {
+        var rand = new Random();
+        var lst = Enumerable.Range(0, 20).Distinct().OrderBy(i => rand.Next()).ToList();
+        lst.SechatMergeSort(i => i);
+
+        _ = lst.Should().BeInAscendingOrder();
+    }
 }
