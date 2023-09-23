@@ -8,12 +8,6 @@ public enum Color
     Red = 1,
 }
 
-public enum Direction
-{
-    Left,
-    Right
-}
-
 public class RedBlackTree<T> where T : IComparable<T>
 {
     private RedBlackNode<T> _root;
