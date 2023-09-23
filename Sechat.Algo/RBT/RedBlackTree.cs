@@ -216,57 +216,57 @@ public class RedBlackTree<T> where T : IComparable<T>
         }
     }
 
-    private void FixInsert(RedBlackNode<T> k)
+    private void FixInsert(RedBlackNode<T> newNode)
     {
-        RedBlackNode<T> u;
-        while (k.Parent.Color == Color.Red)
+        RedBlackNode<T> tempNode;
+        while (newNode.Parent.Color == Color.Red)
         {
-            if (k.Parent == k.Parent.Parent.Right)
+            if (newNode.Parent == newNode.Parent.Parent.Right)
             {
-                u = k.Parent.Parent.Left;
-                if (u.Color == Color.Red)
+                tempNode = newNode.Parent.Parent.Left;
+                if (tempNode.Color == Color.Red)
                 {
-                    u.Color = 0;
-                    k.Parent.Color = 0;
-                    k.Parent.Parent.Color = Color.Red;
-                    k = k.Parent.Parent;
+                    tempNode.Color = Color.Black;
+                    newNode.Parent.Color = Color.Black;
+                    newNode.Parent.Parent.Color = Color.Red;
+                    newNode = newNode.Parent.Parent;
                 }
                 else
                 {
-                    if (k == k.Parent.Left)
+                    if (newNode == newNode.Parent.Left)
                     {
-                        k = k.Parent;
-                        RightRotate(k);
+                        newNode = newNode.Parent;
+                        RightRotate(newNode);
                     }
-                    k.Parent.Color = 0;
-                    k.Parent.Parent.Color = Color.Red;
-                    LeftRotate(k.Parent.Parent);
+                    newNode.Parent.Color = Color.Black;
+                    newNode.Parent.Parent.Color = Color.Red;
+                    LeftRotate(newNode.Parent.Parent);
                 }
             }
             else
             {
-                u = k.Parent.Parent.Right;
+                tempNode = newNode.Parent.Parent.Right;
 
-                if (u.Color == Color.Red)
+                if (tempNode.Color == Color.Red)
                 {
-                    u.Color = 0;
-                    k.Parent.Color = 0;
-                    k.Parent.Parent.Color = Color.Red;
-                    k = k.Parent.Parent;
+                    tempNode.Color = Color.Black;
+                    newNode.Parent.Color = Color.Black;
+                    newNode.Parent.Parent.Color = Color.Red;
+                    newNode = newNode.Parent.Parent;
                 }
                 else
                 {
-                    if (k == k.Parent.Right)
+                    if (newNode == newNode.Parent.Right)
                     {
-                        k = k.Parent;
-                        LeftRotate(k);
+                        newNode = newNode.Parent;
+                        LeftRotate(newNode);
                     }
-                    k.Parent.Color = 0;
-                    k.Parent.Parent.Color = Color.Red;
-                    RightRotate(k.Parent.Parent);
+                    newNode.Parent.Color = Color.Black;
+                    newNode.Parent.Parent.Color = Color.Red;
+                    RightRotate(newNode.Parent.Parent);
                 }
             }
-            if (k == _root)
+            if (newNode == _root)
             {
                 break;
             }
@@ -278,15 +278,15 @@ public class RedBlackTree<T> where T : IComparable<T>
     {
         if (root != _tnull)
         {
-            Console.WriteLine(indent);
+            Console.Write(indent);
             if (last)
             {
-                Console.WriteLine("R----");
+                Console.Write("R----");
                 indent += "   ";
             }
             else
             {
-                Console.WriteLine("L----");
+                Console.Write("L----");
                 indent += "|  ";
             }
 
@@ -408,7 +408,7 @@ public class RedBlackTree<T> where T : IComparable<T>
 
     public void Insert(T key)
     {
-        var node = new RedBlackNode<T>
+        var newNode = new RedBlackNode<T>
         {
             Parent = null,
             Data = key,
@@ -417,46 +417,46 @@ public class RedBlackTree<T> where T : IComparable<T>
             Color = Color.Red
         };
 
-        RedBlackNode<T> y = null;
-        var x = _root;
+        RedBlackNode<T> parentNode = null;
+        var currentRoot = _root;
 
-        while (x != _tnull)
+        while (currentRoot != _tnull)
         {
-            y = x;
-            var xcomp = node.Data.CompareTo(x.Data);
-            x = xcomp < 0 ? x.Left : x.Right;
+            parentNode = currentRoot;
+            var xcomp = newNode.Data.CompareTo(currentRoot.Data);
+            currentRoot = xcomp < 0 ? currentRoot.Left : currentRoot.Right;
         }
 
-        node.Parent = y;
-        if (y == null)
+        newNode.Parent = parentNode;
+        if (parentNode == null)
         {
-            _root = node;
+            _root = newNode;
         }
         else
         {
-            var ycomp = node.Data.CompareTo(y.Data);
+            var ycomp = newNode.Data.CompareTo(parentNode.Data);
             if (ycomp < 0)
             {
-                y.Left = node;
+                parentNode.Left = newNode;
             }
             else
             {
-                y.Right = node;
+                parentNode.Right = newNode;
             }
         }
 
-        if (node.Parent == null)
+        if (newNode.Parent == null)
         {
-            node.Color = 0;
+            newNode.Color = 0;
             return;
         }
 
-        if (node.Parent.Parent == null)
+        if (newNode.Parent.Parent == null)
         {
             return;
         }
 
-        FixInsert(node);
+        FixInsert(newNode);
     }
 
     public RedBlackNode<T> GetRoot() => _root;

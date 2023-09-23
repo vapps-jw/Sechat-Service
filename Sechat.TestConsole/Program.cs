@@ -9,10 +9,13 @@ var tests = new Dictionary<int, bool>();
 var bt = new RedBlackTree<int>();
 foreach (var i in ints)
 {
+    Console.Clear();
+    Console.WriteLine($"INSERTING >>> {i}");
     tests.Add(i, false);
+    bt.PrintTree();
+    Console.WriteLine(">>> AFTER >>>");
     bt.Insert(i);
+    bt.PrintTree();
 }
-
-bt.PrintTree();
 
 Console.ReadLine();

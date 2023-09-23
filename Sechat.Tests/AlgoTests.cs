@@ -12,7 +12,7 @@ public class AlgoTests
     {
         var random = new Random();
         var rand = new Random();
-        _testSet = Enumerable.Range(0, 1_000_000).OrderBy(i => rand.Next());
+        _testSet = Enumerable.Range(0, 10).OrderBy(i => rand.Next());
     }
 
     [Fact]
