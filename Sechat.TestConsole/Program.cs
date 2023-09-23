@@ -1,21 +1,32 @@
 ﻿
-using Sechat.Algo.RBT;
+using Sechat.Algo.AVL;
 
 var random = new Random();
 var rand = new Random();
-var ints = Enumerable.Range(0, 200).OrderBy(i => rand.Next());
-var tests = new Dictionary<int, bool>();
+var ints = Enumerable.Range(0, 50).OrderBy(i => rand.Next());
 
-var bt = new RedBlackTree<int>();
+//var rbt = new RedBlackTree<int>();
+//foreach (var i in ints)
+//{
+//    Console.Clear();
+//    Console.WriteLine($"INSERTING >>> {i}");
+//    rbt.PrintTree();
+//    Console.WriteLine(">>> AFTER >>>");
+//    rbt.Insert(i);
+//    rbt.PrintTree();
+//}
+
+var avl = new AVLTree<int>();
+AVLNode<int>? nodes = null;
 foreach (var i in ints)
 {
-    Console.Clear();
-    Console.WriteLine($"INSERTING >>> {i}");
-    tests.Add(i, false);
-    bt.PrintTree();
-    Console.WriteLine(">>> AFTER >>>");
-    bt.Insert(i);
-    bt.PrintTree();
+    //Console.Clear();
+    //Console.WriteLine($"INSERTING >>> {i}");
+    //avl.PrintTree(nodes);
+    //Console.WriteLine(">>> AFTER >>>");
+    nodes = avl.Insert(nodes, i);
+    //avl.PrintTree(nodes);
 }
+avl.PrintTree(nodes);
 
 Console.ReadLine();

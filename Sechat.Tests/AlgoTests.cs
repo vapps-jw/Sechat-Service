@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Sechat.Algo;
+using Sechat.Algo.AVL;
 using Sechat.Algo.BST;
 using Sechat.Algo.RBT;
 
@@ -12,7 +13,7 @@ public class AlgoTests
     {
         var random = new Random();
         var rand = new Random();
-        _testSet = Enumerable.Range(0, 10).OrderBy(i => rand.Next());
+        _testSet = Enumerable.Range(1, 100000).OrderBy(i => rand.Next());
     }
 
     [Fact]
@@ -33,6 +34,9 @@ public class AlgoTests
         }
 
         Assert.All(tests, (t) => Assert.True(t.Value));
+
+        var notFound = bt.SearchTree(0);
+        Assert.Null(notFound);
     }
 
     [Fact]
@@ -53,6 +57,31 @@ public class AlgoTests
         }
 
         Assert.All(tests, (t) => Assert.True(t.Value));
+    }
+
+    [Fact]
+    public void AVLTest()
+    {
+        var tests = new Dictionary<int, bool>();
+
+        var bt = new AVLTree<int>();
+        AVLNode<int>? nodes = null;
+        foreach (var i in _testSet)
+        {
+
+            tests.Add(i, false);
+            nodes = bt.Insert(nodes, i);
+        }
+
+        foreach (var test in tests)
+        {
+            tests[test.Key] = bt.SearchTree(nodes, test.Key) is not null;
+        }
+
+        Assert.All(tests, (t) => Assert.True(t.Value));
+
+        var notFound = bt.SearchTree(nodes, 0);
+        Assert.Null(notFound);
     }
 
     [Fact]

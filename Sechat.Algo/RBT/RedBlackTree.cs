@@ -54,11 +54,13 @@ public class RedBlackTree<T> where T : IComparable<T>
         }
     }
 
+    public RedBlackNode<T> SearchTree(T k) => SearchTreeHelper(_root, k);
+
     private RedBlackNode<T> SearchTreeHelper(RedBlackNode<T> node, T key)
     {
         if (node == _tnull)
         {
-            return node;
+            return null;
         }
 
         var comparison = key.CompareTo(node.Data);
@@ -274,36 +276,11 @@ public class RedBlackTree<T> where T : IComparable<T>
         _root.Color = 0;
     }
 
-    private void PrintHelper(RedBlackNode<T> root, string indent, bool last)
-    {
-        if (root != _tnull)
-        {
-            Console.Write(indent);
-            if (last)
-            {
-                Console.Write("R----");
-                indent += "   ";
-            }
-            else
-            {
-                Console.Write("L----");
-                indent += "|  ";
-            }
-
-            var sColor = root.Color.ToString();
-            Console.WriteLine(root.Data + "(" + sColor + ")");
-            PrintHelper(root.Left, indent, false);
-            PrintHelper(root.Right, indent, true);
-        }
-    }
-
     public void Preorder() => PreOrderHelper(_root);
 
     public void Inorder() => InOrderHelper(_root);
 
     public void Postorder() => PostOrderHelper(_root);
-
-    public RedBlackNode<T> SearchTree(T k) => SearchTreeHelper(_root, k);
 
     public RedBlackNode<T> Minimum(RedBlackNode<T> node)
     {
@@ -465,5 +442,27 @@ public class RedBlackTree<T> where T : IComparable<T>
 
     public void PrintTree() => PrintHelper(_root, "", true);
 
+    private void PrintHelper(RedBlackNode<T> root, string indent, bool last)
+    {
+        if (root != _tnull)
+        {
+            Console.Write(indent);
+            if (last)
+            {
+                Console.Write("R----");
+                indent += "   ";
+            }
+            else
+            {
+                Console.Write("L----");
+                indent += "|  ";
+            }
+
+            var sColor = root.Color.ToString();
+            Console.WriteLine(root.Data + "(" + sColor + ")");
+            PrintHelper(root.Left, indent, false);
+            PrintHelper(root.Right, indent, true);
+        }
+    }
 }
 
