@@ -1,33 +1,34 @@
 ﻿using FluentAssertions;
 using Sechat.Algo;
 using Sechat.Algo.BST;
+using Sechat.Algo.RBT;
 
 namespace Sechat.Tests;
 public class AlgoTests
 {
     [Fact]
-    public void AvlTest()
+    public void RBTTest()
     {
         var random = new Random();
         var rand = new Random();
         var ints = Enumerable.Range(0, 200).OrderBy(i => rand.Next());
         var tests = new Dictionary<int, bool>();
 
-        var bt = new SechatAVLBinarySearchTree<int>();
+        var bt = new RedBlackTree<int>();
         foreach (var i in ints)
         {
             tests.Add(i, false);
-            bt.AddAndBalance(i);
+            bt.insert(i);
         }
 
         foreach (var test in tests)
         {
-            tests[test.Key] = bt.Contains(test.Key, out var _);
+            tests[test.Key] = bt.searchTree(test.Key) is not null;
         }
 
         Assert.All(tests, (t) => Assert.True(t.Value));
-
     }
+
     [Fact]
     public void BstTest()
     {
