@@ -1,12 +1,18 @@
-﻿// See https://aka.ms/new-console-template for more information
-using WebPush;
+﻿
+using Sechat.Algo.RBT;
 
-Console.WriteLine("Hello, World!");
+var random = new Random();
+var rand = new Random();
+var ints = Enumerable.Range(0, 200).OrderBy(i => rand.Next());
+var tests = new Dictionary<int, bool>();
 
-var vapidKeys = VapidHelper.GenerateVapidKeys();
+var bt = new RedBlackTree<int>();
+foreach (var i in ints)
+{
+    tests.Add(i, false);
+    bt.Insert(i);
+}
 
-// Prints 2 URL Safe Base64 Encoded Strings
-Console.WriteLine("Public {0}", vapidKeys.PublicKey);
-Console.WriteLine("Private {0}", vapidKeys.PrivateKey);
+bt.PrintTree();
 
 Console.ReadLine();

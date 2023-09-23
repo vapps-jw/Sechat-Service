@@ -23,47 +23,43 @@ public class RedBlackTree<T> where T : IComparable<T>
     {
         _tnull = new RedBlackNode<T>
         {
-            color = Color.Black,
-            left = null,
-            right = null
+            Color = Color.Black,
+            Left = null,
+            Right = null
         };
         _root = _tnull;
     }
 
-    // Preorder
-    private void preOrderHelper(RedBlackNode<T> node)
+    private void PreOrderHelper(RedBlackNode<T> node)
     {
         if (node != _tnull)
         {
-            Debug.WriteLine(node.data + " ");
-            preOrderHelper(node.left);
-            preOrderHelper(node.right);
+            Debug.WriteLine(node.Data + " ");
+            PreOrderHelper(node.Left);
+            PreOrderHelper(node.Right);
         }
     }
 
-    // Inorder
-    private void inOrderHelper(RedBlackNode<T> node)
+    private void InOrderHelper(RedBlackNode<T> node)
     {
         if (node != _tnull)
         {
-            inOrderHelper(node.left);
-            Debug.WriteLine(node.data + " ");
-            inOrderHelper(node.right);
+            InOrderHelper(node.Left);
+            Debug.WriteLine(node.Data + " ");
+            InOrderHelper(node.Right);
         }
     }
 
-    // Post order
-    private void postOrderHelper(RedBlackNode<T> node)
+    private void PostOrderHelper(RedBlackNode<T> node)
     {
         if (node != _tnull)
         {
-            postOrderHelper(node.left);
-            postOrderHelper(node.right);
-            Debug.WriteLine(node.data + " ");
+            PostOrderHelper(node.Left);
+            PostOrderHelper(node.Right);
+            Debug.WriteLine(node.Data + " ");
         }
     }
 
-    // Search the tree
     private RedBlackNode<T> SearchTreeHelper(RedBlackNode<T> node, T key)
     {
         if (node == _tnull)
@@ -71,101 +67,100 @@ public class RedBlackTree<T> where T : IComparable<T>
             return node;
         }
 
-        var comparison = key.CompareTo(node.data);
-        return comparison == 0 ? node : comparison < 0 ? SearchTreeHelper(node.left, key) : SearchTreeHelper(node.right, key);
+        var comparison = key.CompareTo(node.Data);
+        return comparison == 0 ? node : comparison < 0 ? SearchTreeHelper(node.Left, key) : SearchTreeHelper(node.Right, key);
     }
 
-    // Balance the tree after deletion of a node
     private void FixDelete(RedBlackNode<T> x)
     {
         RedBlackNode<T> s;
-        while (x != _root && x.color == 0)
+        while (x != _root && x.Color == 0)
         {
-            if (x == x.parent.left)
+            if (x == x.Parent.Left)
             {
-                s = x.parent.right;
-                if (s.color == Color.Red)
+                s = x.Parent.Right;
+                if (s.Color == Color.Red)
                 {
-                    s.color = 0;
-                    x.parent.color = (Color)1;
-                    leftRotate(x.parent);
-                    s = x.parent.right;
+                    s.Color = 0;
+                    x.Parent.Color = (Color)1;
+                    LeftRotate(x.Parent);
+                    s = x.Parent.Right;
                 }
 
-                if (s.left.color == 0 && s.right.color == 0)
+                if (s.Left.Color == 0 && s.Right.Color == 0)
                 {
-                    s.color = (Color)1;
-                    x = x.parent;
+                    s.Color = (Color)1;
+                    x = x.Parent;
                 }
                 else
                 {
-                    if (s.right.color == 0)
+                    if (s.Right.Color == 0)
                     {
-                        s.left.color = 0;
-                        s.color = (Color)1;
-                        rightRotate(s);
-                        s = x.parent.right;
+                        s.Left.Color = 0;
+                        s.Color = (Color)1;
+                        RightRotate(s);
+                        s = x.Parent.Right;
                     }
 
-                    s.color = x.parent.color;
-                    x.parent.color = 0;
-                    s.right.color = 0;
-                    leftRotate(x.parent);
+                    s.Color = x.Parent.Color;
+                    x.Parent.Color = 0;
+                    s.Right.Color = 0;
+                    LeftRotate(x.Parent);
                     x = _root;
                 }
             }
             else
             {
-                s = x.parent.left;
-                if (s.color == Color.Red)
+                s = x.Parent.Left;
+                if (s.Color == Color.Red)
                 {
-                    s.color = 0;
-                    x.parent.color = (Color)1;
-                    rightRotate(x.parent);
-                    s = x.parent.left;
+                    s.Color = 0;
+                    x.Parent.Color = (Color)1;
+                    RightRotate(x.Parent);
+                    s = x.Parent.Left;
                 }
 
-                if (s.right.color is 0 and 0)
+                if (s.Right.Color is 0 and 0)
                 {
-                    s.color = (Color)1;
-                    x = x.parent;
+                    s.Color = (Color)1;
+                    x = x.Parent;
                 }
                 else
                 {
-                    if (s.left.color == 0)
+                    if (s.Left.Color == 0)
                     {
-                        s.right.color = 0;
-                        s.color = (Color)1;
-                        leftRotate(s);
-                        s = x.parent.left;
+                        s.Right.Color = 0;
+                        s.Color = (Color)1;
+                        LeftRotate(s);
+                        s = x.Parent.Left;
                     }
 
-                    s.color = x.parent.color;
-                    x.parent.color = 0;
-                    s.left.color = 0;
-                    rightRotate(x.parent);
+                    s.Color = x.Parent.Color;
+                    x.Parent.Color = 0;
+                    s.Left.Color = 0;
+                    RightRotate(x.Parent);
                     x = _root;
                 }
             }
         }
-        x.color = 0;
+        x.Color = 0;
     }
 
     private void RbTransplant(RedBlackNode<T> u, RedBlackNode<T> v)
     {
-        if (u.parent == null)
+        if (u.Parent == null)
         {
             _root = v;
         }
-        else if (u == u.parent.left)
+        else if (u == u.Parent.Left)
         {
-            u.parent.left = v;
+            u.Parent.Left = v;
         }
         else
         {
-            u.parent.right = v;
+            u.Parent.Right = v;
         }
-        v.parent = u.parent;
+        v.Parent = u.Parent;
     }
 
     private void DeleteNodeHelper(RedBlackNode<T> node, T key)
@@ -174,13 +169,13 @@ public class RedBlackTree<T> where T : IComparable<T>
         RedBlackNode<T> x, y;
         while (node != _tnull)
         {
-            var comparison = key.CompareTo(node.data);
+            var comparison = key.CompareTo(node.Data);
             if (comparison == 0)
             {
                 z = node;
             }
 
-            node = comparison <= 0 ? node.right : node.left;
+            node = comparison <= 0 ? node.Right : node.Left;
         }
 
         if (z == _tnull)
@@ -189,37 +184,37 @@ public class RedBlackTree<T> where T : IComparable<T>
         }
 
         y = z;
-        var yOriginalColor = y.color;
-        if (z.left == _tnull)
+        var yOriginalColor = y.Color;
+        if (z.Left == _tnull)
         {
-            x = z.right;
-            RbTransplant(z, z.right);
+            x = z.Right;
+            RbTransplant(z, z.Right);
         }
-        else if (z.right == _tnull)
+        else if (z.Right == _tnull)
         {
-            x = z.left;
-            RbTransplant(z, z.left);
+            x = z.Left;
+            RbTransplant(z, z.Left);
         }
         else
         {
-            y = minimum(z.right);
-            yOriginalColor = y.color;
-            x = y.right;
-            if (y.parent == z)
+            y = Minimum(z.Right);
+            yOriginalColor = y.Color;
+            x = y.Right;
+            if (y.Parent == z)
             {
-                x.parent = y;
+                x.Parent = y;
             }
             else
             {
-                RbTransplant(y, y.right);
-                y.right = z.right;
-                y.right.parent = y;
+                RbTransplant(y, y.Right);
+                y.Right = z.Right;
+                y.Right.Parent = y;
             }
 
             RbTransplant(z, y);
-            y.left = z.left;
-            y.left.parent = y;
-            y.color = z.color;
+            y.Left = z.Left;
+            y.Left.Parent = y;
+            y.Color = z.Color;
         }
         if (yOriginalColor == 0)
         {
@@ -227,55 +222,54 @@ public class RedBlackTree<T> where T : IComparable<T>
         }
     }
 
-    // Balance the node after insertion
-    private void fixInsert(RedBlackNode<T> k)
+    private void FixInsert(RedBlackNode<T> k)
     {
         RedBlackNode<T> u;
-        while (k.parent.color == Color.Red)
+        while (k.Parent.Color == Color.Red)
         {
-            if (k.parent == k.parent.parent.right)
+            if (k.Parent == k.Parent.Parent.Right)
             {
-                u = k.parent.parent.left;
-                if (u.color == Color.Red)
+                u = k.Parent.Parent.Left;
+                if (u.Color == Color.Red)
                 {
-                    u.color = 0;
-                    k.parent.color = 0;
-                    k.parent.parent.color = Color.Red;
-                    k = k.parent.parent;
+                    u.Color = 0;
+                    k.Parent.Color = 0;
+                    k.Parent.Parent.Color = Color.Red;
+                    k = k.Parent.Parent;
                 }
                 else
                 {
-                    if (k == k.parent.left)
+                    if (k == k.Parent.Left)
                     {
-                        k = k.parent;
-                        rightRotate(k);
+                        k = k.Parent;
+                        RightRotate(k);
                     }
-                    k.parent.color = 0;
-                    k.parent.parent.color = Color.Red;
-                    leftRotate(k.parent.parent);
+                    k.Parent.Color = 0;
+                    k.Parent.Parent.Color = Color.Red;
+                    LeftRotate(k.Parent.Parent);
                 }
             }
             else
             {
-                u = k.parent.parent.right;
+                u = k.Parent.Parent.Right;
 
-                if (u.color == Color.Red)
+                if (u.Color == Color.Red)
                 {
-                    u.color = 0;
-                    k.parent.color = 0;
-                    k.parent.parent.color = Color.Red;
-                    k = k.parent.parent;
+                    u.Color = 0;
+                    k.Parent.Color = 0;
+                    k.Parent.Parent.Color = Color.Red;
+                    k = k.Parent.Parent;
                 }
                 else
                 {
-                    if (k == k.parent.right)
+                    if (k == k.Parent.Right)
                     {
-                        k = k.parent;
-                        leftRotate(k);
+                        k = k.Parent;
+                        LeftRotate(k);
                     }
-                    k.parent.color = 0;
-                    k.parent.parent.color = Color.Red;
-                    rightRotate(k.parent.parent);
+                    k.Parent.Color = 0;
+                    k.Parent.Parent.Color = Color.Red;
+                    RightRotate(k.Parent.Parent);
                 }
             }
             if (k == _root)
@@ -283,10 +277,10 @@ public class RedBlackTree<T> where T : IComparable<T>
                 break;
             }
         }
-        _root.color = 0;
+        _root.Color = 0;
     }
 
-    private void printHelper(RedBlackNode<T> root, string indent, bool last)
+    private void PrintHelper(RedBlackNode<T> root, string indent, bool last)
     {
         if (root != _tnull)
         {
@@ -302,131 +296,131 @@ public class RedBlackTree<T> where T : IComparable<T>
                 indent += "|  ";
             }
 
-            var sColor = root.color.ToString();
-            Console.WriteLine(root.data + "(" + sColor + ")");
-            printHelper(root.left, indent, false);
-            printHelper(root.right, indent, true);
+            var sColor = root.Color.ToString();
+            Console.WriteLine(root.Data + "(" + sColor + ")");
+            PrintHelper(root.Left, indent, false);
+            PrintHelper(root.Right, indent, true);
         }
     }
 
-    public void preorder() => preOrderHelper(_root);
+    public void Preorder() => PreOrderHelper(_root);
 
-    public void inorder() => inOrderHelper(_root);
+    public void Inorder() => InOrderHelper(_root);
 
-    public void postorder() => postOrderHelper(_root);
+    public void Postorder() => PostOrderHelper(_root);
 
-    public RedBlackNode<T> searchTree(T k) => SearchTreeHelper(_root, k);
+    public RedBlackNode<T> SearchTree(T k) => SearchTreeHelper(_root, k);
 
-    public RedBlackNode<T> minimum(RedBlackNode<T> node)
+    public RedBlackNode<T> Minimum(RedBlackNode<T> node)
     {
-        while (node.left != _tnull)
+        while (node.Left != _tnull)
         {
-            node = node.left;
+            node = node.Left;
         }
         return node;
     }
 
-    public RedBlackNode<T> maximum(RedBlackNode<T> node)
+    public RedBlackNode<T> Maximum(RedBlackNode<T> node)
     {
-        while (node.right != _tnull)
+        while (node.Right != _tnull)
         {
-            node = node.right;
+            node = node.Right;
         }
         return node;
     }
 
-    public RedBlackNode<T> successor(RedBlackNode<T> x)
+    public RedBlackNode<T> Successor(RedBlackNode<T> x)
     {
-        if (x.right != _tnull)
+        if (x.Right != _tnull)
         {
-            return minimum(x.right);
+            return Minimum(x.Right);
         }
 
-        var y = x.parent;
-        while (y != _tnull && x == y.right)
+        var y = x.Parent;
+        while (y != _tnull && x == y.Right)
         {
             x = y;
-            y = y.parent;
+            y = y.Parent;
         }
         return y;
     }
 
-    public RedBlackNode<T> predecessor(RedBlackNode<T> x)
+    public RedBlackNode<T> Predecessor(RedBlackNode<T> x)
     {
-        if (x.left != _tnull)
+        if (x.Left != _tnull)
         {
-            return maximum(x.left);
+            return Maximum(x.Left);
         }
 
-        var y = x.parent;
-        while (y != _tnull && x == y.left)
+        var y = x.Parent;
+        while (y != _tnull && x == y.Left)
         {
             x = y;
-            y = y.parent;
+            y = y.Parent;
         }
 
         return y;
     }
 
-    public void leftRotate(RedBlackNode<T> x)
+    public void LeftRotate(RedBlackNode<T> x)
     {
-        var y = x.right;
-        x.right = y.left;
-        if (y.left != _tnull)
+        var y = x.Right;
+        x.Right = y.Left;
+        if (y.Left != _tnull)
         {
-            y.left.parent = x;
+            y.Left.Parent = x;
         }
-        y.parent = x.parent;
-        if (x.parent == null)
+        y.Parent = x.Parent;
+        if (x.Parent == null)
         {
             _root = y;
         }
-        else if (x == x.parent.left)
+        else if (x == x.Parent.Left)
         {
-            x.parent.left = y;
+            x.Parent.Left = y;
         }
         else
         {
-            x.parent.right = y;
+            x.Parent.Right = y;
         }
-        y.left = x;
-        x.parent = y;
+        y.Left = x;
+        x.Parent = y;
     }
 
-    public void rightRotate(RedBlackNode<T> x)
+    public void RightRotate(RedBlackNode<T> x)
     {
-        var y = x.left;
-        x.left = y.right;
-        if (y.right != _tnull)
+        var y = x.Left;
+        x.Left = y.Right;
+        if (y.Right != _tnull)
         {
-            y.right.parent = x;
+            y.Right.Parent = x;
         }
-        y.parent = x.parent;
-        if (x.parent == null)
+        y.Parent = x.Parent;
+        if (x.Parent == null)
         {
             _root = y;
         }
-        else if (x == x.parent.right)
+        else if (x == x.Parent.Right)
         {
-            x.parent.right = y;
+            x.Parent.Right = y;
         }
         else
         {
-            x.parent.left = y;
+            x.Parent.Left = y;
         }
-        y.right = x;
-        x.parent = y;
+        y.Right = x;
+        x.Parent = y;
     }
 
-    public void insert(T key)
+    public void Insert(T key)
     {
         var node = new RedBlackNode<T>
         {
-            parent = null,
-            data = key,
-            left = _tnull,
-            right = _tnull,
-            color = Color.Red
+            Parent = null,
+            Data = key,
+            Left = _tnull,
+            Right = _tnull,
+            Color = Color.Red
         };
 
         RedBlackNode<T> y = null;
@@ -435,47 +429,47 @@ public class RedBlackTree<T> where T : IComparable<T>
         while (x != _tnull)
         {
             y = x;
-            var xcomp = node.data.CompareTo(x.data);
-            x = xcomp < 0 ? x.left : x.right;
+            var xcomp = node.Data.CompareTo(x.Data);
+            x = xcomp < 0 ? x.Left : x.Right;
         }
 
-        node.parent = y;
+        node.Parent = y;
         if (y == null)
         {
             _root = node;
         }
         else
         {
-            var ycomp = node.data.CompareTo(y.data);
+            var ycomp = node.Data.CompareTo(y.Data);
             if (ycomp < 0)
             {
-                y.left = node;
+                y.Left = node;
             }
             else
             {
-                y.right = node;
+                y.Right = node;
             }
         }
 
-        if (node.parent == null)
+        if (node.Parent == null)
         {
-            node.color = 0;
+            node.Color = 0;
             return;
         }
 
-        if (node.parent.parent == null)
+        if (node.Parent.Parent == null)
         {
             return;
         }
 
-        fixInsert(node);
+        FixInsert(node);
     }
 
-    public RedBlackNode<T> getRoot() => _root;
+    public RedBlackNode<T> GetRoot() => _root;
 
-    public void deleteNode(T data) => DeleteNodeHelper(_root, data);
+    public void DeleteNode(T data) => DeleteNodeHelper(_root, data);
 
-    public void printTree() => printHelper(_root, "", true);
+    public void PrintTree() => PrintHelper(_root, "", true);
 
 }
 

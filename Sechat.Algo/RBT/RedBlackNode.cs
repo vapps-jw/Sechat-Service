@@ -2,12 +2,12 @@
 
 public class RedBlackNode<T> where T : IComparable<T>
 {
-    public T data { get; set; }
-    public Color color { get; set; }
+    public T Data { get; set; }
+    public Color Color { get; set; }
 
-    public RedBlackNode<T> parent { get; set; }
-    public RedBlackNode<T> left { get; set; }
-    public RedBlackNode<T> right { get; set; }
+    public RedBlackNode<T> Parent { get; set; }
+    public RedBlackNode<T> Left { get; set; }
+    public RedBlackNode<T> Right { get; set; }
 
-    public override string ToString() => $"{color} - {data}";
+    public override string ToString() => $"{Color} - {Data}";
 }

@@ -6,39 +6,42 @@ using Sechat.Algo.RBT;
 namespace Sechat.Tests;
 public class AlgoTests
 {
-    [Fact]
-    public void RBTTest()
+    private readonly IOrderedEnumerable<int> _testSet;
+
+    public AlgoTests()
     {
         var random = new Random();
         var rand = new Random();
-        var ints = Enumerable.Range(0, 200).OrderBy(i => rand.Next());
+        _testSet = Enumerable.Range(0, 1_000_000).OrderBy(i => rand.Next());
+    }
+
+    [Fact]
+    public void RBTTest()
+    {
         var tests = new Dictionary<int, bool>();
 
         var bt = new RedBlackTree<int>();
-        foreach (var i in ints)
+        foreach (var i in _testSet)
         {
             tests.Add(i, false);
-            bt.insert(i);
+            bt.Insert(i);
         }
 
         foreach (var test in tests)
         {
-            tests[test.Key] = bt.searchTree(test.Key) is not null;
+            tests[test.Key] = bt.SearchTree(test.Key) is not null;
         }
 
         Assert.All(tests, (t) => Assert.True(t.Value));
     }
 
     [Fact]
-    public void BstTest()
+    public void BSTTest()
     {
-        var random = new Random();
-        var rand = new Random();
-        var ints = Enumerable.Range(0, 50000).OrderBy(i => rand.Next());
         var tests = new Dictionary<int, bool>();
 
         var bt = new SechatBinarySearchTree<int>();
-        foreach (var i in ints)
+        foreach (var i in _testSet)
         {
             tests.Add(i, false);
             bt.Add(i);
