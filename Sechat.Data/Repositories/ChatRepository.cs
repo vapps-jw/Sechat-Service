@@ -238,6 +238,26 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return res;
     }
 
+    public async Task<Room> GetRoomWithRecentMessages(string roomId, string memberUserId, int initialTake)
+    {
+        var res = await _context.Rooms
+        .Include(r => r.Messages)
+            .ThenInclude(m => m.MessageViewers)
+        .Where(r =>
+            r.Id.Equals(roomId) &&
+            r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
+            {
+                LastActivity = r.LastActivity,
+                Created = r.Created,
+                CreatorName = r.CreatorName,
+                Id = r.Id,
+                Members = r.Members,
+                Messages = r.Messages.OrderByDescending(m => m.Id).Take(initialTake).ToList(),
+                Name = r.Name
+            }).FirstOrDefaultAsync();
+        return res;
+    }
+
     public Task<List<Message>> GetOldMessagesForRoom(string roomId, long lastMessage, int take) =>
         _context.Messages
             .Include(m => m.MessageViewers)

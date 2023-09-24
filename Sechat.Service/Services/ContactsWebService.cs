@@ -23,7 +23,7 @@ public class ContactsWebService
         _mapper = mapper;
     }
 
-    public List<ContactSuggestion> CreateContactsuggections(uint level) => throw new NotImplementedException();
+    public List<ContactSuggestion> CreateContactSuggections(uint level) => throw new NotImplementedException();
 }
 
 public class ContactSuggestion

@@ -84,6 +84,36 @@ public class ChatController : SechatControllerBase
         return Ok(roomDtos);
     }
 
+    [HttpGet("room-initial-load/{roomId}")]
+    public async Task<IActionResult> RoomInitialLoadAsync(string roomId)
+    {
+        var room = await _chatRepository.GetRoomWithRecentMessages(roomId, UserId, _initialMessagesPull);
+        room.Messages = room.Messages.OrderBy(m => m.Id).ToList();
+
+        foreach (var message in room.Messages)
+        {
+            foreach (var viewer in message.MessageViewers)
+            {
+                viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+            }
+        }
+
+        var roomDto = _mapper.Map<RoomDto>(room);
+        foreach (var message in roomDto.Messages)
+        {
+            foreach (var viewer in message.MessageViewers)
+            {
+                if (viewer.User.Equals(UserName))
+                {
+                    message.WasViewed = true;
+                    continue;
+                }
+            }
+        }
+
+        return Ok(roomDto);
+    }
+
     [HttpGet("room/{roomId}/load-more/{lastId}")]
     public async Task<IActionResult> LoadMoreRoomMessages(string roomId, long lastId)
     {
