@@ -79,12 +79,6 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
             .ToListAsync();
 
-    //public Task<List<Contact>> GetContactsWithMessages(string userId) =>
-    //    _context.Contacts
-    //        .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
-    //        .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
-    //        .ToListAsync();
-
     public Task<List<Contact>> GetContactsWithRecentMessages(string userId, int initalTake) =>
         _context.Contacts
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
@@ -93,11 +87,6 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     public Task<Contact> GetContact(long contactId) =>
         _context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
-
-    //public Task<Contact> GetContactWithMessages(long contactId) =>
-    //    _context.Contacts
-    //        .Include(c => c.DirectMessages.OrderBy(dm => dm.Id))
-    //        .FirstOrDefaultAsync(c => c.Id == contactId);
 
     public Task<Contact> GetContactWithRecentMessages(long contactId, int initalTake) =>
         _context.Contacts
