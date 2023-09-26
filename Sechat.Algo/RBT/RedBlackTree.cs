@@ -54,17 +54,39 @@ public class RedBlackTree<T> where T : IComparable<T>
         }
     }
 
-    public RedBlackNode<T> SearchTree(T k) => SearchTreeHelper(_root, k);
+    //public RedBlackNode<T> SearchTree(T k) => SearchTreeHelper(_root, k);
 
-    private RedBlackNode<T> SearchTreeHelper(RedBlackNode<T> node, T key)
+    //private RedBlackNode<T> SearchTreeHelper(RedBlackNode<T> node, T key)
+    //{
+    //    if (node == _tnull)
+    //    {
+    //        return null;
+    //    }
+
+    //    var comparison = key.CompareTo(node.Data);
+    //    return comparison == 0 ? node : comparison < 0 ? SearchTreeHelper(node.Left, key) : SearchTreeHelper(node.Right, key);
+    //}
+
+    public bool Contains(T data, out T item)
     {
-        if (node == _tnull)
+        var node = _root;
+        item = default;
+
+        while (node is not null)
         {
-            return null;
+            var comparison = data.CompareTo(node.Data);
+            if (comparison == 0)
+            {
+                item = node.Data;
+                return true;
+            }
+            else
+            {
+                node = comparison < 0 ? node.Left : node.Right;
+            }
         }
 
-        var comparison = key.CompareTo(node.Data);
-        return comparison == 0 ? node : comparison < 0 ? SearchTreeHelper(node.Left, key) : SearchTreeHelper(node.Right, key);
+        return false;
     }
 
     private void FixDelete(RedBlackNode<T> x)

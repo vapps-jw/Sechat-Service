@@ -30,13 +30,13 @@ public class AlgoTests
 
         foreach (var test in tests)
         {
-            tests[test.Key] = bt.SearchTree(test.Key) is not null;
+            tests[test.Key] = bt.Contains(test.Key, out var _);
         }
 
         Assert.All(tests, (t) => Assert.True(t.Value));
 
-        var notFound = bt.SearchTree(0);
-        Assert.Null(notFound);
+        var notFound = bt.Contains(-1, out var _);
+        Assert.False(notFound);
     }
 
     [Fact]
