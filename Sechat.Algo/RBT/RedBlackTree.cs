@@ -54,19 +54,6 @@ public class RedBlackTree<T> where T : IComparable<T>
         }
     }
 
-    //public RedBlackNode<T> SearchTree(T k) => SearchTreeHelper(_root, k);
-
-    //private RedBlackNode<T> SearchTreeHelper(RedBlackNode<T> node, T key)
-    //{
-    //    if (node == _tnull)
-    //    {
-    //        return null;
-    //    }
-
-    //    var comparison = key.CompareTo(node.Data);
-    //    return comparison == 0 ? node : comparison < 0 ? SearchTreeHelper(node.Left, key) : SearchTreeHelper(node.Right, key);
-    //}
-
     public bool Contains(T data, out T item)
     {
         var node = _root;
@@ -462,9 +449,9 @@ public class RedBlackTree<T> where T : IComparable<T>
 
     public void DeleteNode(T data) => DeleteNodeHelper(_root, data);
 
-    public void PrintTree() => PrintHelper(_root, "", true);
+    public void PrintTree() => Print(_root, "", true);
 
-    private void PrintHelper(RedBlackNode<T> root, string indent, bool last)
+    private void Print(RedBlackNode<T> root, string indent, bool last)
     {
         if (root != _tnull)
         {
@@ -482,8 +469,8 @@ public class RedBlackTree<T> where T : IComparable<T>
 
             var sColor = root.Color.ToString();
             Console.WriteLine(root.Data + "(" + sColor + ")");
-            PrintHelper(root.Left, indent, false);
-            PrintHelper(root.Right, indent, true);
+            Print(root.Left, indent, false);
+            Print(root.Right, indent, true);
         }
     }
 }
