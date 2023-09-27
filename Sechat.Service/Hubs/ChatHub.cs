@@ -338,7 +338,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             }
 
             var roomMembers = _chatRepository.GetRoomMembersIds(keyRequest.Id);
-            _ = roomMembers.RemoveAll(rm => !_signalRConnectionsMonitor.ConnectedUsers.Contains(rm));
+            _ = roomMembers.RemoveAll(rm => !_signalRConnectionsMonitor.IsUserOnlineFlag(rm));
             foreach (var roomMember in roomMembers)
             {
                 await Clients.Group(roomMember).RoomKeyRequested(keyRequest);
@@ -399,14 +399,18 @@ public class ChatHub : SechatHubBase<IChatHub>
         try
         {
             var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-            _ = _signalRConnectionsMonitor.ConnectedUsers.RemoveAll(u => u is null);
-            foreach (var userContact in userContacts)
-            {
-                await Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Online));
-            }
+            _signalRConnectionsMonitor.RemoveAllUserConnections(null);
 
             await Groups.AddToGroupAsync(Context.ConnectionId, UserId);
-            _signalRConnectionsMonitor.ConnectedUsers.Add(UserId);
+            _signalRConnectionsMonitor.AddUser(UserId);
+
+            var tasks = new List<Task>();
+            foreach (var userContact in userContacts)
+            {
+                tasks.Add(Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Online)));
+            }
+
+            await Task.WhenAll(tasks);
             _ = base.OnConnectedAsync();
         }
         catch (Exception ex)
@@ -418,13 +422,17 @@ public class ChatHub : SechatHubBase<IChatHub>
     public override async Task OnDisconnectedAsync(Exception exception)
     {
         var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-        _ = _signalRConnectionsMonitor.ConnectedUsers.RemoveAll(u => u is null);
-        foreach (var userContact in userContacts)
+        _signalRConnectionsMonitor.RemoveAllUserConnections(null);
+        _signalRConnectionsMonitor.RemoveUserConnection(UserId);
+        if (!_signalRConnectionsMonitor.IsUserOnlineFlag(UserId))
         {
-            await Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Offline));
+            var tasks = new List<Task>();
+            foreach (var userContact in userContacts)
+            {
+                tasks.Add(Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Offline)));
+            }
+            await Task.WhenAll(tasks);
         }
-
-        _ = _signalRConnectionsMonitor.ConnectedUsers.Remove(UserId);
         _ = base.OnDisconnectedAsync(exception);
     }
 }

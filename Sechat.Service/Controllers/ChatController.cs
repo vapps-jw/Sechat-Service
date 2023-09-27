@@ -181,15 +181,10 @@ public class ChatController : SechatControllerBase
             }
         }
 
-        var connectedContacts = new List<long>();
-        if (_signalRConnectionsMonitor.ConnectedUsers is not null)
-        {
-            connectedContacts = contacts
-                .Where(c => _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InvitedId) && c.InvitedId != UserId) ||
-                            _signalRConnectionsMonitor.ConnectedUsers.Any(cu => cu.Equals(c.InviterId) && c.InviterId != UserId))
-                .Select(c => c.Id)
-                .ToList();
-        }
+        var connectedContacts = contacts
+            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
+            .Select(c => c.Id)
+            .ToList();
 
         foreach (var contactDto in contactDtos)
         {
