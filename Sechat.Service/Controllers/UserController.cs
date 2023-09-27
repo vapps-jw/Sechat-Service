@@ -18,6 +18,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Channels;
@@ -160,11 +161,14 @@ public class UserController : SechatControllerBase
         if (await _userRepository.SaveChanges() > 0)
         {
             var contactDto = _mapper.Map<ContactDto>(contact);
+            var pictures = _userRepository.GetProfilePictures(new List<string> { contact.InviterId, contact.InvitedId });
 
             contactDto.ContactState = _signalRConnectionsMonitor.IsUserOnline(contact.InvitedId);
+            contactDto.ProfileImage = pictures[contact.InviterId];
             await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdated(contactDto);
 
             contactDto.ContactState = _signalRConnectionsMonitor.IsUserOnline(contact.InviterId);
+            contactDto.ProfileImage = pictures[contact.InvitedId];
             await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdated(contactDto);
             return Ok();
         }
