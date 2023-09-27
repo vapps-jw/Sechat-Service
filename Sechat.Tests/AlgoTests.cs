@@ -17,6 +17,40 @@ public class AlgoTests
     }
 
     [Fact]
+    public void LRUTest()
+    {
+        var lru = new LRU<string, int>();
+
+        Assert.Equal(default, lru.Get("foo"));
+
+        lru.Update("foo", 69);
+        Assert.Equal(69, lru.Get("foo"));
+        Assert.Equal(69, lru.Head.Value);
+
+        var test = lru.Get("bar");
+        Assert.Equal(default, test);
+
+        lru.Update("bar", 420);
+        Assert.Equal(420, lru.Get("bar"));
+        Assert.Equal(420, lru.Head.Value);
+
+        lru.Update("baz", 1337);
+        Assert.Equal(1337, lru.Get("baz"));
+        Assert.Equal(1337, lru.Head.Value);
+
+        lru.Update("ball", 69420);
+        Assert.Equal(69420, lru.Get("ball"));
+        Assert.Equal(420, lru.Get("bar"));
+
+        Assert.Equal(420, lru.Head.Value);
+
+        lru.Update("foo", 69);
+        Assert.Equal(420, lru.Get("bar"));
+        Assert.Equal(69, lru.Get("foo"));
+
+    }
+
+    [Fact]
     public void RBTTest()
     {
         var tests = new Dictionary<int, bool>();
@@ -133,5 +167,60 @@ public class AlgoTests
         lst.SechatMergeSort(i => i);
 
         _ = lst.Should().BeInAscendingOrder();
+    }
+
+    [Fact]
+    public void MinHeapTest()
+    {
+        var heap = new MinHeap<int>();
+
+        Assert.Equal(0, heap.Lenght);
+
+        heap.Insert(5);
+        heap.Insert(3);
+        heap.Insert(69);
+        heap.Insert(420);
+        heap.Insert(4);
+        heap.Insert(1);
+        heap.Insert(8);
+        heap.Insert(7);
+
+        Assert.Equal(8, heap.Lenght);
+
+        var delete = heap.Delete(out var res);
+        Assert.True(delete);
+        Assert.Equal(1, res);
+
+        delete = heap.Delete(out res);
+        Assert.True(delete);
+        Assert.Equal(3, res);
+
+        delete = heap.Delete(out res);
+        Assert.True(delete);
+        Assert.Equal(4, res);
+
+        delete = heap.Delete(out res);
+        Assert.True(delete);
+        Assert.Equal(5, res);
+
+        Assert.Equal(4, heap.Lenght);
+
+        delete = heap.Delete(out res);
+        Assert.True(delete);
+        Assert.Equal(7, res);
+
+        delete = heap.Delete(out res);
+        Assert.True(delete);
+        Assert.Equal(8, res);
+
+        delete = heap.Delete(out res);
+        Assert.True(delete);
+        Assert.Equal(69, res);
+
+        delete = heap.Delete(out res);
+        Assert.True(delete);
+        Assert.Equal(420, res);
+
+        Assert.Equal(0, heap.Lenght);
     }
 }
