@@ -23,7 +23,7 @@ public class ContactSuggestionsService
         ContactSuggestionsCache cacheService,
         IDbContextFactory<SechatContext> contextFactory)
     {
-        _cacheUpdateSemaphore = new SemaphoreSlim(0, 1);
+        _cacheUpdateSemaphore = new SemaphoreSlim(1);
         _logger = logger;
         _cacheService = cacheService;
         _contextFactory = contextFactory;
@@ -31,7 +31,7 @@ public class ContactSuggestionsService
 
     public async Task<List<ContactSuggestion>> CreateContactSuggections(string askingUser, List<string> suggested, CancellationToken cancellationToken)
     {
-        //_cacheUpdateSemaphore.Wait(cancellationToken);
+        await _cacheUpdateSemaphore.WaitAsync(cancellationToken);
 
         try
         {
@@ -104,7 +104,7 @@ public class ContactSuggestionsService
         }
         finally
         {
-            // _ = _cacheUpdateSemaphore.Release();
+            _ = _cacheUpdateSemaphore.Release();
         }
     }
 

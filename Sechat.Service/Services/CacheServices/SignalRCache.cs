@@ -11,7 +11,7 @@ public class SignalRCache
 
     public List<string> ConnectedUsers { get; set; } = new();
 
-    public SignalRCache() => _signalRSemaphore = new SemaphoreSlim(0, 1);
+    public SignalRCache() => _signalRSemaphore = new SemaphoreSlim(1);
 
     public string IsUserOnline(string userId) =>
         ConnectedUsers.Contains(userId) ? AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
