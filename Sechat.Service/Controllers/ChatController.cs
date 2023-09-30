@@ -84,9 +84,6 @@ public class ChatController : SechatControllerBase
         return Ok(roomDtos);
     }
 
-    [HttpGet("suggest-contacts")]
-    public IActionResult GetSuggestedContacts() => Ok();
-
     [HttpGet("room-initial-load/{roomId}")]
     public async Task<IActionResult> RoomInitialLoadAsync(string roomId)
     {

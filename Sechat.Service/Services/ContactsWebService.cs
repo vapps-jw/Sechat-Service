@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 namespace Sechat.Service.Services;
 
+// todo: finish cs service
 public class ContactsWebService
 {
     private readonly IDbContextFactory<SechatContext> _contextFactory;
@@ -23,12 +24,12 @@ public class ContactsWebService
         _mapper = mapper;
     }
 
-    public List<ContactSuggestion> CreateContactSuggections(uint level) => throw new NotImplementedException();
+    public List<ContactSuggestion> CreateContactSuggections(int level) => throw new NotImplementedException();
 }
 
 public class ContactSuggestion
 {
-    public uint Level { get; set; }
+    public int Level { get; set; }
     public string UserName { get; set; }
     public string ProfilePicture { get; set; }
 }

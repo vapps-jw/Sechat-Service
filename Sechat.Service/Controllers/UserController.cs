@@ -61,6 +61,10 @@ public class UserController : SechatControllerBase
         _userRepository = userRepository;
     }
 
+    // todo: contact suggestions
+    [HttpGet("suggest-contacts")]
+    public IActionResult GetSuggestedContacts() => Ok();
+
     [HttpGet("get-profile")]
     public async Task<IActionResult> GetProfile([FromServices] UserDataService userDataService)
     {
