@@ -20,4 +20,6 @@ public record Contact : BaseModel<long>
     public string BlockedByName { get; set; } = string.Empty;
 
     public List<DirectMessage> DirectMessages { get; set; } = new();
+
+    public override string ToString() => $"{InviterName} -> {InvitedName}";
 }

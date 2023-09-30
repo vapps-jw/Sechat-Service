@@ -35,6 +35,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\Sechat.Algo\Sechat.Algo.csproj" />
 	  <ProjectReference Include="..\Sechat.Data\Sechat.Data.csproj" />
 	  <ProjectReference Include="..\Sechat.Domain\Sechat.Domain.csproj" />
 	</ItemGroup>

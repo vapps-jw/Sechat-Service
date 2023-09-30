@@ -23,4 +23,6 @@ public record UserProfile : BaseTrackedModel<string>
     public List<CallLog> CallLogs { get; set; } = new();
     public List<Blacklisted> Blacklist { get; set; } = new();
     public Calendar Calendar { get; set; }
+
+    public override string ToString() => UserName;
 }

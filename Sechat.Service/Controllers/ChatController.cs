@@ -8,7 +8,7 @@ using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
-using Sechat.Service.Services;
+using Sechat.Service.Services.CacheServices;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Channels;
@@ -24,7 +24,7 @@ public class ChatController : SechatControllerBase
     private const int _initialMessagesPull = 20;
     private const int _updateMessagesPull = 20;
 
-    private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
+    private readonly SignalRCache _cacheService;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
     private readonly ChatRepository _chatRepository;
@@ -32,14 +32,14 @@ public class ChatController : SechatControllerBase
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
     public ChatController(
-        SignalRConnectionsMonitor signalRConnectionsMonitor,
+        SignalRCache signalRConnectionsMonitor,
         UserManager<IdentityUser> userManager,
         UserRepository userRepository,
         ChatRepository chatRepository,
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
-        _signalRConnectionsMonitor = signalRConnectionsMonitor;
+        _cacheService = signalRConnectionsMonitor;
         _userManager = userManager;
         _userRepository = userRepository;
         _chatRepository = chatRepository;
@@ -179,7 +179,7 @@ public class ChatController : SechatControllerBase
         }
 
         var connectedContacts = contacts
-            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
+            .Where(c => c.InvitedId.Equals(UserId) ? _cacheService.IsUserOnlineFlag(c.InviterId) : _cacheService.IsUserOnlineFlag(c.InvitedId))
             .Select(c => c.Id)
             .ToList();
 

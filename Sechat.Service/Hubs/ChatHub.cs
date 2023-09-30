@@ -7,7 +7,7 @@ using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Dtos.CryptoDtos;
-using Sechat.Service.Services;
+using Sechat.Service.Services.CacheServices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -78,7 +78,7 @@ public interface IChatHub
 public class ChatHub : SechatHubBase<IChatHub>
 {
     private readonly Channel<DefaultNotificationDto> _pushNotificationChannel;
-    private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
+    private readonly SignalRCache _signalRConnectionsMonitor;
     private readonly UserRepository _userRepository;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ILogger<ChatHub> _logger;
@@ -87,7 +87,7 @@ public class ChatHub : SechatHubBase<IChatHub>
 
     public ChatHub(
         Channel<DefaultNotificationDto> pushNotificationChannel,
-        SignalRConnectionsMonitor signalRConnectionsMonitor,
+        SignalRCache signalRConnectionsMonitor,
         UserRepository userRepository,
         UserManager<IdentityUser> userManager,
         ILogger<ChatHub> logger,
@@ -399,10 +399,10 @@ public class ChatHub : SechatHubBase<IChatHub>
         try
         {
             var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-            _signalRConnectionsMonitor.RemoveAllUserConnections(null);
+            await _signalRConnectionsMonitor.RemoveAllUserConnections(null);
 
             await Groups.AddToGroupAsync(Context.ConnectionId, UserId);
-            _signalRConnectionsMonitor.AddUser(UserId);
+            await _signalRConnectionsMonitor.AddUser(UserId);
 
             var tasks = new List<Task>();
             foreach (var userContact in userContacts)
@@ -422,8 +422,10 @@ public class ChatHub : SechatHubBase<IChatHub>
     public override async Task OnDisconnectedAsync(Exception exception)
     {
         var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-        _signalRConnectionsMonitor.RemoveAllUserConnections(null);
-        _signalRConnectionsMonitor.RemoveUserConnection(UserId);
+
+        await _signalRConnectionsMonitor.RemoveAllUserConnections(null);
+        await _signalRConnectionsMonitor.RemoveUserConnection(UserId);
+
         if (!_signalRConnectionsMonitor.IsUserOnlineFlag(UserId))
         {
             var tasks = new List<Task>();

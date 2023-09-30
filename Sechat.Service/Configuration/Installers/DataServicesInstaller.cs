@@ -76,5 +76,6 @@ public class DataServicesInstaller : IServiceInstaller
             typeof(ChatModelsProfile),
             typeof(CalendarModelsProfile));
 
+        _ = webApplicationBuilder.Services.AddTransient<ContactSuggestionsService>();
     }
 }

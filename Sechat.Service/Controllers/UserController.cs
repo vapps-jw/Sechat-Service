@@ -14,6 +14,7 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Dtos.CryptoDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
+using Sechat.Service.Services.CacheServices;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
@@ -32,7 +33,7 @@ namespace Sechat.Service.Controllers;
 [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class UserController : SechatControllerBase
 {
-    private readonly SignalRConnectionsMonitor _signalRConnectionsMonitor;
+    private readonly SignalRCache _cacheService;
     private readonly IDbContextFactory<SechatContext> _contextFactory;
     private readonly CryptographyService _cryptographyService;
     private readonly PushNotificationService _pushNotificationService;
@@ -42,7 +43,7 @@ public class UserController : SechatControllerBase
     private readonly UserRepository _userRepository;
 
     public UserController(
-        SignalRConnectionsMonitor signalRConnectionsMonitor,
+        SignalRCache signalRConnectionsMonitor,
         IDbContextFactory<SechatContext> contextFactory,
         CryptographyService cryptographyService,
         PushNotificationService pushNotificationService,
@@ -51,7 +52,7 @@ public class UserController : SechatControllerBase
         IHubContext<ChatHub, IChatHub> chatHubContext,
         UserRepository userRepository)
     {
-        _signalRConnectionsMonitor = signalRConnectionsMonitor;
+        _cacheService = signalRConnectionsMonitor;
         _contextFactory = contextFactory;
         _cryptographyService = cryptographyService;
         _pushNotificationService = pushNotificationService;
@@ -167,11 +168,11 @@ public class UserController : SechatControllerBase
             var contactDto = _mapper.Map<ContactDto>(contact);
             var pictures = _userRepository.GetProfilePictures(new List<string> { contact.InviterId, contact.InvitedId });
 
-            contactDto.ContactState = _signalRConnectionsMonitor.IsUserOnline(contact.InvitedId);
+            contactDto.ContactState = _cacheService.IsUserOnline(contact.InvitedId);
             contactDto.ProfileImage = pictures[contact.InviterId];
             await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdated(contactDto);
 
-            contactDto.ContactState = _signalRConnectionsMonitor.IsUserOnline(contact.InviterId);
+            contactDto.ContactState = _cacheService.IsUserOnline(contact.InviterId);
             contactDto.ProfileImage = pictures[contact.InvitedId];
             await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdated(contactDto);
             return Ok();
