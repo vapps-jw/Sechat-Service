@@ -24,7 +24,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using static Sechat.Service.Controllers.UserControllerForms;
 
 namespace Sechat.Service.Controllers;
 
@@ -33,6 +32,7 @@ namespace Sechat.Service.Controllers;
 [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class UserController : SechatControllerBase
 {
+    private readonly ContactSuggestionsService _contactSuggestionsService;
     private readonly SignalRCache _cacheService;
     private readonly IDbContextFactory<SechatContext> _contextFactory;
     private readonly CryptographyService _cryptographyService;
@@ -43,6 +43,7 @@ public class UserController : SechatControllerBase
     private readonly UserRepository _userRepository;
 
     public UserController(
+        ContactSuggestionsService contactSuggestionsService,
         SignalRCache signalRConnectionsMonitor,
         IDbContextFactory<SechatContext> contextFactory,
         CryptographyService cryptographyService,
@@ -52,6 +53,7 @@ public class UserController : SechatControllerBase
         IHubContext<ChatHub, IChatHub> chatHubContext,
         UserRepository userRepository)
     {
+        _contactSuggestionsService = contactSuggestionsService;
         _cacheService = signalRConnectionsMonitor;
         _contextFactory = contextFactory;
         _cryptographyService = cryptographyService;
@@ -62,9 +64,12 @@ public class UserController : SechatControllerBase
         _userRepository = userRepository;
     }
 
-    // todo: contact suggestions
-    [HttpGet("suggest-contacts")]
-    public IActionResult GetSuggestedContacts() => Ok();
+    [HttpPost("suggest-contacts")]
+    public async Task<IActionResult> GetSuggestedContacts([FromBody] UserControllerForms.SuggestedContacts suggestedContacts, CancellationToken cancellationToken)
+    {
+        var suggestions = await _contactSuggestionsService.CreateSuggectionsList(UserName, suggestedContacts.Data, cancellationToken);
+        return Ok(suggestions);
+    }
 
     [HttpGet("get-profile")]
     public async Task<IActionResult> GetProfile([FromServices] UserDataService userDataService)
@@ -74,7 +79,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPost("request-contact")]
-    public async Task<IActionResult> Invite([FromBody] ConnectionRequestDto invitationDto)
+    public async Task<IActionResult> Invite([FromBody] ConnectionRequestDto invitationDto, CancellationToken cancellationToken)
     {
         if (UserName.Equals(invitationDto.Username)) return BadRequest("You cant invite yourself");
 
@@ -105,6 +110,7 @@ public class UserController : SechatControllerBase
             await _chatHubContext.Clients.Group(UserId).ContactRequestReceived(contactDto);
 
             await _pushNotificationService.IncomingContactRequestNotification(invitedUser.Id, UserName);
+            await _contactSuggestionsService.UpdateCache(UserName, cancellationToken);
             return Ok("Invitation sent");
         }
 
@@ -112,7 +118,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpDelete("delete-contact")]
-    public async Task<IActionResult> DeleteContact(long contactId)
+    public async Task<IActionResult> DeleteContact(long contactId, CancellationToken cancellationToken)
     {
         var contact = await _userRepository.GetContact(contactId);
         if (contact is null) return BadRequest("Not your contact");
@@ -134,6 +140,7 @@ public class UserController : SechatControllerBase
         {
             await _chatHubContext.Clients.Group(contact.InvitedId).ContactDeleted(new ResourceId(contactId));
             await _chatHubContext.Clients.Group(contact.InviterId).ContactDeleted(new ResourceId(contactId));
+            await _contactSuggestionsService.DeleteContact(UserName, cancellationToken);
             return Ok();
         }
 
@@ -141,7 +148,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("block-contact")]
-    public async Task<IActionResult> BlockContact(long contactId)
+    public async Task<IActionResult> BlockContact(long contactId, CancellationToken cancellationToken)
     {
         var contact = _userRepository.BlockContact(contactId, UserId, UserName);
         if (contact is null) return BadRequest("Can`t do that");
@@ -151,6 +158,7 @@ public class UserController : SechatControllerBase
             var contactDto = _mapper.Map<ContactDto>(contact);
             await _chatHubContext.Clients.Group(await GetUserId(contactDto.InvitedName)).ContactUpdated(contactDto);
             await _chatHubContext.Clients.Group(await GetUserId(contactDto.InviterName)).ContactUpdated(contactDto);
+            await _contactSuggestionsService.UpdateCache(UserName, cancellationToken);
             return Ok();
         }
 
@@ -158,7 +166,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("allow-contact")]
-    public async Task<IActionResult> AllowContact(long contactId)
+    public async Task<IActionResult> AllowContact(long contactId, CancellationToken cancellationToken)
     {
         var contact = _userRepository.AllowContact(contactId, UserId);
         if (contact is null) return BadRequest("Can`t do that");
@@ -175,6 +183,7 @@ public class UserController : SechatControllerBase
             contactDto.ContactState = _cacheService.IsUserOnline(contact.InviterId);
             contactDto.ProfileImage = pictures[contact.InvitedId];
             await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdated(contactDto);
+            await _contactSuggestionsService.UpdateCache(UserName, cancellationToken);
             return Ok();
         }
 
@@ -194,7 +203,8 @@ public class UserController : SechatControllerBase
     [HttpPatch("approve-contact")]
     public async Task<IActionResult> ApproveContact(
         [FromServices] Channel<DefaultNotificationDto> channel,
-        long contactId)
+        long contactId,
+        CancellationToken cancellationToken)
     {
         var contact = _userRepository.ApproveContact(contactId, UserId);
         if (contact is null) return BadRequest("Can`t do that");
@@ -210,6 +220,7 @@ public class UserController : SechatControllerBase
             await _chatHubContext.Clients.Group(inviterId).ContactUpdated(contactDto);
             await _chatHubContext.Clients.Group(inviterId).DMKeyRequested(new DMKeyRequest(UserName, contactDto.InviterName, contactDto.Id));
             await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.ContactRequestApproved, inviterId, UserName));
+            await _contactSuggestionsService.UpdateCache(UserName, cancellationToken);
             return Ok();
         }
 
@@ -232,8 +243,13 @@ public class UserController : SechatControllerBase
         var imageData = Convert.ToBase64String(stream.ToArray());
 
         user.ProfilePicture = imageData;
+        if (await ctx.SaveChangesAsync(cancellationToken) > 0)
+        {
+            await _contactSuggestionsService.DeleteContact(UserName, cancellationToken);
+            return Ok(new UserControllerForms.ProcessedImageResponse(imageData));
+        }
 
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(new ProcessedImageResponse(imageData)) : BadRequest(AppConstants.ApiResponseMessage.DefaultFail);
+        return BadRequest(AppConstants.ApiResponseMessage.DefaultFail);
     }
 
     private async Task<string> GetUserId(string userName) => (await _userManager.FindByNameAsync(userName))?.Id;
@@ -251,6 +267,11 @@ public class UserControllerForms
     public class ProfileImageFormValidation : AbstractValidator<ProfileImageForm>
     {
         public ProfileImageFormValidation() => _ = RuleFor(x => x.Data).NotNull().NotEmpty();
+    }
+
+    public class SuggestedContacts
+    {
+        public List<string> Data { get; set; } = new();
     }
 
     public class FlagForm

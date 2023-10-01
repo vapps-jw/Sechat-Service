@@ -67,7 +67,7 @@ public class SechatBinarySearchTree<T> : BinaryTree<T> where T : IComparable<T>
     private BinaryTreeNode<T> GetParentForNewNode(T data)
     {
         var current = Root;
-        BinaryTreeNode<T>? parent = null;
+        BinaryTreeNode<T> parent = null;
         while (current != null)
         {
             parent = current;
@@ -116,7 +116,7 @@ public class SechatBinarySearchTree<T> : BinaryTree<T> where T : IComparable<T>
         }
     }
 
-    private void ReplaceInParent(BinaryTreeNode<T> node, BinaryTreeNode<T>? newNode)
+    private void ReplaceInParent(BinaryTreeNode<T> node, BinaryTreeNode<T> newNode)
     {
         if (node.Parent != null)
         {

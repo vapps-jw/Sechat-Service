@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Data;
+using Sechat.Data.Models.UserDetails;
 using Sechat.Data.Repositories;
 using System;
 using System.Linq;
@@ -56,11 +57,12 @@ public static class DBSetup
     {
         using var serviceScope = app.ApplicationServices.CreateScope();
         var userManager = serviceScope.ServiceProvider.GetService<UserManager<IdentityUser>>();
+
         var repo = serviceScope.ServiceProvider.GetService<UserRepository>();
 
         if (repo.CountUserProfiles() > 0) return;
 
-        for (var i = 1; i < 11; i++)
+        for (var i = 1; i < 31; i++)
         {
             var name = $"u{i}";
             var user = new IdentityUser(name);
@@ -72,5 +74,35 @@ public static class DBSetup
 
             Console.WriteLine($"--> Creating User: {name} - Success: {res.Succeeded}");
         }
+
+        var ctxFactoryScope = serviceScope.ServiceProvider.GetRequiredService<IDbContextFactory<SechatContext>>();
+        var ctx = ctxFactoryScope.CreateDbContext();
+        var users = ctx.UserProfiles.ToList();
+
+        var level = 1;
+        for (var i = 0; i < users.Count; i++)
+        {
+            for (var j = 1; j <= level && i + j <= users.Count - 1; j++)
+            {
+                _ = await CreateContact(users[i], users[i + j], ctx);
+            }
+            level += level;
+        }
+    }
+
+    private static async Task<Contact> CreateContact(UserProfile inviter, UserProfile invited, SechatContext context)
+    {
+        var result = new Contact()
+        {
+            Approved = true,
+            InvitedId = invited.Id,
+            InvitedName = invited.UserName,
+            InviterId = inviter.Id,
+            InviterName = inviter.UserName,
+        };
+        _ = context.Contacts.Add(result);
+        _ = await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+        return result;
     }
 }

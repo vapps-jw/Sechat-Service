@@ -14,7 +14,6 @@ public class AccountsCleaner : BackgroundService
     private readonly ILogger<AccountsCleaner> _logger;
     private readonly IDbContextFactory<SechatContext> _contextFactory;
     private int _exceptionCount;
-    private readonly int _cleanInterval = 1;
 
     public AccountsCleaner(ILogger<AccountsCleaner> logger, IDbContextFactory<SechatContext> contextFactory)
     {

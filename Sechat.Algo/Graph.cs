@@ -1,4 +1,7 @@
-﻿namespace Sechat.Algo;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+
+namespace Sechat.Algo;
 
 public record Edge<T>
 {
@@ -10,7 +13,7 @@ public record Edge<T>
 
 public class Graph<T>
 {
-    public Dictionary<T, List<T>> Matrix { get; set; } = new();
+    public ConcurrentDictionary<T, List<T>> Matrix { get; set; } = new();
 
     public bool IsCached(T node) => Matrix.ContainsKey(node);
 
@@ -18,15 +21,30 @@ public class Graph<T>
     {
         if (Matrix.ContainsKey(node))
         {
+            var newEdges = edges.Except(Matrix[node]);
+            var redundantEdges = Matrix[node].Except(edges);
+            foreach (var currentEdge in redundantEdges)
+            {
+                _ = Matrix[currentEdge].RemoveAll(e => e.Equals(node));
+            }
+            foreach (var newEdge in newEdges)
+            {
+                if (Matrix.ContainsKey(newEdge))
+                {
+                    if (!Matrix[newEdge].Contains(node))
+                    {
+                        Matrix[newEdge].Add(node);
+                    }
+                    continue;
+                }
+                _ = Matrix.TryAdd(newEdge, new List<T>());
+                Matrix[newEdge].Add(node);
+            }
+
             Matrix[node] = edges;
             return;
         }
-        Matrix.Add(node, edges);
-        foreach (var edge in edges)
-        {
-            if (Matrix.ContainsKey(edge)) continue;
-            Matrix.Add(edge, new List<T>());
-        }
+        _ = Matrix.TryAdd(node, edges);
     }
 
     public void Delete(T node)
@@ -35,9 +53,24 @@ public class Graph<T>
         var edges = Matrix[node];
         foreach (var edge in edges)
         {
-            _ = Matrix[edge].RemoveAll(e => e.Equals(node));
+            if (Matrix.ContainsKey(edge))
+            {
+                _ = Matrix[edge].RemoveAll(e => e.Equals(node));
+            }
         }
-        _ = Matrix.Remove(node);
+        _ = Matrix.TryRemove(node, out var _);
+    }
+
+    public void Print()
+    {
+        foreach (var node in Matrix)
+        {
+            foreach (var edge in node.Value)
+            {
+                Console.WriteLine($"{node.Key} -> {edge}");
+                Debug.WriteLine($"{node.Key} -> {edge}");
+            }
+        }
     }
 
     public List<T> GetEdges(T node) =>
