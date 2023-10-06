@@ -2,6 +2,19 @@
 
 public class AppConstants
 {
+    public struct Files
+    {
+        public const string Base64jpegPrefix = "data:image/jepg;base64,";
+        public const string Base64jpgPrefix = "data:image/jpg;base64,";
+        public const string Base64mp4Prefix = "data:image/mp4;base64,";
+        public const string TempPrefix = "temp_";
+        public const string ConvertedPrefix = "processed_";
+        public const string ThumbnailPrefix = "thumbnail_";
+
+        public static string GenerateConvertedFileName(string guid) => $"{ConvertedPrefix}{guid}.mp4";
+        public static string GenerateThumbnailFileName(string guid) => $"{ThumbnailPrefix}{guid}.jpg";
+    }
+
     public struct Paths
     {
         public const string SecretSettings = @"secrets/appsettings.secrets.json";

@@ -53,6 +53,6 @@ public class ImagesController : SechatControllerBase
         await imageProcessor.SaveAsync(stream, new JpegEncoder() { Quality = 80 }, cancellationToken);
         var imageData = Convert.ToBase64String(stream.ToArray());
 
-        return Ok(new ProcessedImageResponse($"data:image/jepg;base64,{imageData}"));
+        return Ok(new ProcessedImageResponse($"{AppConstants.Files.Base64jpegPrefix}{imageData}"));
     }
 }
