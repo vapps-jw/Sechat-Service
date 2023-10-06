@@ -6,7 +6,7 @@ public class AppConstants
     {
         public const string Base64jpegPrefix = "data:image/jepg;base64,";
         public const string Base64jpgPrefix = "data:image/jpg;base64,";
-        public const string Base64mp4Prefix = "data:image/mp4;base64,";
+        public const string Base64mp4Prefix = "data:video/mp4;base64,";
         public const string TempPrefix = "temp_";
         public const string ConvertedPrefix = "processed_";
         public const string ThumbnailPrefix = "thumbnail_";
