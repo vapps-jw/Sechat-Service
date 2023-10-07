@@ -10,5 +10,6 @@ public class FileServicesInstaller : IServiceInstaller
     {
         _ = webApplicationBuilder.Services.AddSingleton<VideoConversionService>();
         _ = webApplicationBuilder.Services.AddSingleton<TemporaryFileService>();
+        _ = webApplicationBuilder.Services.AddScoped<ImageConversionService>();
     }
 }
