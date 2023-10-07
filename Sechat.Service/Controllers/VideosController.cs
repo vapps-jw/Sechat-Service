@@ -11,20 +11,23 @@ namespace Sechat.Service.Controllers;
 [Route("[controller]")]
 public class VideosController : SechatControllerBase
 {
+    private readonly VideoConversionService _videoConversionService;
+
+    public VideosController(VideoConversionService videoConversionService) => _videoConversionService = videoConversionService;
+
     [HttpPost("process-chat-video")]
     public async Task<IActionResult> ProcessChatVideo(
-        [FromServices] VideoConversionService videoConversionService,
         IFormFile video,
         CancellationToken cancellationToken)
     {
         if (video is null) return BadRequest("Video not detected");
-        if (video.Length > 52428800)
+        if (video.Length > 83886080)
         {
-            return BadRequest("File too large, max 50MB");
+            return BadRequest("File too large, max 80MB");
         }
-        var result = await videoConversionService.PrepareVideoAsync(video, cancellationToken);
 
-        return Ok(result);
+        var result = await _videoConversionService.PrepareVideoAsync(video, cancellationToken);
+        return result is null ? Problem("Video conversion error, try again") : (IActionResult)Ok(result);
     }
 }
 

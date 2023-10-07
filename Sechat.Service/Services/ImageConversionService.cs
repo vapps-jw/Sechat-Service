@@ -25,7 +25,7 @@ public class ImageConversionService
         using var imageProcessor = await Image.LoadAsync(image.OpenReadStream(), cancellationToken);
 
         var maxH = 500;
-        var maxW = 300;
+        var maxW = 320;
 
         var width = imageProcessor.Width;
         var height = imageProcessor.Height;

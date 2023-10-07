@@ -202,10 +202,6 @@ public class ChatController : SechatControllerBase
         return Ok(dtos);
     }
 
-    // Updates
-
-    // Rooms
-
     [HttpPost("send-message")]
     public async Task<IActionResult> SendMessage(
     [FromServices] Channel<DefaultNotificationDto> channel,

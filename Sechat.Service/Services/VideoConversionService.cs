@@ -39,7 +39,7 @@ public class VideoConversionService
 
         var uniqueId = Guid.NewGuid().ToString();
 
-        var inputPath = _temporaryFileService.GetSavePath(uniqueId);
+        var inputPath = _temporaryFileService.GetSavePath($"{uniqueId}{Path.GetExtension(video.FileName)}");
         var outputConvertedName = AppConstants.Files.GenerateConvertedFileName(uniqueId);
         var outputThumbnailName = AppConstants.Files.GenerateThumbnailFileName(uniqueId);
         var outputConvertedPath = _temporaryFileService.GetSavePath(outputConvertedName);
@@ -51,7 +51,8 @@ public class VideoConversionService
             var startInfo = new ProcessStartInfo
             {
                 FileName = _fileSettingsMonitor.CurrentValue.FFMPEGPath,
-                Arguments = $"-y -i {inputPath} -vf scale=540x380 {outputConvertedPath} -ss 00:00:00 -vframes 1 -vf scale=540x380 {outputThumbnailPath}",
+                Arguments = $"-y -i {inputPath} -vf scale=320:-1 -f mp4 {outputConvertedPath} -ss 00:00:00 -vframes 1 -vf scale=320:-1 {outputThumbnailPath}",
+                //Arguments = $"-y -i {inputPath} -filter:v scale=720:-1 -c:a copy -f mp4 {outputConvertedPath} -ss 00:00:00 -vframes 1 {outputThumbnailPath}",
                 CreateNoWindow = true,
                 UseShellExecute = false,
             };
@@ -86,7 +87,7 @@ public class VideoConversionService
             var videoString = $"{AppConstants.Files.Base64mp4Prefix}{results[0]}";
             var thumbnailString = $"{AppConstants.Files.Base64jpgPrefix}{results[1]}";
 
-            return new VideoConversionResult(videoString, thumbnailString);
+            return new VideoConversionResult(thumbnailString, videoString);
         }
         catch (Exception ex)
         {

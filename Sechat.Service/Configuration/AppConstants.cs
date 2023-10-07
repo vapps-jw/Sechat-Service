@@ -96,7 +96,7 @@ public class AppConstants
     {
         public const int NameMax = 50;
         public const int TextMax = 3000;
-        public const int Max = 300000;
+        public const int Max = 100_000_000;
         public const int DataStoreMax = 5000;
         public const int PasswordMax = 20;
         public const int PasswordMin = 8;

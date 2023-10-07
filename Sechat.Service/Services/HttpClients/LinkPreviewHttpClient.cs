@@ -71,10 +71,9 @@ public class LinkPreviewHttpClient
         _ = stream.Read(readByte);
 
         var base64String = Convert.ToBase64String(readByte);
-        if (!IsBase64String(base64String)) return false;
-
-        var contentHeader = response.Content.Headers.GetValues("Content-Type");
-        return contentHeader.Any() || Regex.IsMatch(contentHeader.First(), "image/*", RegexOptions.IgnoreCase);
+        return IsBase64String(base64String) &&
+                response.Content.Headers.TryGetValues("Content-Type", out var contentHeader) &&
+                (contentHeader.Any() || Regex.IsMatch(contentHeader.First(), "image/*", RegexOptions.IgnoreCase));
     }
 
     private async Task<string> GetImage(HtmlDocument htmlDocument)

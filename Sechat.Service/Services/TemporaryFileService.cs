@@ -17,6 +17,11 @@ public class TemporaryFileService
         var fileName = string.Concat(uniqueId, Path.GetExtension(video.FileName));
         var savePath = GetSavePath(fileName);
 
+        if (!Directory.Exists(Path.GetDirectoryName(savePath)))
+        {
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+        }
+
         await using (var fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write))
         {
             await video.CopyToAsync(fileStream);
