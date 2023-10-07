@@ -16,6 +16,7 @@ public class VideosController : SechatControllerBase
     public VideosController(VideoConversionService videoConversionService) => _videoConversionService = videoConversionService;
 
     [HttpPost("process-chat-video")]
+    [RequestSizeLimit(100_000_000)]
     public async Task<IActionResult> ProcessChatVideo(
         IFormFile video,
         CancellationToken cancellationToken)
