@@ -48,11 +48,13 @@ public class VideoConversionService
         try
         {
             _ = _temporaryFileService.SaveTemporaryFile(video, uniqueId);
+            //Fix resolution
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = _fileSettingsMonitor.CurrentValue.FFMPEGPath,
-                Arguments = $"-y -i {inputPath} -vf scale=320:-1 -f mp4 {outputConvertedPath} -ss 00:00:00 -vframes 1 -vf scale=320:-1 {outputThumbnailPath}",
-                //Arguments = $"-y -i {inputPath} -filter:v scale=720:-1 -c:a copy -f mp4 {outputConvertedPath} -ss 00:00:00 -vframes 1 {outputThumbnailPath}",
+                //Arguments = $"-y -i {inputPath} -vf scale=320:-1 -f mp4 {outputConvertedPath} -ss 00:00:00 -vframes 1 -vf scale=320:-1 {outputThumbnailPath}",
+                Arguments = $"-y -i {inputPath} -vf scale='bitand(oh*dar,65534)':'min(480,ih)' -f mp4 {outputConvertedPath} -ss 00:00:00 -vframes 1 -vf scale='bitand(oh*dar,65534)':'min(480,ih)' {outputThumbnailPath}",
                 CreateNoWindow = true,
                 UseShellExecute = false,
             };
