@@ -212,7 +212,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
             CreatorName = r.CreatorName,
             Id = r.Id,
             Members = r.Members,
-            Messages = r.Messages.OrderByDescending(m => m.Id).Take(initialTake).ToList(),
+            Messages = r.Messages.OrderByDescending(m => m.Id).Take(initialTake).OrderBy(m => m.Id).ToList(),
             Name = r.Name
         }).ToListAsync();
         return res;
@@ -232,9 +232,27 @@ public class ChatRepository : RepositoryBase<SechatContext>
                 CreatorName = r.CreatorName,
                 Id = r.Id,
                 Members = r.Members,
-                Messages = r.Messages.OrderByDescending(m => m.Id).Take(initialTake).ToList(),
+                Messages = r.Messages.OrderByDescending(m => m.Id).Take(initialTake).OrderBy(m => m.Id).ToList(),
                 Name = r.Name
             }).FirstOrDefaultAsync();
+        return res;
+    }
+
+    public async Task<List<Room>> GetRoomsUpdate(string memberUserId, long lastMessage)
+    {
+        var res = await _context.Rooms
+        .Include(r => r.Messages)
+            .ThenInclude(m => m.MessageViewers)
+        .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
+        {
+            LastActivity = r.LastActivity,
+            Created = r.Created,
+            CreatorName = r.CreatorName,
+            Id = r.Id,
+            Members = r.Members,
+            Messages = r.Messages.Where(m => m.Id > lastMessage).OrderBy(m => m.Id).ToList(),
+            Name = r.Name
+        }).ToListAsync();
         return res;
     }
 
@@ -244,6 +262,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
             .Where(m => m.RoomId.Equals(roomId) && m.Id < lastMessage)
             .OrderByDescending(m => m.Id)
             .Take(take)
+            .OrderBy(m => m.Id)
             .ToListAsync();
 
     public Room AddToRoom(string roomId, string userId)

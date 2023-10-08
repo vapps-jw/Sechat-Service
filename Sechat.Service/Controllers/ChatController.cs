@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -55,7 +56,40 @@ public class ChatController : SechatControllerBase
         var rooms = await _chatRepository.GetRoomsWithRecentMessages(UserId, _initialMessagesPull);
         foreach (var room in rooms)
         {
-            room.Messages = room.Messages.OrderBy(m => m.Id).ToList();
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
+        }
+
+        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    if (viewer.User.Equals(UserName))
+                    {
+                        message.WasViewed = true;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return Ok(roomDtos);
+    }
+
+    [HttpGet("rooms-update/{lastMessage}")]
+    public async Task<IActionResult> RoomsUpdate(long lastMessage)
+    {
+        var rooms = await _chatRepository.GetRoomsUpdate(UserId, lastMessage);
+        foreach (var room in rooms)
+        {
             foreach (var message in room.Messages)
             {
                 foreach (var viewer in message.MessageViewers)
@@ -118,8 +152,6 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> LoadMoreRoomMessages(string roomId, long lastId)
     {
         var messages = await _chatRepository.GetOldMessagesForRoom(roomId, lastId, _updateMessagesPull);
-        messages = messages.OrderBy(m => m.Id).ToList();
-
         foreach (var message in messages)
         {
             foreach (var viewer in message.MessageViewers)
@@ -149,8 +181,51 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> ContactsInitialLoadAsync()
     {
         var contacts = await _userRepository.GetContactsWithRecentMessages(UserId, _initialMessagesPull);
-        contacts.ForEach(c => c.DirectMessages = c.DirectMessages.OrderBy(m => m.Id).ToList());
+        var ids = contacts
+            .Select(c => new { id = c.InviterId, name = c.InviterName })
+            .Concat(contacts.Select(c => new { id = c.InvitedId, name = c.InvitedName }))
+            .Distinct()
+            .Where(i => !i.id.Equals(UserId))
+            .ToList();
 
+        var pictures = _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList());
+        var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
+
+        foreach (var dto in contactDtos)
+        {
+            if (dto.InviterName.Equals(UserName))
+            {
+                var imageId = ids.FirstOrDefault(i => i.name.Equals(dto.InvitedName));
+                dto.ProfileImage = pictures[imageId.id];
+                continue;
+            }
+
+            if (dto.InvitedName.Equals(UserName))
+            {
+                var imageId = ids.FirstOrDefault(i => i.name.Equals(dto.InviterName));
+                dto.ProfileImage = pictures[imageId.id];
+                continue;
+            }
+        }
+
+        var connectedContacts = contacts
+            .Where(c => c.InvitedId.Equals(UserId) ? _cacheService.IsUserOnlineFlag(c.InviterId) : _cacheService.IsUserOnlineFlag(c.InvitedId))
+            .Select(c => c.Id)
+            .ToList();
+
+        foreach (var contactDto in contactDtos)
+        {
+            contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
+                AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+        }
+
+        return Ok(contactDtos);
+    }
+
+    [HttpGet("contacts-update/{lastMessage}")]
+    public async Task<IActionResult> ContactsUpate(long lastMessage)
+    {
+        var contacts = await _userRepository.GetContactsUpdate(UserId, lastMessage);
         var ids = contacts
             .Select(c => new { id = c.InviterId, name = c.InviterName })
             .Concat(contacts.Select(c => new { id = c.InvitedId, name = c.InvitedName }))
@@ -196,7 +271,6 @@ public class ChatController : SechatControllerBase
     public async Task<IActionResult> LoadMoreContactMessages(long contactId, long lastId)
     {
         var messages = await _userRepository.GetOldMessagesForContact(contactId, lastId, _updateMessagesPull);
-        messages = messages.OrderBy(m => m.Id).ToList();
         var dtos = _mapper.Map<List<DirectMessageDto>>(messages);
 
         return Ok(dtos);
@@ -460,3 +534,4 @@ public class ChatController : SechatControllerBase
         return Ok();
     }
 }
+

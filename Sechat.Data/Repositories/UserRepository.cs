@@ -82,7 +82,13 @@ public class UserRepository : RepositoryBase<SechatContext>
     public Task<List<Contact>> GetContactsWithRecentMessages(string userId, int initalTake) =>
         _context.Contacts
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
-            .Include(c => c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake))
+            .Include(c => c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake).OrderBy(dm => dm.Id))
+            .ToListAsync();
+
+    public Task<List<Contact>> GetContactsUpdate(string userId, long lastMessage) =>
+        _context.Contacts
+            .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
+            .Include(c => c.DirectMessages.Where(m => m.Id > lastMessage).OrderBy(dm => dm.Id))
             .ToListAsync();
 
     public Task<Contact> GetContact(long contactId) =>
@@ -98,6 +104,7 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Where(dm => dm.ContactId == contactId && dm.Id < lastMessage)
             .OrderByDescending(m => m.Id)
             .Take(take)
+            .OrderBy(dm => dm.Id)
             .ToListAsync();
 
     public Task<List<string>> GetAllowedContactsIds(string userId) =>
