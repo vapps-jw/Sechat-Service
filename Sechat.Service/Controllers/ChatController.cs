@@ -70,13 +70,10 @@ public class ChatController : SechatControllerBase
         {
             foreach (var message in room.Messages)
             {
-                foreach (var viewer in message.MessageViewers)
+                if (message.MessageViewers.Any(mv => mv.User.Equals(UserName)))
                 {
-                    if (viewer.User.Equals(UserName))
-                    {
-                        message.WasViewed = true;
-                        continue;
-                    }
+                    message.WasViewed = true;
+                    continue;
                 }
             }
         }
@@ -104,13 +101,10 @@ public class ChatController : SechatControllerBase
         {
             foreach (var message in room.Messages)
             {
-                foreach (var viewer in message.MessageViewers)
+                if (message.MessageViewers.Any(mv => mv.User.Equals(UserName)))
                 {
-                    if (viewer.User.Equals(UserName))
-                    {
-                        message.WasViewed = true;
-                        continue;
-                    }
+                    message.WasViewed = true;
+                    continue;
                 }
             }
         }
@@ -137,7 +131,7 @@ public class ChatController : SechatControllerBase
         {
             foreach (var viewer in message.MessageViewers)
             {
-                if (viewer.User.Equals(UserName))
+                if (message.MessageViewers.Any(mv => mv.User.Equals(UserName)))
                 {
                     message.WasViewed = true;
                     continue;
@@ -166,7 +160,7 @@ public class ChatController : SechatControllerBase
         {
             foreach (var viewer in message.MessageViewers)
             {
-                if (viewer.User.Equals(UserName))
+                if (message.MessageViewers.Any(mv => mv.User.Equals(UserName)))
                 {
                     message.WasViewed = true;
                     continue;
