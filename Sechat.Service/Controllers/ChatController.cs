@@ -22,8 +22,8 @@ namespace Sechat.Service.Controllers;
 [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class ChatController : SechatControllerBase
 {
-    private const int _initialMessagesPull = 20;
-    private const int _updateMessagesPull = 20;
+    private const int _initialMessagesPull = 10;
+    private const int _updateMessagesPull = 10;
 
     private readonly SignalRCache _cacheService;
     private readonly UserManager<IdentityUser> _userManager;
