@@ -48,24 +48,14 @@ public class AdminController : SechatControllerBase
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
         var setting = ctx.GlobalSettings.FirstOrDefault(s => s.Id.Equals(form.Id));
         setting.Value = form.Value;
-        var result = await ctx.SaveChangesAsync();
+        var result = await ctx.SaveChangesAsync(cancellationToken);
         return result > 0 ? Ok() : BadRequest("Setting not updated");
     }
 
-    [HttpPost("lock-user-username")]
-    public async Task<IActionResult> LockUserByUserName([FromBody] UserNameForm userNameForm, CancellationToken cancellationToken)
+    [HttpPost("lock-user")]
+    public async Task<IActionResult> LockUserByUserName([FromBody] UserIdentifier userIdentifier, CancellationToken cancellationToken)
     {
-        var user = await _userManager.FindByNameAsync(userNameForm.UserName);
-        if (user is null) return BadRequest("User does not exit");
-
-        var lockUserTask = await _userManager.SetLockoutEnabledAsync(user, true);
-        return lockUserTask.Succeeded ? Ok() : BadRequest("Lockout failed");
-    }
-
-    [HttpPost("lock-user-email")]
-    public async Task<IActionResult> LockUserBEmail([FromBody] UserEmailForm userEmailForm, CancellationToken cancellationToken)
-    {
-        var user = await _userManager.FindByNameAsync(userEmailForm.Email);
+        var user = await _userManager.FindByNameAsync(userIdentifier.UserName);
         if (user is null) return BadRequest("User does not exit");
 
         var lockUserTask = await _userManager.SetLockoutEnabledAsync(user, true);
@@ -78,22 +68,18 @@ public class AdminController : SechatControllerBase
 
 public class AdminControllerForms
 {
-    public class UserNameForm
+    public class UserIdentifier
     {
         public string UserName { get; set; }
-    }
-    public class UserNameFormValidation : AbstractValidator<UserNameForm>
-    {
-        public UserNameFormValidation() => _ = RuleFor(x => x.UserName).NotNull().NotEmpty();
-    }
-
-    public class UserEmailForm
-    {
         public string Email { get; set; }
     }
-    public class UserEmailFormValidation : AbstractValidator<UserEmailForm>
+    public class UserIdentifierValidation : AbstractValidator<UserIdentifier>
     {
-        public UserEmailFormValidation() => _ = RuleFor(x => x.Email).NotNull().NotEmpty().EmailAddress();
+        public UserIdentifierValidation()
+        {
+            _ = RuleFor(x => x.UserName).NotNull().NotEmpty();
+            _ = RuleFor(x => x.Email).NotNull().NotEmpty().EmailAddress();
+        }
     }
 
     public class SettingForm

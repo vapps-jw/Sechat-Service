@@ -73,7 +73,7 @@ public class AccountController : SechatControllerBase
         if (signInResult.IsLockedOut)
         {
             _logger.LogWarning("User Locked: {Username}", userCredentials.Username);
-            return BadRequest("Too many attempts, try later");
+            return BadRequest("Account locked, try again later");
         }
 
         _logger.LogWarning("User failed to Sign In: {Username} Reason: {reason}", userCredentials.Username, signInResult.ToString());
