@@ -230,6 +230,37 @@ public class ChatController : SechatControllerBase
         return Ok(roomDtos);
     }
 
+    [HttpGet("rooms-update-metadata/{lastMessage}")]
+    public async Task<IActionResult> RoomsUpdateMetadata(long lastMessage)
+    {
+        var rooms = await _chatRepository.GetRoomsUpdateMetadata(UserId, lastMessage);
+        foreach (var room in rooms)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
+        }
+
+        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                if (message.MessageViewers.Any(mv => mv.User.Equals(UserName)))
+                {
+                    message.WasViewed = true;
+                }
+                message.Loaded = false;
+            }
+        }
+
+        return Ok(roomDtos);
+    }
+
     [HttpGet("room-initial-load/{roomId}")]
     public async Task<IActionResult> RoomInitialLoadAsync(string roomId)
     {
@@ -375,6 +406,52 @@ public class ChatController : SechatControllerBase
         foreach (var contactDto in contactDtos)
         {
             contactDto.DirectMessages.ForEach(dm => dm.Loaded = true);
+            contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
+                AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+        }
+
+        return Ok(contactDtos);
+    }
+
+    [HttpGet("contacts-update-metadata/{lastMessage}")]
+    public async Task<IActionResult> ContactsUpateMetadata(long lastMessage)
+    {
+        var contacts = await _userRepository.GetContactsUpdateMetadata(UserId, lastMessage);
+        var ids = contacts
+            .Select(c => new { id = c.InviterId, name = c.InviterName })
+            .Concat(contacts.Select(c => new { id = c.InvitedId, name = c.InvitedName }))
+            .Distinct()
+            .Where(i => !i.id.Equals(UserId))
+            .ToList();
+
+        var pictures = _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList());
+        var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
+
+        foreach (var dto in contactDtos)
+        {
+            if (dto.InviterName.Equals(UserName))
+            {
+                var imageId = ids.FirstOrDefault(i => i.name.Equals(dto.InvitedName));
+                dto.ProfileImage = pictures[imageId.id];
+                continue;
+            }
+
+            if (dto.InvitedName.Equals(UserName))
+            {
+                var imageId = ids.FirstOrDefault(i => i.name.Equals(dto.InviterName));
+                dto.ProfileImage = pictures[imageId.id];
+                continue;
+            }
+        }
+
+        var connectedContacts = contacts
+            .Where(c => c.InvitedId.Equals(UserId) ? _cacheService.IsUserOnlineFlag(c.InviterId) : _cacheService.IsUserOnlineFlag(c.InvitedId))
+            .Select(c => c.Id)
+            .ToList();
+
+        foreach (var contactDto in contactDtos)
+        {
+            contactDto.DirectMessages.ForEach(dm => dm.Loaded = false);
             contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
                 AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
         }

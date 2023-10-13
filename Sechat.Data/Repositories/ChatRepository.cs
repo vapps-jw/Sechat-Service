@@ -265,9 +265,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return res;
     }
 
-    public async Task<List<Room>> GetRoomsUpdate(string memberUserId, long lastMessage)
-    {
-        var res = await _context.Rooms
+    public Task<List<Room>> GetRoomsUpdate(string memberUserId, long lastMessage) => _context.Rooms
         .Include(r => r.Messages)
             .ThenInclude(m => m.MessageViewers)
         .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
@@ -280,8 +278,28 @@ public class ChatRepository : RepositoryBase<SechatContext>
             Messages = r.Messages.Where(m => m.Id > lastMessage).OrderBy(m => m.Id).ToList(),
             Name = r.Name
         }).ToListAsync();
-        return res;
-    }
+
+    public Task<List<Room>> GetRoomsUpdateMetadata(string memberUserId, long lastMessage) => _context.Rooms
+        .Include(r => r.Messages)
+            .ThenInclude(m => m.MessageViewers)
+        .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
+        {
+            LastActivity = r.LastActivity,
+            Created = r.Created,
+            CreatorName = r.CreatorName,
+            Id = r.Id,
+            Members = r.Members,
+            Messages = r.Messages.Where(m => m.Id > lastMessage).OrderBy(m => m.Id).Select(m => new Message()
+            {
+                Id = m.Id,
+                Created = m.Created,
+                IdSentBy = m.IdSentBy,
+                NameSentBy = m.NameSentBy,
+                RoomId = m.RoomId,
+                MessageViewers = m.MessageViewers
+            }).ToList().ToList(),
+            Name = r.Name
+        }).ToListAsync();
 
     public Task<List<Message>> GetOldMessagesForRoom(string roomId, long lastMessage, int take) =>
         _context.Messages

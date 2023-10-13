@@ -120,6 +120,33 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Include(c => c.DirectMessages.Where(m => m.Id > lastMessage).OrderBy(dm => dm.Id))
             .ToListAsync();
 
+    public Task<List<Contact>> GetContactsUpdateMetadata(string userId, long lastMessage) => _context.Contacts
+        .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
+        .Include(c => c.DirectMessages)
+        .Select(c => new Contact()
+        {
+            Approved = c.Approved,
+            InvitedId = c.InvitedId,
+            Blocked = c.Blocked,
+            BlockedById = c.BlockedById,
+            BlockedByName = c.BlockedByName,
+            Created = c.Created,
+            Id = c.Id,
+            InvitedName = c.InvitedName,
+            InviterId = c.InviterId,
+            InviterName = c.InviterName,
+            DirectMessages = c.DirectMessages.Where(m => m.Id > lastMessage).OrderByDescending(dm => dm.Id).OrderBy(dm => dm.Id).Select(m => new DirectMessage()
+            {
+                ContactId = m.ContactId,
+                Created = m.Created,
+                Id = m.Id,
+                IdSentBy = m.IdSentBy,
+                NameSentBy = m.NameSentBy,
+                WasViewed = m.WasViewed
+            }).ToList()
+        })
+        .ToListAsync();
+
     public Task<Contact> GetContact(long contactId) =>
         _context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
 
