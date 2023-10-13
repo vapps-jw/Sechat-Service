@@ -7,6 +7,7 @@ using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Dtos.CryptoDtos;
+using Sechat.Service.Dtos.Messages;
 using Sechat.Service.Services.CacheServices;
 using System;
 using System.Collections.Generic;
@@ -241,7 +242,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             var result = new List<string>();
             foreach (var request in connectToRoomsRequest.RoomIds)
             {
-                if (_chatRepository.IsRoomAllowed(UserId, request))
+                if (_chatRepository.IsRoomMember(UserId, request))
                 {
                     await Groups.AddToGroupAsync(Context.ConnectionId, request);
                     result.Add(request);
@@ -259,7 +260,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
-            if (_chatRepository.IsRoomAllowed(UserId, message.Id))
+            if (_chatRepository.IsRoomMember(UserId, message.Id))
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, message.Id);
                 return new ResourceGuid(message.Id);
@@ -332,7 +333,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         try
         {
-            if (!_chatRepository.IsRoomAllowed(UserId, keyRequest.Id))
+            if (!_chatRepository.IsRoomMember(UserId, keyRequest.Id))
             {
                 return;
             }
@@ -355,7 +356,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         try
         {
             var needKey = await _userManager.FindByNameAsync(key.Receipient);
-            if (!_chatRepository.IsRoomAllowed(needKey.Id, key.Id))
+            if (!_chatRepository.IsRoomMember(needKey.Id, key.Id))
             {
                 return;
             }

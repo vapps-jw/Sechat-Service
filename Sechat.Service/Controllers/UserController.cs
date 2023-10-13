@@ -211,13 +211,18 @@ public class UserController : SechatControllerBase
 
         if (await _userRepository.SaveChanges() > 0)
         {
+            var pictures = _userRepository.GetProfilePictures(new List<string> { contact.InviterId, contact.InvitedId });
             var contactDto = _mapper.Map<ContactDto>(contact);
             var inviterId = await GetUserId(contactDto.InviterName);
 
             contactDto.ContactState = AppConstants.ContactState.Online;
 
+            contactDto.ProfileImage = pictures[inviterId];
             await _chatHubContext.Clients.Group(UserId).ContactUpdated(contactDto);
+
+            contactDto.ProfileImage = pictures[UserId];
             await _chatHubContext.Clients.Group(inviterId).ContactUpdated(contactDto);
+
             await _chatHubContext.Clients.Group(inviterId).DMKeyRequested(new DMKeyRequest(UserName, contactDto.InviterName, contactDto.Id));
             await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.ContactRequestApproved, inviterId, UserName));
             await _contactSuggestionsService.UpdateCache(UserName, cancellationToken);

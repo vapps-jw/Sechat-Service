@@ -1,4 +1,5 @@
 ﻿using Sechat.Service.Configuration;
+using Sechat.Service.Dtos.Messages;
 using System.Collections.Generic;
 using System.Linq;
 

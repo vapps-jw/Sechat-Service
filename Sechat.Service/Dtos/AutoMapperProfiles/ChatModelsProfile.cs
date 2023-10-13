@@ -3,6 +3,7 @@ using Sechat.Data.Models.ChatModels;
 using Sechat.Data.Models.UserDetails;
 using Sechat.Data.Models.VideoCalls;
 using Sechat.Service.Dtos.ChatDtos;
+using Sechat.Service.Dtos.Messages;
 
 namespace Sechat.Service.Dtos.AutoMapperProfiles;
 

@@ -85,6 +85,35 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Include(c => c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake).OrderBy(dm => dm.Id))
             .ToListAsync();
 
+    public Task<List<Contact>> GetContactsMetadata(string userId, int initalTake) => _context.Contacts
+        .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
+        .Include(c => c.DirectMessages)
+        .Select(c => new Contact()
+        {
+            Approved = c.Approved,
+            InvitedId = c.InvitedId,
+            Blocked = c.Blocked,
+            BlockedById = c.BlockedById,
+            BlockedByName = c.BlockedByName,
+            Created = c.Created,
+            Id = c.Id,
+            InvitedName = c.InvitedName,
+            InviterId = c.InviterId,
+            InviterName = c.InviterName,
+            DirectMessages = c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake).OrderBy(dm => dm.Id).Select(m => new DirectMessage()
+            {
+                ContactId = m.ContactId,
+                Created = m.Created,
+                Id = m.Id,
+                IdSentBy = m.IdSentBy,
+                NameSentBy = m.NameSentBy,
+                WasViewed = m.WasViewed
+            }).ToList()
+        })
+        .ToListAsync();
+
+    public Task<DirectMessage> GetContactMessage(long messageId) => _context.DirectMessages.Where(m => m.Id == messageId).FirstOrDefaultAsync();
+
     public Task<List<Contact>> GetContactsUpdate(string userId, long lastMessage) =>
         _context.Contacts
             .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))

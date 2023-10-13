@@ -8,6 +8,7 @@ using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
+using Sechat.Service.Dtos.Messages;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services.CacheServices;
 using System.Collections.Generic;
@@ -48,10 +49,127 @@ public class ChatController : SechatControllerBase
         _chatHubContext = chatHubContext;
     }
 
-    // Messages handling
+    // For background load
+
+    [HttpGet("contacts-messages-metadata")]
+    public async Task<IActionResult> GetContactsMetadataAsync()
+    {
+        var contacts = await _userRepository.GetContactsMetadata(UserId, _initialMessagesPull);
+        var ids = contacts
+            .Select(c => new { id = c.InviterId, name = c.InviterName })
+            .Concat(contacts.Select(c => new { id = c.InvitedId, name = c.InvitedName }))
+            .Distinct()
+            .Where(i => !i.id.Equals(UserId))
+            .ToList();
+
+        var pictures = _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList());
+        var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
+
+        foreach (var dto in contactDtos)
+        {
+            if (dto.InviterName.Equals(UserName))
+            {
+                var imageId = ids.FirstOrDefault(i => i.name.Equals(dto.InvitedName));
+                dto.ProfileImage = pictures[imageId.id];
+                continue;
+            }
+
+            if (dto.InvitedName.Equals(UserName))
+            {
+                var imageId = ids.FirstOrDefault(i => i.name.Equals(dto.InviterName));
+                dto.ProfileImage = pictures[imageId.id];
+                continue;
+            }
+        }
+
+        var connectedContacts = contacts
+            .Where(c => c.InvitedId.Equals(UserId) ? _cacheService.IsUserOnlineFlag(c.InviterId) : _cacheService.IsUserOnlineFlag(c.InvitedId))
+            .Select(c => c.Id)
+            .ToList();
+
+        foreach (var contactDto in contactDtos)
+        {
+            contactDto.DirectMessages.ForEach(dm => dm.Loaded = false);
+            contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
+                AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+        }
+
+        return Ok(contactDtos);
+    }
+
+    [HttpGet("contact/{contactId}/{messageId}")]
+    public async Task<IActionResult> GetContactMessageAsync(long contactId, long messageId)
+    {
+        if (!_userRepository.CheckContact(contactId, UserId, out var _))
+        {
+            return BadRequest();
+        }
+
+        var message = await _userRepository.GetContactMessage(messageId);
+        var messageDto = _mapper.Map<DirectMessageDto>(message);
+        messageDto.Loaded = true;
+
+        return Ok(messageDto);
+    }
+
+    [HttpGet("rooms-messages-metadata")]
+    public async Task<IActionResult> GetRoomsMetadata()
+    {
+        var rooms = await _chatRepository.GetRoomsMetadata(UserId, _initialMessagesPull);
+        foreach (var room in rooms)
+        {
+            foreach (var message in room.Messages)
+            {
+                foreach (var viewer in message.MessageViewers)
+                {
+                    viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+                }
+            }
+        }
+
+        var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
+        foreach (var room in roomDtos)
+        {
+            foreach (var message in room.Messages)
+            {
+                if (message.MessageViewers.Any(mv => mv.User.Equals(UserName)))
+                {
+                    message.WasViewed = true;
+                }
+            }
+        }
+
+        return Ok(roomDtos);
+    }
+
+    [HttpGet("room/{roomId}/{messageId}")]
+    public async Task<IActionResult> GetRoomMessage(string roomId, long messageId)
+    {
+        if (!_chatRepository.IsRoomMember(UserId, roomId))
+        {
+            return BadRequest();
+        }
+
+        var message = await _chatRepository.GetRoomMessage(messageId);
+        foreach (var viewer in message.MessageViewers)
+        {
+            viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
+        }
+
+        var messageDto = _mapper.Map<MessageDto>(message);
+        if (messageDto.MessageViewers.Any(mv => mv.User.Equals(UserName)))
+        {
+            messageDto.WasViewed = true;
+        }
+        messageDto.Loaded = true;
+
+        return Ok(messageDto);
+    }
+
+    // Default load
 
     [HttpGet("rooms-initial-load")]
-    public async Task<IActionResult> RoomsInitialLoadAsync()
+    public async Task<IActionResult> RoomsInitialLoad()
     {
         var rooms = await _chatRepository.GetRoomsWithRecentMessages(UserId, _initialMessagesPull);
         foreach (var room in rooms)
@@ -73,8 +191,8 @@ public class ChatController : SechatControllerBase
                 if (message.MessageViewers.Any(mv => mv.User.Equals(UserName)))
                 {
                     message.WasViewed = true;
-                    continue;
                 }
+                message.Loaded = true;
             }
         }
 
@@ -104,8 +222,8 @@ public class ChatController : SechatControllerBase
                 if (message.MessageViewers.Any(mv => mv.User.Equals(UserName)))
                 {
                     message.WasViewed = true;
-                    continue;
                 }
+                message.Loaded = true;
             }
         }
 
@@ -172,7 +290,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contacts-initial-load")]
-    public async Task<IActionResult> ContactsInitialLoadAsync()
+    public async Task<IActionResult> ContactsInitialLoad()
     {
         var contacts = await _userRepository.GetContactsWithRecentMessages(UserId, _initialMessagesPull);
         var ids = contacts
@@ -212,6 +330,8 @@ public class ChatController : SechatControllerBase
             contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
                 AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
         }
+
+        contactDtos.ForEach(c => c.DirectMessages.ForEach(dm => dm.Loaded = true));
 
         return Ok(contactDtos);
     }
@@ -254,6 +374,7 @@ public class ChatController : SechatControllerBase
 
         foreach (var contactDto in contactDtos)
         {
+            contactDto.DirectMessages.ForEach(dm => dm.Loaded = true);
             contactDto.ContactState = connectedContacts.Contains(contactDto.Id) ?
                 AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
         }
@@ -275,7 +396,7 @@ public class ChatController : SechatControllerBase
     [FromServices] Channel<DefaultNotificationDto> channel,
     [FromBody] IncomingMessage incomingMessageDto)
     {
-        if (!_chatRepository.IsRoomAllowed(UserId, incomingMessageDto.RoomId))
+        if (!_chatRepository.IsRoomMember(UserId, incomingMessageDto.RoomId))
         {
             return BadRequest("You dont have access to this room");
         }
@@ -292,7 +413,7 @@ public class ChatController : SechatControllerBase
         {
             viewer.User = (await _userManager.FindByIdAsync(viewer.User))?.UserName;
         }
-
+        messageDto.Loaded = true;
         await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
 
         var roomMembers = _chatRepository.GetRoomMembersIds(incomingMessageDto.RoomId);
@@ -454,6 +575,7 @@ public class ChatController : SechatControllerBase
 
         var messageDto = _mapper.Map<DirectMessageDto>(res);
 
+        messageDto.Loaded = true;
         await _chatHubContext.Clients.Group(UserId).DirectMessageIncoming(messageDto);
         await _chatHubContext.Clients.Group(recipient.Id).DirectMessageIncoming(messageDto);
         await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingDirectMessage, recipient.Id, UserName));

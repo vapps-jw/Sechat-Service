@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Sechat.Service.Dtos.ChatDtos;
+namespace Sechat.Service.Dtos.Messages;
 
 public class MessageDto
 {
+    public bool Loaded { get; set; }
     public long Id { get; set; }
     public DateTime Created { get; set; } = DateTime.UtcNow;
     public string NameSentBy { get; set; } = string.Empty;
@@ -16,6 +17,7 @@ public class MessageDto
 
 public class DirectMessageDto
 {
+    public bool Loaded { get; set; }
     public long Id { get; set; }
     public DateTime Created { get; set; } = DateTime.UtcNow;
     public string NameSentBy { get; set; } = string.Empty;

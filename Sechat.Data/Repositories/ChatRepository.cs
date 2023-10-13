@@ -10,11 +10,10 @@ public class ChatRepository : RepositoryBase<SechatContext>
 
     // Access
 
-    public bool IsRoomAllowed(string userId, string roomId)
-    {
-        var members = _context.Rooms.Where(r => r.Id.Equals(roomId)).SelectMany(r => r.Members.Select(rm => rm.Id)).ToList();
-        return members.Any(m => m.Equals(userId));
-    }
+    public bool IsRoomMember(string userId, string roomId) => _context.Rooms
+        .Where(r => r.Id.Equals(roomId))
+        .SelectMany(r => r.Members)
+        .Any(m => m.Id.Equals(userId));
 
     // Call Log
 
@@ -218,6 +217,34 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return res;
     }
 
+    public Task<List<Room>> GetRoomsMetadata(string memberUserId, int initialTake) => _context.Rooms
+        .Include(r => r.Messages)
+            .ThenInclude(m => m.MessageViewers)
+        .Where(r => r.Members.Any(m => m.Id.Equals(memberUserId))).Select(r => new Room()
+        {
+            Name = r.Name,
+            LastActivity = r.LastActivity,
+            Created = r.Created,
+            CreatorName = r.CreatorName,
+            Id = r.Id,
+            Members = r.Members,
+            Messages = r.Messages.OrderByDescending(m => m.Id).Take(initialTake).OrderBy(m => m.Id).Select(m => new Message()
+            {
+                Id = m.Id,
+                Created = m.Created,
+                IdSentBy = m.IdSentBy,
+                NameSentBy = m.NameSentBy,
+                RoomId = m.RoomId,
+                MessageViewers = m.MessageViewers
+            }).ToList(),
+        }).ToListAsync();
+
+    public Task<Message> GetRoomMessage(long messageId)
+    {
+        return _context.Messages.Include(m => m.MessageViewers)
+        .Where(m => m.Id == messageId).FirstOrDefaultAsync();
+    }
+
     public async Task<Room> GetRoomWithRecentMessages(string roomId, string memberUserId, int initialTake)
     {
         var res = await _context.Rooms
@@ -295,11 +322,6 @@ public class ChatRepository : RepositoryBase<SechatContext>
         _ = room.Members.Remove(memberProfile);
         return room;
     }
-
-    public bool IsRoomMember(string userId, string roomId) => _context.Rooms
-        .Where(r => r.Id.Equals(roomId))
-        .SelectMany(r => r.Members)
-        .Any(m => m.Id.Equals(userId));
 
     public Task<int> DeleteRoom(string roomId, string creatorUserId) => _context.Rooms
         .Where(r => r.Id.Equals(roomId) && r.CreatorId.Equals(creatorUserId))

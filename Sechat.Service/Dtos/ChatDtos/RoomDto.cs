@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sechat.Service.Dtos.Messages;
 
 namespace Sechat.Service.Dtos.ChatDtos;
 
