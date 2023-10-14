@@ -41,7 +41,7 @@ public class SignalRCache
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"{nameof(SignalRCache)} {nameof(AddUser)} {ex.GetType()}");
+            _logger.LogError(ex, "{class} {method} {type}", nameof(SignalRCache), nameof(AddUser), ex.GetType());
         }
         finally
         {
@@ -61,7 +61,7 @@ public class SignalRCache
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"{nameof(SignalRCache)} {nameof(RemoveUserConnection)} {ex.GetType()}");
+            _logger.LogError(ex, "{class} {method} {type}", nameof(SignalRCache), nameof(RemoveUserConnection), ex.GetType());
         }
         finally
         {
