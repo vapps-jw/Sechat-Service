@@ -38,7 +38,6 @@ public class SignalRCache
             {
                 ConnectedUsers.Add(userId, new HashSet<string>() { connectionId });
             }
-            _ = _signalRSemaphore.Release();
         }
         catch (Exception ex)
         {
@@ -59,7 +58,6 @@ public class SignalRCache
             {
                 _ = ConnectedUsers[userId].Remove(connectionId);
             }
-            _ = _signalRSemaphore.Release();
         }
         catch (Exception ex)
         {
