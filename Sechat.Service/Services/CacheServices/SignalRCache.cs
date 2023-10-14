@@ -9,33 +9,33 @@ public class SignalRCache
 {
     private readonly SemaphoreSlim _signalRSemaphore;
 
-    public List<string> ConnectedUsers { get; set; } = new();
+    public Dictionary<string, HashSet<string>> ConnectedUsers { get; set; } = new();
 
     public SignalRCache() => _signalRSemaphore = new SemaphoreSlim(1);
 
     public string IsUserOnline(string userId) =>
-        ConnectedUsers.Contains(userId) ? AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
+        ConnectedUsers.ContainsKey(userId) ? AppConstants.ContactState.Online : AppConstants.ContactState.Offline;
 
-    public bool IsUserOnlineFlag(string userId) => ConnectedUsers.Contains(userId);
+    public bool IsUserOnlineFlag(string userId) => ConnectedUsers.ContainsKey(userId);
 
-    public async Task AddUser(string userId)
+    public async Task AddUser(string userId, string connectionId)
     {
         await _signalRSemaphore.WaitAsync();
-        ConnectedUsers.Add(userId);
+        if (ConnectedUsers.ContainsKey(userId))
+        {
+            _ = ConnectedUsers[userId].Add(connectionId);
+        }
+        ConnectedUsers.Add(userId, new HashSet<string>() { connectionId });
         _ = _signalRSemaphore.Release();
     }
 
-    public async Task RemoveAllUserConnections(string userId)
+    public async Task RemoveUserConnection(string userId, string connectionId)
     {
         await _signalRSemaphore.WaitAsync();
-        _ = ConnectedUsers.RemoveAll(u => u.Equals(userId));
-        _ = _signalRSemaphore.Release();
-    }
-
-    public async Task RemoveUserConnection(string userId)
-    {
-        await _signalRSemaphore.WaitAsync();
-        _ = ConnectedUsers.Remove(userId);
+        if (ConnectedUsers.ContainsKey(userId))
+        {
+            _ = ConnectedUsers[userId].Remove(connectionId);
+        }
         _ = _signalRSemaphore.Release();
     }
 }

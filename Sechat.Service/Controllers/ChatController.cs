@@ -26,10 +26,11 @@ public class ChatController : SechatControllerBase
     private const int _initialMessagesPull = 10;
     private const int _updateMessagesPull = 10;
 
-    private readonly SignalRCache _cacheService;
+    private readonly SignalRCache _signalRConnectionsMonitor;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserRepository _userRepository;
     private readonly ChatRepository _chatRepository;
+
     private readonly IMapper _mapper;
     private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
 
@@ -41,7 +42,7 @@ public class ChatController : SechatControllerBase
         IMapper mapper,
         IHubContext<ChatHub, IChatHub> chatHubContext)
     {
-        _cacheService = signalRConnectionsMonitor;
+        _signalRConnectionsMonitor = signalRConnectionsMonitor;
         _userManager = userManager;
         _userRepository = userRepository;
         _chatRepository = chatRepository;
@@ -83,7 +84,7 @@ public class ChatController : SechatControllerBase
         }
 
         var connectedContacts = contacts
-            .Where(c => c.InvitedId.Equals(UserId) ? _cacheService.IsUserOnlineFlag(c.InviterId) : _cacheService.IsUserOnlineFlag(c.InvitedId))
+            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
             .Select(c => c.Id)
             .ToList();
 
@@ -352,7 +353,7 @@ public class ChatController : SechatControllerBase
         }
 
         var connectedContacts = contacts
-            .Where(c => c.InvitedId.Equals(UserId) ? _cacheService.IsUserOnlineFlag(c.InviterId) : _cacheService.IsUserOnlineFlag(c.InvitedId))
+            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
             .Select(c => c.Id)
             .ToList();
 
@@ -399,7 +400,7 @@ public class ChatController : SechatControllerBase
         }
 
         var connectedContacts = contacts
-            .Where(c => c.InvitedId.Equals(UserId) ? _cacheService.IsUserOnlineFlag(c.InviterId) : _cacheService.IsUserOnlineFlag(c.InvitedId))
+            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
             .Select(c => c.Id)
             .ToList();
 
@@ -445,7 +446,7 @@ public class ChatController : SechatControllerBase
         }
 
         var connectedContacts = contacts
-            .Where(c => c.InvitedId.Equals(UserId) ? _cacheService.IsUserOnlineFlag(c.InviterId) : _cacheService.IsUserOnlineFlag(c.InvitedId))
+            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
             .Select(c => c.Id)
             .ToList();
 
@@ -491,7 +492,9 @@ public class ChatController : SechatControllerBase
             viewer.User = (await _userManager.FindByIdAsync(viewer.User))?.UserName;
         }
         messageDto.Loaded = true;
-        await _chatHubContext.Clients.Group(incomingMessageDto.RoomId).MessageIncoming(messageDto);
+
+        var excluded = _signalRConnectionsMonitor.ConnectedUsers[UserId];
+        await _chatHubContext.Clients.GroupExcept(incomingMessageDto.RoomId, excluded).MessageIncoming(messageDto);
 
         var roomMembers = _chatRepository.GetRoomMembersIds(incomingMessageDto.RoomId);
         _ = roomMembers.RemoveAll(m => m.Equals(UserId));
@@ -503,7 +506,8 @@ public class ChatController : SechatControllerBase
             await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingMessage, member, roomName));
         }
 
-        return Ok();
+        messageDto.Text = string.Empty;
+        return Ok(messageDto);
     }
 
     [HttpPatch("messages-viewed")]
@@ -653,11 +657,12 @@ public class ChatController : SechatControllerBase
         var messageDto = _mapper.Map<DirectMessageDto>(res);
 
         messageDto.Loaded = true;
-        await _chatHubContext.Clients.Group(UserId).DirectMessageIncoming(messageDto);
+        //await _chatHubContext.Clients.Group(UserId).DirectMessageIncoming(messageDto);
         await _chatHubContext.Clients.Group(recipient.Id).DirectMessageIncoming(messageDto);
         await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingDirectMessage, recipient.Id, UserName));
 
-        return Ok();
+        messageDto.Text = string.Empty;
+        return Ok(messageDto);
     }
 
     [HttpDelete("direct-message/{contactId}/{messageId}")]

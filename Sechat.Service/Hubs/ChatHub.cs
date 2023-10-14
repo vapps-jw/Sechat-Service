@@ -400,10 +400,9 @@ public class ChatHub : SechatHubBase<IChatHub>
         try
         {
             var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-            await _signalRConnectionsMonitor.RemoveAllUserConnections(null);
 
             await Groups.AddToGroupAsync(Context.ConnectionId, UserId);
-            await _signalRConnectionsMonitor.AddUser(UserId);
+            await _signalRConnectionsMonitor.AddUser(UserId, Context.ConnectionId);
 
             var tasks = new List<Task>();
             foreach (var userContact in userContacts)
@@ -424,8 +423,7 @@ public class ChatHub : SechatHubBase<IChatHub>
     {
         var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
 
-        await _signalRConnectionsMonitor.RemoveAllUserConnections(null);
-        await _signalRConnectionsMonitor.RemoveUserConnection(UserId);
+        await _signalRConnectionsMonitor.RemoveUserConnection(UserId, Context.ConnectionId);
 
         if (!_signalRConnectionsMonitor.IsUserOnlineFlag(UserId))
         {
