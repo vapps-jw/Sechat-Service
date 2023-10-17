@@ -470,6 +470,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("send-message")]
+    [RequestSizeLimit(80_000_000)]
     public async Task<IActionResult> SendMessage(
     [FromServices] Channel<DefaultNotificationDto> channel,
     [FromBody] IncomingMessage incomingMessageDto)
@@ -638,6 +639,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("send-direct-message")]
+    [RequestSizeLimit(80_000_000)]
     public async Task<IActionResult> SendDirectMessage(
         [FromServices] Channel<DefaultNotificationDto> channel,
         [FromBody] IncomingDirectMessage incomingMessageDto)

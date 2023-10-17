@@ -29,8 +29,8 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
             var problem = new ProblemDetails()
             {
                 Status = (int)HttpStatusCode.InternalServerError,
-                Type = "Chat backend error",
-                Title = "Chat backend error",
+                Type = "Chat error",
+                Title = "Chat error",
                 Detail = ex.Message,
             };
 
@@ -63,9 +63,9 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
             var problem = new ProblemDetails()
             {
                 Status = (int)HttpStatusCode.InternalServerError,
-                Type = "Server error",
-                Title = "Server error",
-                Detail = "Server error occured - please contact Admin",
+                Type = "Something went wrong",
+                Title = "Something went wrong",
+                Detail = "Something went wrong",
             };
 
             var json = JsonSerializer.Serialize(problem);
