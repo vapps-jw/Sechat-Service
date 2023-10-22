@@ -32,6 +32,7 @@ public class AppConstants
         public const string NewInvitation = "New Invitation";
         public const string InvitationApproved = "Invitation Approved";
         public const string EventReminder = "Event Reminder";
+        public const string ApplicationEvent = "Application Event";
         public const string VideoCall = "Video Call";
     }
 
@@ -75,6 +76,7 @@ public class AppConstants
         IncomingContactRequest,
         ContactRequestApproved,
         EventReminder,
+        ApplicationEvent,
     }
 
     public struct ContentTypes

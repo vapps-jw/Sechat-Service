@@ -659,7 +659,7 @@ public class ChatController : SechatControllerBase
         var messageDto = _mapper.Map<DirectMessageDto>(res);
 
         messageDto.Loaded = true;
-        //await _chatHubContext.Clients.Group(UserId).DirectMessageIncoming(messageDto);
+
         await _chatHubContext.Clients.Group(recipient.Id).DirectMessageIncoming(messageDto);
         await channel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingDirectMessage, recipient.Id, UserName));
 
