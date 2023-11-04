@@ -8,6 +8,7 @@ using Sechat.Data.Models.CalendarModels;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos.CalendarDtos;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -131,6 +132,20 @@ public class CalendarController : SechatControllerBase
         ce.Reminders.Add(newReminder);
 
         return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(_mapper.Map<ReminderDto>(newReminder)) : BadRequest();
+    }
+
+    [HttpPost("event/{eventId}/reminders")]
+    public async Task<IActionResult> CreateReminders(CancellationToken cancellationToken, string eventId, [FromBody] List<NewReminderForm> reminders)
+    {
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId));
+        if (ce is null) return BadRequest();
+
+        var newReminders = reminders.Select(r => new Reminder() { Remind = r.Remind.ToUniversalTime() }).ToList();
+        ce.Reminders.AddRange(newReminders);
+
+        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(_mapper.Map<List<ReminderDto>>(newReminders)) : BadRequest();
     }
 
     [HttpDelete("event/{eventId}/{reminderId}")]
