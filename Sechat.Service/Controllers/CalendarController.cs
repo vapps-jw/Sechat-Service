@@ -165,6 +165,17 @@ public class CalendarController : SechatControllerBase
         _ = ctx.Reminders.Remove(reminderToDelete);
         return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
     }
+
+    [HttpDelete("event/{eventId}/reminders")]
+    public async Task<IActionResult> DeleteReminders(CancellationToken cancellationToken, string eventId)
+    {
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var result = ctx.Reminders
+            .Where(r => r.CalendarEventId.Equals(eventId))
+            .ExecuteDelete();
+        return result == 0 ? BadRequest() : Ok();
+    }
 }
 
 public class CalendarControllerForms
