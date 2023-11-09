@@ -610,6 +610,23 @@ public class ChatController : SechatControllerBase
         return BadRequest();
     }
 
+    [HttpPatch("rename-room")]
+    public async Task<IActionResult> RenameRoom([FromBody] ChatControllerFroms.RenameRoomReuqest requestForm)
+    {
+        if (!_chatRepository.IsRoomMember(UserId, requestForm.RoomId)) return BadRequest("Not room member");
+
+        var room = _chatRepository.GetRoom(requestForm.RoomId);
+        room.Name = requestForm.NewName;
+        if (await _chatRepository.SaveChanges() > 0)
+        {
+            var roomDto = _mapper.Map<RoomDto>(room);
+            await _chatHubContext.Clients.Group(requestForm.RoomId).RoomUpdated(roomDto);
+            return Ok();
+        }
+
+        return BadRequest();
+    }
+
     [HttpDelete("delete-room")]
     public async Task<IActionResult> DeleteRoom(string roomId)
     {
@@ -732,6 +749,23 @@ public class ChatController : SechatControllerBase
         await _chatHubContext.Clients.Group(recipientId).DirectMessagesWereViewed(new DirectMessagesViewed(resourceId.Id));
 
         return Ok();
+    }
+}
+
+public class ChatControllerFroms
+{
+    public class RenameRoomReuqest
+    {
+        public string RoomId { get; set; }
+        public string NewName { get; set; }
+    }
+    public class RenameRoomReuqestValidation : AbstractValidator<RenameRoomReuqest>
+    {
+        public RenameRoomReuqestValidation()
+        {
+            _ = RuleFor(x => x.RoomId).NotNull().NotEmpty();
+            _ = RuleFor(x => x.NewName).NotNull().NotEmpty();
+        }
     }
 }
 

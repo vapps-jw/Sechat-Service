@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace Sechat.Service.Services;
 
-// todo: finish cs service
 public class ContactSuggestionsService
 {
     private readonly SemaphoreSlim _cacheUpdateSemaphore;
