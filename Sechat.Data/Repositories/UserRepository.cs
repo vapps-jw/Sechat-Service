@@ -27,6 +27,15 @@ public class UserRepository : RepositoryBase<SechatContext>
         return contact is not null && !contact.Blocked && contact.Approved;
     }
 
+    public bool CheckContact(long contactId, out Contact contact)
+    {
+        contact = _context.Contacts
+            .Where(c => c.Id == contactId)
+            .FirstOrDefault();
+
+        return contact is not null && !contact.Blocked && contact.Approved;
+    }
+
     public bool CheckContactWithMessages(long contactId, string userId, out Contact contact)
     {
         contact = _context.Contacts

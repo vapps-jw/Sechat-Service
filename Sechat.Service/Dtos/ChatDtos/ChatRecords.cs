@@ -13,6 +13,8 @@ public record StringMessage(string Message);
 public record BooleanMessage(bool Message);
 public record StringUserMessage(string UserName, string Message);
 public record BoolUserMessage(string UserName, string Message);
+public record DirectMessageTypingUser(long ContactId, string Username);
+public record RoomMessageTypingUser(string RoomId, string Username);
 
 // Direct Messages
 

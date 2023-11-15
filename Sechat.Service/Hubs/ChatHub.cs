@@ -17,7 +17,6 @@ using System.Threading.Tasks;
 using static Sechat.Service.Configuration.AppConstants;
 
 namespace Sechat.Service.Hubs;
-
 public interface IChatHub
 {
     // Video call connection
@@ -37,6 +36,10 @@ public interface IChatHub
     Task MicStateChanged(StringMessage message);
     Task CamStateChanged(StringMessage message);
     Task ScreenShareStateChanged(StringMessage message);
+
+    // Messages General
+    Task UserTypingInRoom(RoomMessageTypingUser message);
+    Task UserTypingDirectMessage(DirectMessageTypingUser message);
 
     // Chat Messages
     Task MessageIncoming(MessageDto message);
@@ -211,7 +214,53 @@ public class ChatHub : SechatHubBase<IChatHub>
         await Clients.Group(contactId).VideoCallRequested(new StringMessage(UserName));
     }
 
+    // Messages
+
     // Rooms
+
+    public async Task ImTypingDirectMessage(ResourceId contactData)
+    {
+        try
+        {
+            var check = _userRepository.CheckContact(contactData.Id, out var contact);
+            if (!check)
+            {
+                return;
+            }
+
+            var recipientId = contact.InviterId.Equals(UserId) ? contact.InvitedId : contact.InviterId;
+
+            if (!_signalRConnectionsMonitor.IsUserOnlineFlag(recipientId))
+            {
+                return;
+            }
+
+            await Clients.Group(recipientId).UserTypingDirectMessage(new DirectMessageTypingUser(contact.Id, UserName));
+
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
+
+    public async Task ImTypingRoomMessage(ResourceGuid roomData)
+    {
+        try
+        {
+            if (!_chatRepository.IsRoomMember(UserId, roomData.Id))
+            {
+                return;
+            }
+
+            var excluded = _signalRConnectionsMonitor.ConnectedUsers[UserId];
+            await Clients.GroupExcept(roomData.Id, excluded).UserTypingInRoom(new RoomMessageTypingUser(roomData.Id, UserName));
+        }
+        catch (Exception ex)
+        {
+            throw new HubException(ex.Message);
+        }
+    }
 
     public async Task<RoomDto> CreateRoom(CreateRoomMessage request)
     {
