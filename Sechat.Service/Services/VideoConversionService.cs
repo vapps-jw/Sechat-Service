@@ -75,16 +75,20 @@ public class VideoConversionService
                 throw new Exception("FFMPEG failed to generate thumbnail");
             }
 
+            if (cancellationToken.IsCancellationRequested) return null;
+
             using var videoStream = File.Open(outputConvertedPath, FileMode.Open, FileAccess.Read);
             using var thumbnailStream = File.Open(outputThumbnailPath, FileMode.Open, FileAccess.Read);
 
             var tasks = new List<Task<string>>
             {
-                Task.Run(() => Convert.ToBase64String(videoStream.ToByteArray())),
-                Task.Run(() => Convert.ToBase64String(thumbnailStream.ToByteArray()))
+                Task.Run(() => Convert.ToBase64String(videoStream.ToByteArray()), cancellationToken),
+                Task.Run(() => Convert.ToBase64String(thumbnailStream.ToByteArray()), cancellationToken)
             };
 
             var results = await Task.WhenAll(tasks);
+
+            if (cancellationToken.IsCancellationRequested) return null;
 
             var videoString = $"{AppConstants.Files.Base64mp4Prefix}{results[0]}";
             var thumbnailString = $"{AppConstants.Files.Base64jpgPrefix}{results[1]}";

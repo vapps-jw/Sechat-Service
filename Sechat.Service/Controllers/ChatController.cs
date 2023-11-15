@@ -13,6 +13,7 @@ using Sechat.Service.Hubs;
 using Sechat.Service.Services.CacheServices;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -53,7 +54,7 @@ public class ChatController : SechatControllerBase
     // For background load
 
     [HttpGet("contacts-messages-metadata")]
-    public async Task<IActionResult> GetContactsMetadataAsync()
+    public async Task<IActionResult> GetContactsMetadata(CancellationToken cancellationToken)
     {
         var contacts = await _userRepository.GetContactsMetadata(UserId, _initialMessagesPull);
         var ids = contacts
@@ -65,6 +66,8 @@ public class ChatController : SechatControllerBase
 
         var pictures = _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList());
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
+
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
 
         foreach (var dto in contactDtos)
         {
@@ -88,6 +91,8 @@ public class ChatController : SechatControllerBase
             .Select(c => c.Id)
             .ToList();
 
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
+
         foreach (var contactDto in contactDtos)
         {
             contactDto.DirectMessages.ForEach(dm => dm.Loaded = false);
@@ -99,12 +104,14 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contact/{contactId}/{messageId}")]
-    public async Task<IActionResult> GetContactMessageAsync(long contactId, long messageId)
+    public async Task<IActionResult> GetContactMessage(long contactId, long messageId, CancellationToken cancellationToken)
     {
         if (!_userRepository.CheckContact(contactId, UserId, out var _))
         {
             return BadRequest();
         }
+
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
 
         var message = await _userRepository.GetContactMessage(messageId);
         var messageDto = _mapper.Map<DirectMessageDto>(message);
@@ -114,7 +121,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("rooms-messages-metadata")]
-    public async Task<IActionResult> GetRoomsMetadata()
+    public async Task<IActionResult> GetRoomsMetadata(CancellationToken cancellationToken)
     {
         var rooms = await _chatRepository.GetRoomsMetadata(UserId, _initialMessagesPull);
         foreach (var room in rooms)
@@ -127,6 +134,8 @@ public class ChatController : SechatControllerBase
                 }
             }
         }
+
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
 
         var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
         foreach (var room in roomDtos)
@@ -144,7 +153,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("room/{roomId}/{messageId}")]
-    public async Task<IActionResult> GetRoomMessage(string roomId, long messageId)
+    public async Task<IActionResult> GetRoomMessage(string roomId, long messageId, CancellationToken cancellationToken)
     {
         if (!_chatRepository.IsRoomMember(UserId, roomId))
         {
@@ -152,10 +161,15 @@ public class ChatController : SechatControllerBase
         }
 
         var message = await _chatRepository.GetRoomMessage(messageId);
+
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
+
         foreach (var viewer in message.MessageViewers)
         {
             viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
         }
+
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
 
         var messageDto = _mapper.Map<MessageDto>(message);
         if (messageDto.MessageViewers.Any(mv => mv.User.Equals(UserName)))
@@ -201,7 +215,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("rooms-update/{lastMessage}")]
-    public async Task<IActionResult> RoomsUpdate(long lastMessage)
+    public async Task<IActionResult> RoomsUpdate(long lastMessage, CancellationToken cancellationToken)
     {
         var rooms = await _chatRepository.GetRoomsUpdate(UserId, lastMessage);
         foreach (var room in rooms)
@@ -214,6 +228,8 @@ public class ChatController : SechatControllerBase
                 }
             }
         }
+
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
 
         var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
         foreach (var room in roomDtos)
@@ -263,7 +279,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("room-initial-load/{roomId}")]
-    public async Task<IActionResult> RoomInitialLoadAsync(string roomId)
+    public async Task<IActionResult> RoomInitialLoad(string roomId)
     {
         var room = await _chatRepository.GetRoomWithRecentMessages(roomId, UserId, _initialMessagesPull);
         room.Messages = room.Messages.OrderBy(m => m.Id).ToList();
@@ -322,7 +338,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contacts-initial-load")]
-    public async Task<IActionResult> ContactsInitialLoad()
+    public async Task<IActionResult> ContactsInitialLoad(CancellationToken cancellationToken)
     {
         var contacts = await _userRepository.GetContactsWithRecentMessages(UserId, _initialMessagesPull);
         var ids = contacts
@@ -351,6 +367,8 @@ public class ChatController : SechatControllerBase
                 continue;
             }
         }
+
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
 
         var connectedContacts = contacts
             .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
