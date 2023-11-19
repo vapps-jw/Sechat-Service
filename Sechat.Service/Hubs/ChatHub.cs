@@ -38,16 +38,19 @@ public interface IChatHub
     Task ScreenShareStateChanged(StringMessage message);
 
     // Messages General
+
     Task UserTypingInRoom(RoomMessageTypingUser message);
     Task UserTypingDirectMessage(DirectMessageTypingUser message);
 
     // Chat Messages
+
     Task MessageIncoming(MessageDto message);
     Task MessagesWereViewed(RoomUserActionMessage message);
     Task MessageWasViewed(RoomMessageUserActionMessage message);
     Task MessageDeleted(MessageId message);
 
     // Chat Direct Messages
+
     Task DirectMessageIncoming(DirectMessageDto message);
     Task DirectMessagesWereViewed(DirectMessagesViewed message);
     Task DirectMessageWasViewed(DirectMessageViewed message);
@@ -55,12 +58,14 @@ public interface IChatHub
     Task ContactUpdateRequired(ContactUpdateRequired message);
 
     // Chat Rooms
+
     Task RoomDeleted(ResourceGuid message);
     Task RoomUpdated(RoomDto message);
     Task UserAddedToRoom(RoomDto message);
     Task UserRemovedFromRoom(RoomUserActionMessage message);
 
     // Chat Contacts
+
     Task ContactRequestReceived(ContactDto message);
     Task ContactDeleted(ResourceId message);
     Task ContactUpdated(ContactDto message);

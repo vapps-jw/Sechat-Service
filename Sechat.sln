@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Data", "Sechat.Data\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Tests", "Sechat.Tests\Sechat.Tests.csproj", "{F8465491-F1EA-4152-AA94-2CB2209C8696}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Domain", "Sechat.Domain\Sechat.Domain.csproj", "{DBB20E0E-3E61-4A0E-9862-B0CA0C927BC2}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.TestConsole", "Sechat.TestConsole\Sechat.TestConsole.csproj", "{AB93C6AE-D8DB-4A4C-B501-762AA036558E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sechat.Algo", "Sechat.Algo\Sechat.Algo.csproj", "{EDC4EBD4-65CD-4277-96D5-A01DD6BB84D0}"
@@ -40,12 +38,6 @@ Global
 		{F8465491-F1EA-4152-AA94-2CB2209C8696}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F8465491-F1EA-4152-AA94-2CB2209C8696}.Test|Any CPU.ActiveCfg = Debug|Any CPU
 		{F8465491-F1EA-4152-AA94-2CB2209C8696}.Test|Any CPU.Build.0 = Debug|Any CPU
-		{DBB20E0E-3E61-4A0E-9862-B0CA0C927BC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DBB20E0E-3E61-4A0E-9862-B0CA0C927BC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DBB20E0E-3E61-4A0E-9862-B0CA0C927BC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DBB20E0E-3E61-4A0E-9862-B0CA0C927BC2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DBB20E0E-3E61-4A0E-9862-B0CA0C927BC2}.Test|Any CPU.ActiveCfg = Debug|Any CPU
-		{DBB20E0E-3E61-4A0E-9862-B0CA0C927BC2}.Test|Any CPU.Build.0 = Debug|Any CPU
 		{AB93C6AE-D8DB-4A4C-B501-762AA036558E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AB93C6AE-D8DB-4A4C-B501-762AA036558E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB93C6AE-D8DB-4A4C-B501-762AA036558E}.Release|Any CPU.ActiveCfg = Release|Any CPU

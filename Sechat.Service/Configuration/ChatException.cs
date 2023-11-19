@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sechat.Domain.CustomExceptions;
+namespace Sechat.Service.Configuration;
 
 public class ChatException : Exception
 {
