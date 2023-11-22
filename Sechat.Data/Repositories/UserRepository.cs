@@ -258,6 +258,15 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Include(r => r.Rooms)
             .FirstOrDefault(p => p.Id.Equals(id));
 
+        if (profile is null)
+        {
+            return new ProfileDeleteResult(
+               new List<string>(),
+               new List<string>(),
+               new List<Contact>()
+           );
+        }
+
         var ownedRooms = profile.Rooms
             .Where(r => r.CreatorId.Equals(id))
             .ToList();
