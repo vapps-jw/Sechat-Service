@@ -23,10 +23,12 @@ jobs:
           files: './Sechat.Service/bin/Release/net7.0/publish/appsettings.Production.json'
         env:
           SechatEmails.Master: ${{ secrets.EMAIL_SECHAT_MASTER }}
+          SechatEmails.System: ${{ secrets.EMAIL_SECHAT_SYSTEM }}
           EmailSenderSettings.ApiKey: ${{ secrets.EMAIL_API_KEY }}
           EmailSenderSettings.From: ${{ secrets.EMAIL_FROM }}
           EmailSenderSettings.ResetPasswordTemplate: ${{ secrets.EMAIL_RESET_PASSWORD_TEMPLATE }}
           EmailSenderSettings.ConfirmEmailTemplate: ${{ secrets.EMAIL_CONFIRM_TEMPLATE }}
+          EmailSenderSettings.AdminNotificationEmailTemplate: ${{ secrets.EMAIL_ADMIN_TEMPLATE }}    
           VapidKeys.PublicKey: ${{ secrets.VAPID_KEY_PUB }}
           VapidKeys.PrivateKey: ${{ secrets.VAPID_KEY }}
           ConnectionStrings.Master: ${{ secrets.POSTGRESQL_CONNECTION_STRING }}

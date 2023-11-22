@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
+using Sechat.Service.Services;
 using System;
 using System.Net;
 using System.Text.Json;
@@ -13,13 +14,16 @@ namespace Sechat.Service.Middleware;
 
 public class GlobalExceptionHandlingMiddleware : IMiddleware
 {
+    private readonly IEmailClient _emailClient;
     private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
     private readonly Channel<DefaultNotificationDto> _pushNotificaionsChannel;
 
     public GlobalExceptionHandlingMiddleware(
+        IEmailClient emailClient,
         ILogger<GlobalExceptionHandlingMiddleware> logger,
         Channel<DefaultNotificationDto> pushNotificaionsChannel)
     {
+        _emailClient = emailClient;
         _logger = logger;
         _pushNotificaionsChannel = pushNotificaionsChannel;
     }
@@ -65,7 +69,9 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+
             await _pushNotificaionsChannel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.ApplicationEvent, string.Empty, ex.Message));
+            _ = await _emailClient.SendExceptionNotificationAsync(ex);
 
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
