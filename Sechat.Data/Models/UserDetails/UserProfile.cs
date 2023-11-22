@@ -15,6 +15,7 @@ public record UserProfile : BaseTrackedModel<string>
     public bool ToSAccepted { get; set; } = true;
     public bool InvitationsAllowed { get; set; } = true;
     public string ProfilePicture { get; set; } = string.Empty;
+    public string ReferallPass { get; set; } = string.Empty;
 
     public List<Feature> Features { get; set; } = new();
     public List<Room> Rooms { get; set; } = new();

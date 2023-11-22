@@ -83,7 +83,7 @@ public class AccountController : SechatControllerBase
     [AllowAnonymous]
     [HttpPost("register")]
     [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
-    public async Task<IActionResult> SignUp([FromBody] UserCredentials userCredentials, CancellationToken cancellationToken)
+    public async Task<IActionResult> SignUp([FromBody] SignUpDetails signUpDetails, CancellationToken cancellationToken)
     {
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
         var result = ctx.GlobalSettings.FirstOrDefault(s => s.Id.Equals(AppGlobalSettings.SettingName.RegistrationStatus));
@@ -92,18 +92,24 @@ public class AccountController : SechatControllerBase
             return BadRequest("New User registration turned off temporarily");
         }
 
-        var user = new IdentityUser(userCredentials.Username)
+        var referralValidation = ctx.UserProfiles.Any(p => p.ReferallPass.Equals(signUpDetails.ReferallPass));
+        if (!referralValidation)
+        {
+            return BadRequest("Double check your Referall");
+        }
+
+        var user = new IdentityUser(signUpDetails.Username)
         {
             LockoutEnabled = true
         };
-        var createUserResult = await _userManager.CreateAsync(user, userCredentials.Password);
+        var createUserResult = await _userManager.CreateAsync(user, signUpDetails.Password);
 
         if (!createUserResult.Succeeded)
         {
             return BadRequest("Failed to Sign Up");
         }
 
-        _logger.LogInformation($"User {userCredentials.Username} has been created");
+        _logger.LogInformation($"User {signUpDetails.Username} has been created");
         return Ok();
     }
 
@@ -159,7 +165,7 @@ public class AccountController : SechatControllerBase
     }
 
     [HttpPost("change-password")]
-    public async Task<IActionResult> ChangePassword([FromBody] PasswordForm passwordForm)
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordForm passwordForm)
     {
         var currentUser = await _userManager.FindByIdAsync(UserId);
         if (currentUser is null)
@@ -175,6 +181,21 @@ public class AccountController : SechatControllerBase
 
         await _signInManager.RefreshSignInAsync(currentUser);
         return Ok();
+    }
+
+    [HttpPost("referral-pass")]
+    public async Task<IActionResult> UpdateReferallPass([FromBody] ReferallPass referallPass, CancellationToken cancellationToken)
+    {
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        var profile = ctx.UserProfiles.FirstOrDefault(p => p.Id.Equals(UserId));
+
+        if (profile is null)
+        {
+            return BadRequest("You dont have a Profile?");
+        }
+
+        profile.ReferallPass = referallPass.PassPhrase;
+        return await ctx.SaveChangesAsync() > 0 ? Ok() : BadRequest("Something went wrong");
     }
 
     [AllowAnonymous]
