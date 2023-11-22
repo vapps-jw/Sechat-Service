@@ -646,7 +646,7 @@ namespace Sechat.Data.Migrations
                     b.Property<string>("ProfilePicture")
                         .HasColumnType("text");
 
-                    b.Property<string>("ReferallPass")
+                    b.Property<string>("ReferralPass")
                         .HasColumnType("text");
 
                     b.Property<bool>("ToSAccepted")

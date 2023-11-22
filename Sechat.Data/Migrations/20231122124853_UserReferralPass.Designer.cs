@@ -12,8 +12,8 @@ using Sechat.Data;
 namespace Sechat.Data.Migrations
 {
     [DbContext(typeof(SechatContext))]
-    [Migration("20231122124054_UserRefferalPass")]
-    partial class UserRefferalPass
+    [Migration("20231122124853_UserReferralPass")]
+    partial class UserReferralPass
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -649,7 +649,7 @@ namespace Sechat.Data.Migrations
                     b.Property<string>("ProfilePicture")
                         .HasColumnType("text");
 
-                    b.Property<string>("ReferallPass")
+                    b.Property<string>("ReferralPass")
                         .HasColumnType("text");
 
                     b.Property<bool>("ToSAccepted")

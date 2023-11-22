@@ -92,7 +92,7 @@ public class AccountController : SechatControllerBase
             return BadRequest("New User registration turned off temporarily");
         }
 
-        var referralValidation = ctx.UserProfiles.Any(p => p.ReferallPass.Equals(signUpDetails.ReferallPass));
+        var referralValidation = ctx.UserProfiles.Any(p => p.ReferralPass.Equals(signUpDetails.ReferralPass));
         if (!referralValidation)
         {
             return BadRequest("Double check your Referall");
@@ -184,7 +184,7 @@ public class AccountController : SechatControllerBase
     }
 
     [HttpPost("referral-pass")]
-    public async Task<IActionResult> UpdateReferallPass([FromBody] ReferallPass referallPass, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateReferallPass([FromBody] ReferralPass referallPass, CancellationToken cancellationToken)
     {
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
         var profile = ctx.UserProfiles.FirstOrDefault(p => p.Id.Equals(UserId));
@@ -194,7 +194,7 @@ public class AccountController : SechatControllerBase
             return BadRequest("You dont have a Profile?");
         }
 
-        profile.ReferallPass = referallPass.PassPhrase;
+        profile.ReferralPass = referallPass.PassPhrase;
         return await ctx.SaveChangesAsync() > 0 ? Ok() : BadRequest("Something went wrong");
     }
 

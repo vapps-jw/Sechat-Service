@@ -5,13 +5,13 @@
 namespace Sechat.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class UserRefferalPass : Migration
+    public partial class UserReferralPass : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "ReferallPass",
+                name: "ReferralPass",
                 table: "UserProfiles",
                 type: "text",
                 nullable: true);
@@ -21,7 +21,7 @@ namespace Sechat.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "ReferallPass",
+                name: "ReferralPass",
                 table: "UserProfiles");
         }
     }
