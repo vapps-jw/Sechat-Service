@@ -2,10 +2,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sechat.Data;
+using Sechat.Data.Repositories;
 using Sechat.Service.Configuration;
+using Sechat.Service.Dtos.ChatDtos;
+using Sechat.Service.Hubs;
 using System;
 using System.Linq;
 using System.Threading;
@@ -19,15 +23,21 @@ namespace Sechat.Service.Controllers;
 [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class AdminController : SechatControllerBase
 {
+    private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
+    private readonly UserRepository _userRepository;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ILogger<AdminController> _logger;
     private readonly IDbContextFactory<SechatContext> _contextFactory;
 
     public AdminController(
+        IHubContext<ChatHub, IChatHub> chatHubContext,
+        UserRepository userRepository,
         UserManager<IdentityUser> userManager,
         ILogger<AdminController> logger,
         IDbContextFactory<SechatContext> contextFactory)
     {
+        _chatHubContext = chatHubContext;
+        _userRepository = userRepository;
         _userManager = userManager;
         _logger = logger;
         _contextFactory = contextFactory;
@@ -51,6 +61,50 @@ public class AdminController : SechatControllerBase
         setting.Value = form.Value;
         var result = await ctx.SaveChangesAsync(cancellationToken);
         return result > 0 ? Ok() : BadRequest("Setting not updated");
+    }
+
+    [HttpGet("usernames")]
+    public IActionResult GetUserNames(CancellationToken cancellationToken) => Ok(_userManager.Users.Select(iu => iu.UserName).ToList());
+
+    [HttpDelete("delete-account/{userName}")]
+    public async Task<IActionResult> DeleteAccount(string userName, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByNameAsync(userName);
+        if (user is null)
+        {
+            return BadRequest("User not found");
+        }
+
+        var deleteResult = await _userRepository.DeleteUserProfile(user.Id);
+
+        if (await _userRepository.SaveChanges(cancellationToken) > 0)
+        {
+            foreach (var ownedRoom in deleteResult.OwnedRooms)
+            {
+                await _chatHubContext.Clients.Group(ownedRoom).RoomDeleted(new ResourceGuid(ownedRoom));
+            }
+
+            foreach (var memberRoom in deleteResult.MemberRooms)
+            {
+                await _chatHubContext.Clients.Group(memberRoom).UserRemovedFromRoom(new RoomUserActionMessage(memberRoom, UserName));
+            }
+
+            foreach (var connection in deleteResult.Connections)
+            {
+                await _chatHubContext.Clients.Group(connection.InvitedId).ContactDeleted(new ResourceId(connection.Id));
+                await _chatHubContext.Clients.Group(connection.InviterId).ContactDeleted(new ResourceId(connection.Id));
+            }
+        }
+
+        _ = await _userManager.UpdateSecurityStampAsync(user);
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            return Problem();
+        }
+
+        _logger.LogInformation($"User {UserName} has been removed");
+        return Ok();
     }
 
     [HttpPost("lock-user")]

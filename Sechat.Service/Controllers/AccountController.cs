@@ -146,6 +146,7 @@ public class AccountController : SechatControllerBase
             }
         }
 
+        _ = await _userManager.UpdateSecurityStampAsync(user);
         var result = await _userManager.DeleteAsync(user);
         if (!result.Succeeded)
         {

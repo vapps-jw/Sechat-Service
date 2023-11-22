@@ -142,6 +142,7 @@ public class ChatController : SechatControllerBase
         {
             foreach (var message in room.Messages)
             {
+                _ = message.MessageViewers.RemoveAll(mv => mv.User is null);
                 if (message.MessageViewers.Any(mv => mv.User.Equals(UserName)))
                 {
                     message.WasViewed = true;
@@ -172,6 +173,8 @@ public class ChatController : SechatControllerBase
         if (cancellationToken.IsCancellationRequested) return BadRequest();
 
         var messageDto = _mapper.Map<MessageDto>(message);
+
+        _ = messageDto.MessageViewers.RemoveAll(mv => mv.User is null);
         if (messageDto.MessageViewers.Any(mv => mv.User.Equals(UserName)))
         {
             messageDto.WasViewed = true;

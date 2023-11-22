@@ -10,6 +10,8 @@ public abstract class RepositoryBase<TContext> where TContext : DbContext
 
     public Task<int> SaveChanges() => _context.SaveChangesAsync();
 
+    public Task<int> SaveChanges(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+
     public void ClearTracker() => _context.ChangeTracker.Clear();
 }
 

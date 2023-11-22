@@ -259,11 +259,15 @@ public class UserRepository : RepositoryBase<SechatContext>
             .FirstOrDefault(p => p.Id.Equals(id));
 
         var ownedRooms = profile.Rooms
-            .Where(r => r.CreatorId.Equals(profile.Id))
+            .Where(r => r.CreatorId.Equals(id))
             .ToList();
 
         var memberRooms = profile.Rooms
-            .Where(r => !r.CreatorId.Equals(profile.Id))
+            .Where(r => !r.CreatorId.Equals(id))
+            .ToList();
+
+        var messageViewers = _context.MessageViewers
+            .Where(mv => mv.UserId.Equals(id))
             .ToList();
 
         var connections = await GetContacts(profile.Id);
@@ -273,13 +277,15 @@ public class UserRepository : RepositoryBase<SechatContext>
             _ = _context.UserProfiles.Remove(profile);
         }
 
+        _context.MessageViewers.RemoveRange(messageViewers);
         _context.Rooms.RemoveRange(ownedRooms);
         _context.Contacts.RemoveRange(connections);
 
         return new ProfileDeleteResult(
             ownedRooms.Select(r => r.Id).ToList(),
             memberRooms.Select(r => r.Id).ToList(),
-            connections);
+            connections
+            );
     }
 
     public bool ProfileExists(string userId) => _context.UserProfiles

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using FluentAssertions.Common;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
@@ -70,6 +71,11 @@ public class AuthServicesInstaller : IServiceInstaller
                 .RequireAuthenticatedUser()
                 .RequireClaim(AppConstants.ClaimType.Role,
                     AppConstants.Role.Admin));
+        });
+
+        _ = webApplicationBuilder.Services.Configure<SecurityStampValidatorOptions>(options =>
+        {
+            options.ValidationInterval = TimeSpan.Zero;
         });
     }
 }
