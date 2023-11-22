@@ -10,7 +10,7 @@ public class UserProfileProjection
     public string ProfilePicture { get; set; }
     public bool EmailConfirmed { get; set; }
     public bool InvitationsAllowed { get; set; }
-    public string ReferallPass { get; set; }
+    public string ReferralPass { get; set; }
 
     public DateTime LastActivity { get; set; } = DateTime.UtcNow;
     public DateTime Created { get; set; } = DateTime.UtcNow;

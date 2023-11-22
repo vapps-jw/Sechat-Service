@@ -95,7 +95,7 @@ public class AccountController : SechatControllerBase
         var referralValidation = ctx.UserProfiles.Any(p => p.ReferralPass.Equals(signUpDetails.ReferralPass));
         if (!referralValidation)
         {
-            return BadRequest("Double check your Referall");
+            return BadRequest("Check your Referall");
         }
 
         var user = new IdentityUser(signUpDetails.Username)
