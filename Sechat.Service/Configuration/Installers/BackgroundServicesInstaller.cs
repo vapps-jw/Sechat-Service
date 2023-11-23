@@ -12,7 +12,6 @@ public class BackgroundServicesInstaller : IServiceInstaller
     {
         _ = webApplicationBuilder.Services.AddHostedService<ReminderNotifications>();
         _ = webApplicationBuilder.Services.AddHostedService<AccountsCleaner>();
-        _ = webApplicationBuilder.Services.AddHostedService<MessageCleaner>();
         _ = webApplicationBuilder.Services.AddHostedService<PushNotificationDispatcher>();
         _ = webApplicationBuilder.Services.AddSingleton(Channel.CreateUnbounded<DefaultNotificationDto>());
     }

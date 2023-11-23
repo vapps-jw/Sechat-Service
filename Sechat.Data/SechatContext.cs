@@ -79,6 +79,8 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
             .HasOne(x => x.Calendar)
             .WithOne(x => x.UserProfile)
             .OnDelete(DeleteBehavior.Cascade);
+        _ = modelBuilder.Entity<UserProfile>()
+            .HasIndex(c => c.UserName);
 
         _ = modelBuilder.Entity<Calendar>()
             .HasMany(x => x.CalendarEvents)
