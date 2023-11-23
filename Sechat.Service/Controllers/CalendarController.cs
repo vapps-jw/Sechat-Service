@@ -107,7 +107,7 @@ public class CalendarController : SechatControllerBase
     }
 
     [HttpDelete("event")]
-    public async Task<IActionResult> DeleteEventAsync(CancellationToken cancellationToken, string eventId)
+    public async Task<IActionResult> DeleteEvent(CancellationToken cancellationToken, string eventId)
     {
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -116,6 +116,15 @@ public class CalendarController : SechatControllerBase
         _ = ctx.CalendarEvents.Remove(ce);
 
         return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
+    }
+
+    [HttpPost("delete-events")]
+    public async Task<IActionResult> DeleteEvents(CancellationToken cancellationToken, List<string> ids)
+    {
+        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        var result = await ctx.CalendarEvents.Where(e => ids.Contains(e.Id) && e.Calendar.UserProfileId.Equals(UserId)).ExecuteDeleteAsync();
+
+        return result == 0 ? BadRequest() : Ok();
     }
 
     // Reminders
