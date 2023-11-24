@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sechat.Data;
 using Sechat.Data.Models.CalendarModels;
 using Sechat.Service.Configuration;
+using Sechat.Service.Configuration.Mediator.Commands.Calendar;
+using Sechat.Service.Configuration.Mediator.Queries.Calendar;
 using Sechat.Service.Dtos.CalendarDtos;
 using System;
 using System.Collections.Generic;
@@ -21,13 +24,16 @@ namespace Sechat.Service.Controllers;
 [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class CalendarController : SechatControllerBase
 {
+    private readonly IMediator _mediator;
     private readonly IDbContextFactory<SechatContext> _contextFactory;
     private readonly IMapper _mapper;
 
     public CalendarController(
+        IMediator mediator,
         IDbContextFactory<SechatContext> contextFactory,
         IMapper mapper)
     {
+        _mediator = mediator;
         _contextFactory = contextFactory;
         _mapper = mapper;
     }
@@ -35,19 +41,10 @@ public class CalendarController : SechatControllerBase
     // Calendar
 
     [HttpGet()]
-    public async Task<IActionResult> GetCalendar(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetCalendarAsync(CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-        var calendar = ctx.Calendars
-            .Where(c => c.UserProfileId.Equals(UserId))
-            .AsSplitQuery()
-            .Include(c => c.CalendarEvents)
-            .ThenInclude(ce => ce.Reminders)
-            .FirstOrDefault();
-        if (calendar is null) return BadRequest();
-
-        var dto = _mapper.Map<CalendarDto>(calendar);
-        return Ok(dto);
+        var result = await _mediator.Send(new GetCalendarQuery(UserId), cancellationToken);
+        return result is null ? BadRequest() : Ok(result);
     }
 
     [HttpDelete()]
@@ -78,21 +75,14 @@ public class CalendarController : SechatControllerBase
     }
 
     [HttpPost("event")]
-    public async Task<IActionResult> CreateEvent(CancellationToken cancellationToken, [FromBody] NewEventForm form)
+    public async Task<IActionResult> CreateEvent(CancellationToken cancellationToken, [FromBody] NewEventCommand command)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        command.UserId = UserId;
+        var result = await _mediator.Send(command);
 
-        var calendar = ctx.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
-        var newEvent = new CalendarEvent()
-        {
-            Id = Guid.NewGuid().ToString(),
-            Data = form.Data,
-        };
-
-        calendar.CalendarEvents.Add(newEvent);
-
-        var response = CreatedAtRoute(nameof(GetEvent), new { eventId = newEvent.Id }, _mapper.Map<CalendarEventDto>(newEvent));
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? response : BadRequest();
+        return result is null
+            ? BadRequest()
+            : CreatedAtRoute(nameof(GetEvent), new { eventId = result.Id }, _mapper.Map<CalendarEventDto>(result));
     }
 
     [HttpPut("event")]
