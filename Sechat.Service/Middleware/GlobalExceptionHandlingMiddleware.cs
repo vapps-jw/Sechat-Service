@@ -76,7 +76,7 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
 
             if (_env.IsProduction())
             {
-                await _pushNotificaionsChannel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.ApplicationEvent, string.Empty, ex.Message));
+                //await _pushNotificaionsChannel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.ApplicationEvent, string.Empty, ex.Message));
                 _ = await _emailClient.SendExceptionNotificationAsync(ex);
             }
 

@@ -9,22 +9,24 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sechat.Service.Configuration.Mediator.Handlers.Calendar;
+namespace Sechat.Service.Configuration.Mediator.Handlers.Calendar.CommandHandlers;
 
-public class NewEventCommandHandler : IRequestHandler<NewEventCommand, CalendarEventDto>
+public class CreateEventCommandHandler : IRequestHandler<CreateEventCommand, CalendarEventDto>
 {
     private readonly SechatContext _context;
     private readonly IMapper _mapper;
 
-    public NewEventCommandHandler(SechatContext context, IMapper mapper)
+    public CreateEventCommandHandler(SechatContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
     }
 
-    public async Task<CalendarEventDto> Handle(NewEventCommand request, CancellationToken cancellationToken)
+    public async Task<CalendarEventDto> Handle(CreateEventCommand request, CancellationToken cancellationToken)
     {
         var calendar = await _context.Calendars.FirstOrDefaultAsync(c => c.UserProfileId.Equals(request.UserId), cancellationToken);
+        if (calendar is null) return null;
+
         var newEvent = new CalendarEvent()
         {
             Id = Guid.NewGuid().ToString(),

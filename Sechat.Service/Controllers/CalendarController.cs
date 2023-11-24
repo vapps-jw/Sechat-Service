@@ -50,14 +50,8 @@ public class CalendarController : SechatControllerBase
     [HttpDelete()]
     public async Task<IActionResult> ClearCalendar(CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-        var calendar = ctx.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(UserId));
-        if (calendar is null) return BadRequest();
-
-        ctx.CalendarEvents.RemoveRange(ctx.CalendarEvents.Where(ce => ce.CalendarId.Equals(calendar.Id)));
-        _ = await ctx.SaveChangesAsync(cancellationToken);
-
-        return Ok();
+        var result = await _mediator.Send(new ClearCalendarCommand(UserId), cancellationToken);
+        return result ? Ok() : BadRequest();
     }
 
     // Events
@@ -75,7 +69,7 @@ public class CalendarController : SechatControllerBase
     }
 
     [HttpPost("event")]
-    public async Task<IActionResult> CreateEvent(CancellationToken cancellationToken, [FromBody] NewEventCommand command)
+    public async Task<IActionResult> CreateEvent(CancellationToken cancellationToken, [FromBody] CreateEventCommand command)
     {
         command.UserId = UserId;
         var result = await _mediator.Send(command);

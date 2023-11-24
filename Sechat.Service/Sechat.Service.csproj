@@ -40,4 +40,9 @@
 	  <ProjectReference Include="..\Sechat.Data\Sechat.Data.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Configuration\Mediator\Requests\" />
+	  <Folder Include="Configuration\Mediator\Responses\" />
+	</ItemGroup>
+
 </Project>

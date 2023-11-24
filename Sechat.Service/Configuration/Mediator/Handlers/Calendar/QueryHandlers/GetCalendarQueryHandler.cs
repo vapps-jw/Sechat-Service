@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sechat.Service.Configuration.Mediator.Handlers.Calendar;
+namespace Sechat.Service.Configuration.Mediator.Handlers.Calendar.QueryHandlers;
 
 public class GetCalendarQueryHandler : IRequestHandler<GetCalendarQuery, CalendarDto>
 {
