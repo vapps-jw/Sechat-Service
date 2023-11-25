@@ -5,14 +5,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sechat.Data;
-using Sechat.Data.Models.CalendarModels;
 using Sechat.Service.Configuration;
 using Sechat.Service.Configuration.Mediator.Commands.Calendar;
 using Sechat.Service.Configuration.Mediator.Queries.Calendar;
 using Sechat.Service.Dtos.CalendarDtos;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using static Sechat.Service.Controllers.CalendarControllerForms;
@@ -57,19 +55,14 @@ public class CalendarController : SechatControllerBase
     // Events
 
     [HttpGet("event/{eventId}", Name = nameof(GetEvent))]
-    public async Task<IActionResult> GetEvent(CancellationToken cancellationToken, string eventId)
+    public async Task<IActionResult> GetEvent(string eventId, CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-
-        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId));
-        if (ce is null) return BadRequest();
-        _ = ctx.CalendarEvents.Remove(ce);
-
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
+        var result = await _mediator.Send(new GetEventQuery(eventId, UserId), cancellationToken);
+        return result is null ? BadRequest() : Ok(result);
     }
 
     [HttpPost("event")]
-    public async Task<IActionResult> CreateEvent(CancellationToken cancellationToken, [FromBody] CreateEventCommand command)
+    public async Task<IActionResult> CreateEvent([FromBody] CreateEventCommand command, CancellationToken cancellationToken)
     {
         command.UserId = UserId;
         var result = await _mediator.Send(command);
@@ -80,108 +73,75 @@ public class CalendarController : SechatControllerBase
     }
 
     [HttpPut("event")]
-    public async Task<IActionResult> UpdateEvent(CancellationToken cancellationToken, [FromBody] CalendarEventDto dto)
+    public async Task<IActionResult> UpdateEvent([FromBody] UpdateEventCommand command, CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        command.UserId = UserId;
+        var result = await _mediator.Send(command, cancellationToken);
 
-        var existingEvent = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(dto.Id) && e.Calendar.UserProfileId.Equals(UserId));
-        if (existingEvent is null) return BadRequest();
-        existingEvent.Data = dto.Data;
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
+        return result is null
+            ? BadRequest()
+            : Ok(result);
     }
 
     [HttpDelete("event")]
-    public async Task<IActionResult> DeleteEvent(CancellationToken cancellationToken, string eventId)
+    public async Task<IActionResult> DeleteEvent(string eventId, CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-
-        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId));
-        if (ce is null) return BadRequest();
-        _ = ctx.CalendarEvents.Remove(ce);
-
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
+        var result = await _mediator.Send(new DeleteEventCommand() { EventId = eventId, UserId = UserId }, cancellationToken);
+        return result > 0
+            ? Ok()
+            : BadRequest();
     }
 
     [HttpPost("delete-events")]
-    public async Task<IActionResult> DeleteEvents(CancellationToken cancellationToken, List<string> ids)
+    public async Task<IActionResult> DeleteEvents(List<string> ids, CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-        var result = await ctx.CalendarEvents.Where(e => ids.Contains(e.Id) && e.Calendar.UserProfileId.Equals(UserId)).ExecuteDeleteAsync();
-
-        return result == 0 ? BadRequest() : Ok();
+        var result = await _mediator.Send(new DeleteEventsCommand() { EventIds = ids, UserId = UserId }, cancellationToken);
+        return result > 0
+            ? Ok()
+            : BadRequest();
     }
 
     // Reminders
 
     [HttpPost("event/reminder")]
-    public async Task<IActionResult> CreateReminder(CancellationToken cancellationToken, [FromBody] NewReminderForm reminder)
+    public async Task<IActionResult> CreateReminder([FromBody] CreateReminderCommand reminder, CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-
-        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(reminder.EventId) && e.Calendar.UserProfileId.Equals(UserId));
-        if (ce is null) return BadRequest();
-
-        var newReminder = new Reminder() { Remind = reminder.Remind.ToUniversalTime() };
-        ce.Reminders.Add(newReminder);
-
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(_mapper.Map<ReminderDto>(newReminder)) : BadRequest();
+        var result = await _mediator.Send(new CreateReminderCommand() { EventId = reminder.EventId, Remind = reminder.Remind, UserId = UserId }, cancellationToken);
+        return result is not null
+            ? Ok(result)
+            : BadRequest();
     }
 
     [HttpPost("event/{eventId}/reminders")]
-    public async Task<IActionResult> CreateReminders(CancellationToken cancellationToken, string eventId, [FromBody] List<NewReminderForm> reminders)
+    public async Task<IActionResult> CreateReminders(string eventId, [FromBody] List<NewReminderForm> reminders, CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-
-        var ce = ctx.CalendarEvents.FirstOrDefault(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId));
-        if (ce is null) return BadRequest();
-
-        var newReminders = reminders.Select(r => new Reminder() { Remind = r.Remind.ToUniversalTime() }).ToList();
-        ce.Reminders.AddRange(newReminders);
-
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok(_mapper.Map<List<ReminderDto>>(newReminders)) : BadRequest();
+        var result = await _mediator.Send(new CreateRemindersCommand(eventId, UserId, reminders), cancellationToken);
+        return result is not null
+            ? Ok(result)
+            : BadRequest();
     }
 
     [HttpDelete("event/{eventId}/{reminderId}")]
-    public async Task<IActionResult> DeleteReminder(CancellationToken cancellationToken, string eventId, long reminderId)
+    public async Task<IActionResult> DeleteReminder(string eventId, long reminderId, CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-
-        var ce = ctx.CalendarEvents
-            .Where(e => e.Id.Equals(eventId) && e.Calendar.UserProfileId.Equals(UserId))
-            .Include(e => e.Reminders)
-            .FirstOrDefault();
-        if (ce is null) return BadRequest();
-
-        var reminderToDelete = ce.Reminders.FirstOrDefault(r => r.Id == reminderId);
-        if (reminderToDelete is null) return BadRequest();
-
-        _ = ctx.Reminders.Remove(reminderToDelete);
-        return await ctx.SaveChangesAsync(cancellationToken) > 0 ? Ok() : BadRequest();
+        var result = await _mediator.Send(new DeleteReminderCommand(UserId, eventId, reminderId), cancellationToken);
+        return result > 0
+            ? Ok()
+            : BadRequest();
     }
 
     [HttpDelete("event/{eventId}/reminders")]
-    public async Task<IActionResult> DeleteReminders(CancellationToken cancellationToken, string eventId)
+    public async Task<IActionResult> DeleteRemindersAsync(string eventId, CancellationToken cancellationToken)
     {
-        using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
-
-        var result = ctx.Reminders
-            .Where(r => r.CalendarEventId.Equals(eventId))
-            .ExecuteDelete();
-        return result == 0 ? BadRequest() : Ok();
+        var result = await _mediator.Send(new DeleteRemindersCommand(UserId, eventId), cancellationToken);
+        return result > 0
+            ? Ok()
+            : BadRequest();
     }
 }
 
 public class CalendarControllerForms
 {
-    public class NewEventForm
-    {
-        public string Data { get; set; }
-    }
-    public class NewEventFormValidation : AbstractValidator<NewEventForm>
-    {
-        public NewEventFormValidation() => _ = RuleFor(x => x.Data).NotNull().NotEmpty().MaximumLength(AppConstants.StringLength.DataStoreMax);
-    }
-
     public class NewReminderForm
     {
         public string EventId { get; set; }
