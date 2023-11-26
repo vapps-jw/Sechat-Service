@@ -9,13 +9,9 @@ public class MVCInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder)
     {
-        _ = webApplicationBuilder.Services.AddMvc(options =>
-        {
-            _ = options.Filters.Add<OperationCancelledExceptionFilter>();
-        });
-
         _ = webApplicationBuilder.Services.AddControllers(option =>
         {
+            _ = option.Filters.Add<OperationCancelledExceptionFilter>();
             option.CacheProfiles.Add(AppConstants.CacheProfiles.NoStore,
                new CacheProfile()
                {
