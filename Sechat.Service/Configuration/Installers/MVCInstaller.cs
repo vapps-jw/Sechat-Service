@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Sechat.Service.Configuration.MVCFilters;
 
 namespace Sechat.Service.Configuration.Installers;
 
@@ -8,6 +9,11 @@ public class MVCInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder)
     {
+        _ = webApplicationBuilder.Services.AddMvc(options =>
+        {
+            _ = options.Filters.Add<OperationCancelledExceptionFilter>();
+        });
+
         _ = webApplicationBuilder.Services.AddControllers(option =>
         {
             option.CacheProfiles.Add(AppConstants.CacheProfiles.NoStore,

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Sechat.Data;
 using Sechat.Service.Configuration.Mediator.Commands.Calendar;
 using System.Linq;
@@ -15,7 +16,7 @@ public class ClearCalendarCommandHandler : IRequestHandler<ClearCalendarCommand,
 
     public async Task<bool> Handle(ClearCalendarCommand request, CancellationToken cancellationToken)
     {
-        var calendar = _context.Calendars.FirstOrDefault(c => c.UserProfileId.Equals(request.UserId));
+        var calendar = await _context.Calendars.FirstOrDefaultAsync(c => c.UserProfileId.Equals(request.UserId), cancellationToken);
         if (calendar is null) return false;
 
         _context.CalendarEvents.RemoveRange(_context.CalendarEvents.Where(ce => ce.CalendarId.Equals(calendar.Id)));

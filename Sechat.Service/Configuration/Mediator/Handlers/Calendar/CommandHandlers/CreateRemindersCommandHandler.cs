@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Sechat.Data;
 using Sechat.Data.Models.CalendarModels;
 using Sechat.Service.Configuration.Mediator.Commands.Calendar;
@@ -24,7 +25,7 @@ public class CreateRemindersCommandHandler : IRequestHandler<CreateRemindersComm
 
     public async Task<List<ReminderDto>> Handle(CreateRemindersCommand request, CancellationToken cancellationToken)
     {
-        var ce = _context.CalendarEvents.FirstOrDefault(e => e.Id.Equals(request.EventId) && e.Calendar.UserProfileId.Equals(request.UserId));
+        var ce = await _context.CalendarEvents.FirstOrDefaultAsync(e => e.Id.Equals(request.EventId) && e.Calendar.UserProfileId.Equals(request.UserId), cancellationToken);
         if (ce is null) return null;
 
         var newReminders = request.CreateReminderCommands.Select(r => new Reminder() { Remind = r.Remind.ToUniversalTime() }).ToList();

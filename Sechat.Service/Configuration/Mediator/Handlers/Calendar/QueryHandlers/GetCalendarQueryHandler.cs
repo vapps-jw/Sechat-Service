@@ -28,7 +28,7 @@ public class GetCalendarQueryHandler : IRequestHandler<GetCalendarQuery, Calenda
             .AsSplitQuery()
             .Include(c => c.CalendarEvents)
             .ThenInclude(ce => ce.Reminders)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         return calendar is null ? null : _mapper.Map<CalendarDto>(calendar);
     }
