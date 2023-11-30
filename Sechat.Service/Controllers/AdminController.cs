@@ -48,7 +48,10 @@ public class AdminController : SechatControllerBase
     {
         _logger.LogWarning("Global Settings requested");
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
         var result = await ctx.GlobalSettings.ToListAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
         return Ok(result);
     }
 
@@ -57,6 +60,8 @@ public class AdminController : SechatControllerBase
     {
         _logger.LogWarning("Global Setting change requested {req}", form);
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
         var setting = ctx.GlobalSettings.FirstOrDefault(s => s.Id.Equals(form.Id));
         setting.Value = form.Value;
         var result = await ctx.SaveChangesAsync(cancellationToken);
@@ -79,6 +84,8 @@ public class AdminController : SechatControllerBase
 
         if (await _userRepository.SaveChanges(cancellationToken) > 0)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             foreach (var ownedRoom in deleteResult.OwnedRooms)
             {
                 await _chatHubContext.Clients.Group(ownedRoom).RoomDeleted(new ResourceGuid(ownedRoom));

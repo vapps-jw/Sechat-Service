@@ -63,11 +63,7 @@ public class AccountController : SechatControllerBase
         CancellationToken cancellationToken)
     {
         var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, true);
-
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return BadRequest();
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (signInResult.Succeeded)
         {
@@ -110,7 +106,9 @@ public class AccountController : SechatControllerBase
             LockoutEnabled = true
         };
 
+        cancellationToken.ThrowIfCancellationRequested();
         var createUserResult = await _userManager.CreateAsync(user, signUpDetails.Password);
+
         if (!createUserResult.Succeeded)
         {
             return BadRequest("Failed to Sign Up");
@@ -195,6 +193,8 @@ public class AccountController : SechatControllerBase
     {
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
         var profile = ctx.UserProfiles.FirstOrDefault(p => p.Id.Equals(UserId));
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (profile is null)
         {

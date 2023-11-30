@@ -174,7 +174,8 @@ public class UserController : SechatControllerBase
         if (await _userRepository.SaveChanges() > 0)
         {
             var contactDto = _mapper.Map<ContactDto>(contact);
-            var pictures = _userRepository.GetProfilePictures(new List<string> { contact.InviterId, contact.InvitedId });
+            var pictures = await _userRepository.GetProfilePictures(new List<string> { contact.InviterId, contact.InvitedId }, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
 
             contactDto.ContactState = _cacheService.IsUserOnline(contact.InvitedId);
             contactDto.ProfileImage = pictures[contact.InviterId];
@@ -211,7 +212,9 @@ public class UserController : SechatControllerBase
 
         if (await _userRepository.SaveChanges() > 0)
         {
-            var pictures = _userRepository.GetProfilePictures(new List<string> { contact.InviterId, contact.InvitedId });
+            var pictures = await _userRepository.GetProfilePictures(new List<string> { contact.InviterId, contact.InvitedId }, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+
             var contactDto = _mapper.Map<ContactDto>(contact);
             var inviterId = await GetUserId(contactDto.InviterName);
 

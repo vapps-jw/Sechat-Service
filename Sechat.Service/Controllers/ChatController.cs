@@ -65,11 +65,9 @@ public class ChatController : SechatControllerBase
             .ToList();
 
         var pictures = await _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList(), cancellationToken);
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
-
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
 
         foreach (var dto in contactDtos)
         {
@@ -93,7 +91,7 @@ public class ChatController : SechatControllerBase
             .Select(c => c.Id)
             .ToList();
 
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         foreach (var contactDto in contactDtos)
         {
@@ -113,7 +111,7 @@ public class ChatController : SechatControllerBase
             return BadRequest();
         }
 
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         var message = await _userRepository.GetContactMessage(messageId);
         var messageDto = _mapper.Map<DirectMessageDto>(message);
@@ -137,7 +135,7 @@ public class ChatController : SechatControllerBase
             }
         }
 
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
         foreach (var room in roomDtos)
@@ -165,14 +163,14 @@ public class ChatController : SechatControllerBase
 
         var message = await _chatRepository.GetRoomMessage(messageId);
 
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         foreach (var viewer in message.MessageViewers)
         {
             viewer.UserId = (await _userManager.FindByIdAsync(viewer.UserId))?.UserName;
         }
 
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         var messageDto = _mapper.Map<MessageDto>(message);
 
@@ -234,7 +232,7 @@ public class ChatController : SechatControllerBase
             }
         }
 
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         var roomDtos = _mapper.Map<List<RoomDto>>(rooms);
         foreach (var room in roomDtos)
@@ -354,7 +352,7 @@ public class ChatController : SechatControllerBase
             .ToList();
 
         var pictures = await _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList(), cancellationToken);
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
@@ -375,7 +373,7 @@ public class ChatController : SechatControllerBase
             }
         }
 
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         var connectedContacts = contacts
             .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
@@ -405,7 +403,7 @@ public class ChatController : SechatControllerBase
             .ToList();
 
         var pictures = await _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList(), cancellationToken);
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
@@ -453,7 +451,7 @@ public class ChatController : SechatControllerBase
             .ToList();
 
         var pictures = await _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList(), cancellationToken);
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
 
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
@@ -680,7 +678,7 @@ public class ChatController : SechatControllerBase
         }
 
         var contact = await _userRepository.GetContactWithRecentMessages(contactId, _initialMessagesPull, cancellationToken);
-        if (cancellationToken.IsCancellationRequested) return BadRequest();
+        cancellationToken.ThrowIfCancellationRequested();
         var contactDto = _mapper.Map<ContactDto>(contact);
 
         return Ok(contactDto);
