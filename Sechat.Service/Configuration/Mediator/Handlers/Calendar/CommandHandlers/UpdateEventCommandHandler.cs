@@ -22,7 +22,7 @@ public class UpdateEventCommandHandler : IRequestHandler<UpdateEventCommand, Cal
 
     public async Task<CalendarEventDto> Handle(UpdateEventCommand request, CancellationToken cancellationToken)
     {
-        var storedEvent = await _context.CalendarEvents.FirstOrDefaultAsync(e => e.Id.Equals(request.Id) && e.Calendar.UserProfileId.Equals(request), cancellationToken);
+        var storedEvent = await _context.CalendarEvents.FirstOrDefaultAsync(e => e.Id.Equals(request.Id) && e.Calendar.UserProfileId.Equals(request.UserId), cancellationToken);
         if (storedEvent is null) return null;
         storedEvent.Data = request.Data;
 
