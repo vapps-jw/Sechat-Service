@@ -56,7 +56,7 @@ public class ChatController : SechatControllerBase
     [HttpGet("contacts-messages-metadata")]
     public async Task<IActionResult> GetContactsMetadata(CancellationToken cancellationToken)
     {
-        var contacts = await _userRepository.GetContactsMetadata(UserId, _initialMessagesPull);
+        var contacts = await _userRepository.GetContactsMetadata(UserId, _initialMessagesPull, cancellationToken);
         var ids = contacts
             .Select(c => new { id = c.InviterId, name = c.InviterName })
             .Concat(contacts.Select(c => new { id = c.InvitedId, name = c.InvitedName }))
@@ -64,7 +64,9 @@ public class ChatController : SechatControllerBase
             .Where(i => !i.id.Equals(UserId))
             .ToList();
 
-        var pictures = _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList());
+        var pictures = await _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList(), cancellationToken);
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
+
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
         if (cancellationToken.IsCancellationRequested) return BadRequest();
@@ -351,7 +353,9 @@ public class ChatController : SechatControllerBase
             .Where(i => !i.id.Equals(UserId))
             .ToList();
 
-        var pictures = _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList());
+        var pictures = await _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList(), cancellationToken);
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
+
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
         foreach (var dto in contactDtos)
@@ -390,7 +394,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contacts-update/{lastMessage}")]
-    public async Task<IActionResult> ContactsUpate(long lastMessage)
+    public async Task<IActionResult> ContactsUpate(long lastMessage, CancellationToken cancellationToken)
     {
         var contacts = await _userRepository.GetContactsUpdate(UserId, lastMessage);
         var ids = contacts
@@ -400,7 +404,9 @@ public class ChatController : SechatControllerBase
             .Where(i => !i.id.Equals(UserId))
             .ToList();
 
-        var pictures = _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList());
+        var pictures = await _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList(), cancellationToken);
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
+
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
         foreach (var dto in contactDtos)
@@ -436,7 +442,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contacts-update-metadata/{lastMessage}")]
-    public async Task<IActionResult> ContactsUpateMetadata(long lastMessage)
+    public async Task<IActionResult> ContactsUpateMetadata(long lastMessage, CancellationToken cancellationToken)
     {
         var contacts = await _userRepository.GetContactsUpdateMetadata(UserId, lastMessage);
         var ids = contacts
@@ -446,7 +452,9 @@ public class ChatController : SechatControllerBase
             .Where(i => !i.id.Equals(UserId))
             .ToList();
 
-        var pictures = _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList());
+        var pictures = await _userRepository.GetProfilePictures(ids.Select(i => i.id).ToList(), cancellationToken);
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
+
         var contactDtos = _mapper.Map<List<ContactDto>>(contacts);
 
         foreach (var dto in contactDtos)
@@ -482,9 +490,9 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpGet("contact/{contactId}/load-more/{lastId}")]
-    public async Task<IActionResult> LoadMoreContactMessages(long contactId, long lastId)
+    public async Task<IActionResult> LoadMoreContactMessages(long contactId, long lastId, CancellationToken cancellationToken)
     {
-        var messages = await _userRepository.GetOldMessagesForContact(contactId, lastId, _updateMessagesPull);
+        var messages = await _userRepository.GetOldMessagesForContact(contactId, lastId, _updateMessagesPull, cancellationToken);
         var dtos = _mapper.Map<List<DirectMessageDto>>(messages);
 
         return Ok(dtos);
@@ -494,7 +502,8 @@ public class ChatController : SechatControllerBase
     [RequestSizeLimit(80_000_000)]
     public async Task<IActionResult> SendMessage(
     [FromServices] Channel<DefaultNotificationDto> channel,
-    [FromBody] IncomingMessage incomingMessageDto)
+    [FromBody] IncomingMessage incomingMessageDto,
+    CancellationToken cancellationToken)
     {
         if (!_chatRepository.IsRoomMember(UserId, incomingMessageDto.RoomId))
         {
@@ -502,7 +511,7 @@ public class ChatController : SechatControllerBase
         }
 
         var res = _chatRepository.CreateMessage(UserId, incomingMessageDto.Text, incomingMessageDto.RoomId);
-        if (await _chatRepository.SaveChanges() == 0)
+        if (await _chatRepository.SaveChanges(cancellationToken) == 0)
         {
             return BadRequest("Message not sent");
         }
@@ -533,13 +542,13 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPatch("messages-viewed")]
-    public async Task<IActionResult> MessagesViewed([FromBody] ResourceGuid resourceGuid)
+    public async Task<IActionResult> MessagesViewed([FromBody] ResourceGuid resourceGuid, CancellationToken cancellationToken)
     {
         if (!_chatRepository.IsRoomMember(UserId, resourceGuid.Id)) return BadRequest("Not your room");
 
         _chatRepository.MarkMessagesAsViewed(UserId, resourceGuid.Id);
 
-        if (await _chatRepository.SaveChanges() > 0)
+        if (await _chatRepository.SaveChanges(cancellationToken) > 0)
         {
             await _chatHubContext.Clients.Group(resourceGuid.Id).MessagesWereViewed(new RoomUserActionMessage(resourceGuid.Id, UserName));
         }
@@ -562,13 +571,13 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPatch("message-viewed/{roomId}/{messageId}")]
-    public async Task<IActionResult> MessageViewed(string roomId, long messageId)
+    public async Task<IActionResult> MessageViewed(string roomId, long messageId, CancellationToken cancellationToken)
     {
         if (!_chatRepository.IsRoomMember(UserId, roomId)) return BadRequest("Not your room");
 
         _chatRepository.MarkMessageAsViewed(UserId, messageId);
 
-        if (await _chatRepository.SaveChanges() > 0)
+        if (await _chatRepository.SaveChanges(cancellationToken) > 0)
         {
             await _chatHubContext.Clients.Group(roomId).MessageWasViewed(new RoomMessageUserActionMessage(roomId, messageId, UserName));
         }
@@ -577,7 +586,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("add-to-room")]
-    public async Task<IActionResult> AddToRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
+    public async Task<IActionResult> AddToRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
         if (!_userRepository.ContactExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest("This is not your friend");
@@ -587,7 +596,7 @@ public class ChatController : SechatControllerBase
         if (!contact.Approved) return BadRequest("Contact was not approved");
 
         var room = _chatRepository.AddToRoom(roomMemberUpdate.RoomId, user.Id);
-        if (await _chatRepository.SaveChanges() > 0)
+        if (await _chatRepository.SaveChanges(cancellationToken) > 0)
         {
             var roomDto = _mapper.Map<RoomDto>(room);
             await _chatHubContext.Clients.Group(user.Id).UserAddedToRoom(roomDto);
@@ -599,13 +608,13 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("remove-from-room")]
-    public async Task<IActionResult> RemoveFromRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate)
+    public async Task<IActionResult> RemoveFromRoom([FromBody] RoomMemberUpdateRequest roomMemberUpdate, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByNameAsync(roomMemberUpdate.UserName);
         if (!_userRepository.ContactExists(roomMemberUpdate.connectionId, UserId, user.Id)) return BadRequest("Not your friend");
 
         var room = _chatRepository.RemoveFromRoom(roomMemberUpdate.RoomId, user.Id);
-        if (await _chatRepository.SaveChanges() > 0)
+        if (await _chatRepository.SaveChanges(cancellationToken) > 0)
         {
             var roomDto = _mapper.Map<RoomDto>(room);
             await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new RoomUserActionMessage(roomDto.Id, roomMemberUpdate.UserName));
@@ -616,12 +625,12 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPost("leave-room")]
-    public async Task<IActionResult> LeaveRoom([FromBody] RoomRequest roomMemberUpdate)
+    public async Task<IActionResult> LeaveRoom([FromBody] RoomRequest roomMemberUpdate, CancellationToken cancellationToken)
     {
         if (!_chatRepository.IsRoomMember(UserId, roomMemberUpdate.RoomId)) return BadRequest("Not room member");
 
         var room = _chatRepository.RemoveFromRoom(roomMemberUpdate.RoomId, UserId);
-        if (await _chatRepository.SaveChanges() > 0)
+        if (await _chatRepository.SaveChanges(cancellationToken) > 0)
         {
             var roomDto = _mapper.Map<RoomDto>(room);
             await _chatHubContext.Clients.Group(roomMemberUpdate.RoomId).UserRemovedFromRoom(new RoomUserActionMessage(roomDto.Id, UserName));
@@ -649,9 +658,9 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpDelete("delete-room")]
-    public async Task<IActionResult> DeleteRoom(string roomId)
+    public async Task<IActionResult> DeleteRoom(string roomId, CancellationToken cancellationToken)
     {
-        if (await _chatRepository.DeleteRoom(roomId, UserId) > 0)
+        if (await _chatRepository.DeleteRoom(roomId, UserId, cancellationToken) > 0)
         {
             await _chatHubContext.Clients.Group(roomId).RoomDeleted(new ResourceGuid(roomId));
             return Ok();
@@ -663,14 +672,15 @@ public class ChatController : SechatControllerBase
     // Contacts
 
     [HttpGet("contact/{contactId}")]
-    public async Task<IActionResult> Contact(long contactId)
+    public async Task<IActionResult> Contact(long contactId, CancellationToken cancellationToken)
     {
         if (!_userRepository.CheckContact(contactId, UserId, out _))
         {
             return BadRequest("Contact not allowed");
         }
 
-        var contact = await _userRepository.GetContactWithRecentMessages(contactId, _initialMessagesPull);
+        var contact = await _userRepository.GetContactWithRecentMessages(contactId, _initialMessagesPull, cancellationToken);
+        if (cancellationToken.IsCancellationRequested) return BadRequest();
         var contactDto = _mapper.Map<ContactDto>(contact);
 
         return Ok(contactDto);
@@ -680,7 +690,8 @@ public class ChatController : SechatControllerBase
     [RequestSizeLimit(80_000_000)]
     public async Task<IActionResult> SendDirectMessage(
         [FromServices] Channel<DefaultNotificationDto> channel,
-        [FromBody] IncomingDirectMessage incomingMessageDto)
+        [FromBody] IncomingDirectMessage incomingMessageDto,
+        CancellationToken cancellationToken)
     {
         var recipient = await _userManager.FindByNameAsync(incomingMessageDto.Recipient);
         var contact = _userRepository.GetContact(UserId, recipient.Id);
@@ -689,7 +700,7 @@ public class ChatController : SechatControllerBase
         if (!contact.Approved) return BadRequest("Contact was not approved");
 
         var res = _chatRepository.CreateDirectMessage(UserId, incomingMessageDto.Text, contact.Id);
-        if (await _chatRepository.SaveChanges() == 0)
+        if (await _chatRepository.SaveChanges(cancellationToken) == 0)
         {
             return BadRequest("Message not sent");
         }
@@ -706,7 +717,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpDelete("direct-message/{contactId}/{messageId}")]
-    public async Task<IActionResult> DeleteDirectMessage(long contactId, long messageId)
+    public async Task<IActionResult> DeleteDirectMessage(long contactId, long messageId, CancellationToken cancellationToken)
     {
         if (!_chatRepository.DirectMessageExists(messageId)) return BadRequest("Message does not exits");
         if (!_chatRepository.IsDirectMessageAuthor(messageId, UserId)) return BadRequest("Not your message");
@@ -715,7 +726,7 @@ public class ChatController : SechatControllerBase
         if (contact.Blocked) return BadRequest("User blocked");
         if (!contact.Approved) return BadRequest("Contact was not approved");
 
-        if (await _chatRepository.DeleteDirectMessage(contactId, messageId) > 0)
+        if (await _chatRepository.DeleteDirectMessage(contactId, messageId, cancellationToken) > 0)
         {
             await _chatHubContext.Clients.Group(contact.InvitedId).DirectMessageDeleted(new DirectMessageId(messageId, contactId));
             await _chatHubContext.Clients.Group(contact.InviterId).DirectMessageDeleted(new DirectMessageId(messageId, contactId));
@@ -725,7 +736,7 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPatch("direct-message-viewed/{contactId}/{messageId}")]
-    public async Task<IActionResult> DirectMessageViewed(long contactId, long messageId)
+    public async Task<IActionResult> DirectMessageViewed(long contactId, long messageId, CancellationToken cancellationToken)
     {
         if (!_userRepository.CheckContact(contactId, UserId, out var contact))
         {
@@ -733,7 +744,7 @@ public class ChatController : SechatControllerBase
         }
 
         _chatRepository.MarkDirectMessageAsViewed(UserId, contactId, messageId);
-        if (await _chatRepository.SaveChanges() > 0)
+        if (await _chatRepository.SaveChanges(cancellationToken) > 0)
         {
             var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
             await _chatHubContext.Clients.Group(recipientId).DirectMessageWasViewed(new DirectMessageViewed(contactId, messageId));
@@ -743,12 +754,15 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpDelete("direct-messages/{contactId}")]
-    public async Task<IActionResult> DirectMessages(long contactId)
+    public async Task<IActionResult> DirectMessages(long contactId, CancellationToken cancellationToken)
     {
         if (_userRepository.CheckContactWithMessages(contactId, UserId, out var contact))
         {
             contact.DirectMessages.Clear();
-            _ = await _chatRepository.SaveChanges();
+            if (await _chatRepository.SaveChanges(cancellationToken) == 0)
+            {
+                return BadRequest();
+            }
             await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
             await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdateRequired(new ContactUpdateRequired(contact.Id));
             return Ok("Chat cleared");
@@ -758,17 +772,19 @@ public class ChatController : SechatControllerBase
     }
 
     [HttpPatch("direct-messages-viewed")]
-    public async Task<IActionResult> DirectMessagesViewed([FromBody] ResourceId resourceId)
+    public async Task<IActionResult> DirectMessagesViewed([FromBody] ResourceId resourceId, CancellationToken cancellationToken)
     {
         if (!_userRepository.CheckContact(resourceId.Id, UserId, out var contact))
         {
             return BadRequest("You cant do that");
         }
 
-        _chatRepository.MarkDirectMessagesAsViewed(UserId, resourceId.Id);
-        var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
-        await _chatHubContext.Clients.Group(recipientId).DirectMessagesWereViewed(new DirectMessagesViewed(resourceId.Id));
+        if (await _chatRepository.MarkDirectMessagesAsViewed(UserId, resourceId.Id, cancellationToken) > 0)
+        {
+            var recipientId = contact.InvitedId.Equals(UserId) ? contact.InviterId : contact.InvitedId;
+            await _chatHubContext.Clients.Group(recipientId).DirectMessagesWereViewed(new DirectMessagesViewed(resourceId.Id));
 
+        }
         return Ok();
     }
 }

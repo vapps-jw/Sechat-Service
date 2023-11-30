@@ -117,7 +117,7 @@ public class ChatRepository : RepositoryBase<SechatContext>
             IdSentBy = profile.Id,
             NameSentBy = profile.UserName,
             RoomId = room.Id,
-            MessageViewers = new List<MessageViewer>() { new MessageViewer(userId) }
+            MessageViewers = new List<MessageViewer>() { new(userId) }
         };
         room.Messages.Add(newMessage);
         return newMessage;
@@ -165,21 +165,21 @@ public class ChatRepository : RepositoryBase<SechatContext>
         message.WasViewed = true;
     }
 
-    public void MarkDirectMessagesAsViewed(string userId, long contactId)
+    public Task<int> MarkDirectMessagesAsViewed(string userId, long contactId, CancellationToken cancellationToken)
     {
-        var messages = _context.DirectMessages
+        return _context.DirectMessages
             .Where(m => m.ContactId == contactId && !m.IdSentBy.Equals(userId))
-            .ExecuteUpdate(setters => setters
-                .SetProperty(m => m.WasViewed, true));
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(m => m.WasViewed, true), cancellationToken);
     }
 
     public Task<int> DeleteMessage(string roomId, long messageId) => _context.Messages
         .Where(m => m.Id == messageId && m.RoomId.Equals(roomId))
         .ExecuteDeleteAsync();
 
-    public Task<int> DeleteDirectMessage(long contactId, long messageId) => _context.DirectMessages
+    public Task<int> DeleteDirectMessage(long contactId, long messageId, CancellationToken cancellationToken) => _context.DirectMessages
         .Where(m => m.Id == messageId && m.ContactId == contactId)
-        .ExecuteDeleteAsync();
+        .ExecuteDeleteAsync(cancellationToken);
 
     // Rooms
 
@@ -343,8 +343,8 @@ public class ChatRepository : RepositoryBase<SechatContext>
         return room;
     }
 
-    public Task<int> DeleteRoom(string roomId, string creatorUserId) => _context.Rooms
+    public Task<int> DeleteRoom(string roomId, string creatorUserId, CancellationToken cancellationToken) => _context.Rooms
         .Where(r => r.Id.Equals(roomId) && r.CreatorId.Equals(creatorUserId))
-        .ExecuteDeleteAsync();
+        .ExecuteDeleteAsync(cancellationToken);
 }
 

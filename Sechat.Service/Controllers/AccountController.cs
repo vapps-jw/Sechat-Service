@@ -59,9 +59,16 @@ public class AccountController : SechatControllerBase
     [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
     public async Task<IActionResult> SignIn(
         [FromServices] UserDataService userDataService,
-        [FromBody] UserCredentials userCredentials)
+        [FromBody] UserCredentials userCredentials,
+        CancellationToken cancellationToken)
     {
         var signInResult = await _signInManager.PasswordSignInAsync(userCredentials.Username, userCredentials.Password, true, true);
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return BadRequest();
+        }
+
         if (signInResult.Succeeded)
         {
             _logger.LogWarning("User Logged In: {Username}", userCredentials.Username);
@@ -102,8 +109,8 @@ public class AccountController : SechatControllerBase
         {
             LockoutEnabled = true
         };
-        var createUserResult = await _userManager.CreateAsync(user, signUpDetails.Password);
 
+        var createUserResult = await _userManager.CreateAsync(user, signUpDetails.Password);
         if (!createUserResult.Succeeded)
         {
             return BadRequest("Failed to Sign Up");

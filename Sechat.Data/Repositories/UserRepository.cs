@@ -94,7 +94,7 @@ public class UserRepository : RepositoryBase<SechatContext>
             .Include(c => c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake).OrderBy(dm => dm.Id))
             .ToListAsync();
 
-    public Task<List<Contact>> GetContactsMetadata(string userId, int initalTake) => _context.Contacts
+    public Task<List<Contact>> GetContactsMetadata(string userId, int initalTake, CancellationToken cancellationToken) => _context.Contacts
         .Where(uc => uc.InvitedId.Equals(userId) || uc.InviterId.Equals(userId))
         .Include(c => c.DirectMessages)
         .Select(c => new Contact()
@@ -119,7 +119,7 @@ public class UserRepository : RepositoryBase<SechatContext>
                 WasViewed = m.WasViewed
             }).ToList()
         })
-        .ToListAsync();
+        .ToListAsync(cancellationToken);
 
     public Task<DirectMessage> GetContactMessage(long messageId) => _context.DirectMessages.Where(m => m.Id == messageId).FirstOrDefaultAsync();
 
@@ -159,18 +159,18 @@ public class UserRepository : RepositoryBase<SechatContext>
     public Task<Contact> GetContact(long contactId) =>
         _context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
 
-    public Task<Contact> GetContactWithRecentMessages(long contactId, int initalTake) =>
+    public Task<Contact> GetContactWithRecentMessages(long contactId, int initalTake, CancellationToken cancellationToken) =>
         _context.Contacts
             .Include(c => c.DirectMessages.OrderByDescending(dm => dm.Id).Take(initalTake))
-            .FirstOrDefaultAsync(c => c.Id == contactId);
+            .FirstOrDefaultAsync(c => c.Id == contactId, cancellationToken);
 
-    public Task<List<DirectMessage>> GetOldMessagesForContact(long contactId, long lastMessage, int take) =>
+    public Task<List<DirectMessage>> GetOldMessagesForContact(long contactId, long lastMessage, int take, CancellationToken cancellationToken) =>
         _context.DirectMessages
             .Where(dm => dm.ContactId == contactId && dm.Id < lastMessage)
             .OrderByDescending(m => m.Id)
             .Take(take)
             .OrderBy(dm => dm.Id)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
     public Task<List<string>> GetAllowedContactsIds(string userId) =>
         _context.Contacts
@@ -226,10 +226,10 @@ public class UserRepository : RepositoryBase<SechatContext>
 
     // Profile
 
-    public Dictionary<string, string> GetProfilePictures(List<string> userIds) =>
+    public Task<Dictionary<string, string>> GetProfilePictures(List<string> userIds, CancellationToken cancellationToken) =>
         _context.UserProfiles
             .Where(p => userIds.Contains(p.Id))
-            .ToDictionary(p => p.Id, p => p.ProfilePicture);
+            .ToDictionaryAsync(p => p.Id, p => p.ProfilePicture, cancellationToken);
 
     public string GetProfilePicture(string userId) =>
         _context.UserProfiles
