@@ -21,7 +21,7 @@ public class LinkPreviewHttpClient
         public string Img { get; set; } = string.Empty;
         public string Domain { get; set; } = string.Empty;
         public string Favicon { get; set; } = string.Empty;
-        public string Url { get; set; } = string.Empty;
+        public string Link { get; set; } = string.Empty;
     }
 
     public LinkPreviewHttpClient(HttpClient httpClient, BasicHttpClientPolicy httpClientPolicy)
@@ -48,7 +48,7 @@ public class LinkPreviewHttpClient
             Task.Run(() =>  result.Title = GetTitle(htmlDocument)),
             Task.Run( () => result.Description = GetDescription(htmlDocument)),
             Task.Run( () => result.Domain = GetDomain(htmlDocument)),
-            Task.Run( () => result.Url = url),
+            Task.Run( () => result.Link = url),
         });
 
         return result;
