@@ -49,7 +49,7 @@ public class CalendarController : SechatControllerBase
     public async Task<IActionResult> ClearCalendar(CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new ClearCalendarCommand(UserId), cancellationToken);
-        return result ? Ok() : BadRequest();
+        return result.Success ? Ok() : BadRequest(result.ErrorMessage);
     }
 
     // Events
