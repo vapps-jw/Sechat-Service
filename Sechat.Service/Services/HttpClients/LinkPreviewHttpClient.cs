@@ -32,7 +32,11 @@ public class LinkPreviewHttpClient
 
     public async Task<LinkPreview> GetLinkPreview(string url)
     {
-        var result = new LinkPreview();
+        var result = new LinkPreview
+        {
+            Link = url
+        };
+
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var responseMessage = await _httpClientPolicy.ExponentialHttpRetry.ExecuteAsync(()
                 => _httpClient.GetAsync(url));
@@ -48,7 +52,6 @@ public class LinkPreviewHttpClient
             Task.Run(() =>  result.Title = GetTitle(htmlDocument)),
             Task.Run( () => result.Description = GetDescription(htmlDocument)),
             Task.Run( () => result.Domain = GetDomain(htmlDocument)),
-            Task.Run( () => result.Link = url),
         });
 
         return result;
