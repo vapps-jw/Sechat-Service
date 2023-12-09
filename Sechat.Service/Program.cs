@@ -49,7 +49,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapDefaultControllerRoute();
+
 app.MapHub<ChatHub>("/chat-hub");
+app.MapHub<GamesHub>("/games-hub");
 
 DBSetup.PrepareDatabase(app);
 await UsersSetup.PrepareAdmins(app);

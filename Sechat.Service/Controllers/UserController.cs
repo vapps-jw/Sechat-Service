@@ -71,6 +71,9 @@ public class UserController : SechatControllerBase
         return Ok(suggestions);
     }
 
+    [HttpGet("contacts")]
+    public IActionResult GetContacts() => throw new NotImplementedException();
+
     [HttpGet("get-profile")]
     public async Task<IActionResult> GetProfile([FromServices] UserDataService userDataService)
     {
@@ -177,11 +180,11 @@ public class UserController : SechatControllerBase
             var pictures = await _userRepository.GetProfilePictures(new List<string> { contact.InviterId, contact.InvitedId }, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
 
-            contactDto.ContactState = _cacheService.IsUserOnline(contact.InvitedId);
+            contactDto.ContactState = _cacheService.IsChatUserOnline(contact.InvitedId);
             contactDto.ProfileImage = pictures[contact.InviterId];
             await _chatHubContext.Clients.Group(contact.InvitedId).ContactUpdated(contactDto);
 
-            contactDto.ContactState = _cacheService.IsUserOnline(contact.InviterId);
+            contactDto.ContactState = _cacheService.IsChatUserOnline(contact.InviterId);
             contactDto.ProfileImage = pictures[contact.InvitedId];
             await _chatHubContext.Clients.Group(contact.InviterId).ContactUpdated(contactDto);
             await _contactSuggestionsService.UpdateCache(UserName, cancellationToken);

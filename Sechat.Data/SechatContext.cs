@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Sechat.Data.Models.CalendarModels;
 using Sechat.Data.Models.ChatModels;
+using Sechat.Data.Models.Games;
 using Sechat.Data.Models.GlobalModels;
 using Sechat.Data.Models.UserDetails;
 using Sechat.Data.Models.VideoCalls;
@@ -27,6 +28,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<CalendarEvent> CalendarEvents { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
     public DbSet<GlobalSetting> GlobalSettings { get; set; }
+    public DbSet<GameState> GameStates { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
@@ -34,6 +36,9 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        _ = modelBuilder.Entity<GameState>()
+             .HasIndex(c => c.GameName);
+
         _ = modelBuilder.Entity<CallLog>()
              .HasIndex(c => c.CalleeId);
 

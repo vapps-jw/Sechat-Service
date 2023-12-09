@@ -2,12 +2,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sechat.Data.Repositories;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Dtos.CryptoDtos;
 using Sechat.Service.Dtos.Messages;
+using Sechat.Service.Services;
 using Sechat.Service.Services.CacheServices;
 using System;
 using System.Collections.Generic;
@@ -92,6 +94,8 @@ public class ChatHub : SechatHubBase<IChatHub>
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ILogger<ChatHub> _logger;
     private readonly IMapper _mapper;
+    private readonly IHostEnvironment _env;
+    private readonly IEmailClient _emailClient;
     private readonly ChatRepository _chatRepository;
 
     public ChatHub(
@@ -101,7 +105,8 @@ public class ChatHub : SechatHubBase<IChatHub>
         UserManager<IdentityUser> userManager,
         ILogger<ChatHub> logger,
         IMapper mapper,
-
+        IHostEnvironment env,
+        IEmailClient emailClient,
         ChatRepository chatRepository)
     {
         _pushNotificationChannel = pushNotificationChannel;
@@ -110,7 +115,8 @@ public class ChatHub : SechatHubBase<IChatHub>
         _userManager = userManager;
         _logger = logger;
         _mapper = mapper;
-
+        _env = env;
+        _emailClient = emailClient;
         _chatRepository = chatRepository;
     }
 
@@ -221,8 +227,6 @@ public class ChatHub : SechatHubBase<IChatHub>
 
     // Messages
 
-    // Rooms
-
     public async Task ImTypingDirectMessage(ResourceId contactData)
     {
         try
@@ -235,7 +239,7 @@ public class ChatHub : SechatHubBase<IChatHub>
 
             var recipientId = contact.InviterId.Equals(UserId) ? contact.InvitedId : contact.InviterId;
 
-            if (!_signalRConnectionsMonitor.IsUserOnlineFlag(recipientId))
+            if (!_signalRConnectionsMonitor.IsChatUserOnlineFlag(recipientId))
             {
                 return;
             }
@@ -258,7 +262,7 @@ public class ChatHub : SechatHubBase<IChatHub>
                 return;
             }
 
-            var excluded = _signalRConnectionsMonitor.ConnectedUsers[UserId];
+            var excluded = _signalRConnectionsMonitor.ConnectedChatUsers[UserId];
             await Clients.GroupExcept(roomData.Id, excluded).UserTypingInRoom(new RoomMessageTypingUser(roomData.Id, UserName));
         }
         catch (Exception ex)
@@ -393,7 +397,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             }
 
             var roomMembers = _chatRepository.GetRoomMembersIds(keyRequest.Id);
-            _ = roomMembers.RemoveAll(rm => !_signalRConnectionsMonitor.IsUserOnlineFlag(rm));
+            _ = roomMembers.RemoveAll(rm => !_signalRConnectionsMonitor.IsChatUserOnlineFlag(rm));
             foreach (var roomMember in roomMembers)
             {
                 await Clients.Group(roomMember).RoomKeyRequested(keyRequest);
@@ -456,7 +460,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
 
             await Groups.AddToGroupAsync(Context.ConnectionId, UserId);
-            await _signalRConnectionsMonitor.AddUser(UserId, Context.ConnectionId);
+            await _signalRConnectionsMonitor.AddChatUser(UserId, Context.ConnectionId);
 
             var tasks = new List<Task>();
             foreach (var userContact in userContacts)
@@ -469,25 +473,40 @@ public class ChatHub : SechatHubBase<IChatHub>
         }
         catch (Exception ex)
         {
-            throw new HubException(ex.Message);
+            _logger.LogError(ex, ex.Message);
+            if (_env.IsProduction())
+            {
+                _ = await _emailClient.SendExceptionNotificationAsync(ex);
+            }
         }
     }
 
     public override async Task OnDisconnectedAsync(Exception exception)
     {
-        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
-
-        await _signalRConnectionsMonitor.RemoveUserConnection(UserId, Context.ConnectionId);
-
-        if (!_signalRConnectionsMonitor.IsUserOnlineFlag(UserId))
+        try
         {
-            var tasks = new List<Task>();
-            foreach (var userContact in userContacts)
+            var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+
+            await _signalRConnectionsMonitor.RemoveChatUserConnection(UserId, Context.ConnectionId);
+
+            if (!_signalRConnectionsMonitor.IsChatUserOnlineFlag(UserId))
             {
-                tasks.Add(Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Offline)));
+                var tasks = new List<Task>();
+                foreach (var userContact in userContacts)
+                {
+                    tasks.Add(Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Offline)));
+                }
+                await Task.WhenAll(tasks);
             }
-            await Task.WhenAll(tasks);
+            _ = base.OnDisconnectedAsync(exception);
         }
-        _ = base.OnDisconnectedAsync(exception);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            if (_env.IsProduction())
+            {
+                _ = await _emailClient.SendExceptionNotificationAsync(ex);
+            }
+        }
     }
 }

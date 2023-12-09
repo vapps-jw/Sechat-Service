@@ -87,7 +87,7 @@ public class ChatController : SechatControllerBase
         }
 
         var connectedContacts = contacts
-            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
+            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsChatUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsChatUserOnlineFlag(c.InvitedId))
             .Select(c => c.Id)
             .ToList();
 
@@ -376,7 +376,7 @@ public class ChatController : SechatControllerBase
         cancellationToken.ThrowIfCancellationRequested();
 
         var connectedContacts = contacts
-            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
+            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsChatUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsChatUserOnlineFlag(c.InvitedId))
             .Select(c => c.Id)
             .ToList();
 
@@ -425,7 +425,7 @@ public class ChatController : SechatControllerBase
         }
 
         var connectedContacts = contacts
-            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
+            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsChatUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsChatUserOnlineFlag(c.InvitedId))
             .Select(c => c.Id)
             .ToList();
 
@@ -473,7 +473,7 @@ public class ChatController : SechatControllerBase
         }
 
         var connectedContacts = contacts
-            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsUserOnlineFlag(c.InvitedId))
+            .Where(c => c.InvitedId.Equals(UserId) ? _signalRConnectionsMonitor.IsChatUserOnlineFlag(c.InviterId) : _signalRConnectionsMonitor.IsChatUserOnlineFlag(c.InvitedId))
             .Select(c => c.Id)
             .ToList();
 
@@ -522,7 +522,7 @@ public class ChatController : SechatControllerBase
         }
         messageDto.Loaded = true;
 
-        var excluded = _signalRConnectionsMonitor.ConnectedUsers[UserId];
+        var excluded = _signalRConnectionsMonitor.ConnectedChatUsers[UserId];
         await _chatHubContext.Clients.GroupExcept(incomingMessageDto.RoomId, excluded).MessageIncoming(messageDto);
 
         var roomMembers = _chatRepository.GetRoomMembersIds(incomingMessageDto.RoomId);
