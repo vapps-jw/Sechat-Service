@@ -11,6 +11,7 @@ using Sechat.Service.Services;
 using Sechat.Service.Services.CacheServices;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using static Sechat.Service.Configuration.AppConstants;
@@ -58,6 +59,15 @@ public class GamesHub : SechatHubBase<IGamesHub>
         _chatRepository = chatRepository;
     }
 
+    private async Task<string> IsContactAllowed(string userName)
+    {
+        var contact = await _userManager.FindByNameAsync(userName);
+        if (contact is null) return string.Empty;
+
+        var userContacts = await _userRepository.GetAllowedContactsIds(UserId);
+        return !userContacts.Any(c => c.Equals(contact.Id)) ? string.Empty : contact.Id;
+    }
+
     public void LogConnection(StringMessage connectionEstablishedDto) =>
         _logger.LogWarning("Connection established for user Id: {UserId} Name: {UserName} Message: {Message}", UserId, UserName, connectionEstablishedDto.Message);
 
@@ -96,10 +106,10 @@ public class GamesHub : SechatHubBase<IGamesHub>
         {
             _logger.LogError(ex, ex.Message);
             _ = await _emailClient.SendExceptionNotificationAsync(ex);
-            //if (_env.IsProduction())
-            //{
-            //    _ = await _emailClient.SendExceptionNotificationAsync(ex);
-            //}
+            if (_env.IsProduction())
+            {
+                _ = await _emailClient.SendExceptionNotificationAsync(ex);
+            }
         }
     }
 
@@ -125,11 +135,10 @@ public class GamesHub : SechatHubBase<IGamesHub>
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            _ = await _emailClient.SendExceptionNotificationAsync(ex);
-            //if (_env.IsProduction())
-            //{
-
-            //}
+            if (_env.IsProduction())
+            {
+                _ = await _emailClient.SendExceptionNotificationAsync(ex);
+            }
         }
     }
 }
