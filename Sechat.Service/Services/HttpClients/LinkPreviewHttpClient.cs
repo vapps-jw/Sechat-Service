@@ -1,5 +1,4 @@
 ﻿using HtmlAgilityPack;
-using Microsoft.Extensions.Logging;
 using Sechat.Service.Services.HttpClients.PollyPolicies;
 using System;
 using System.Linq;
@@ -12,7 +11,6 @@ namespace Sechat.Service.Services.HttpClients;
 
 public class LinkPreviewHttpClient
 {
-    private readonly ILogger<LinkPreviewHttpClient> _logger;
     private readonly HttpClient _httpClient;
     private readonly BasicHttpClientPolicy _httpClientPolicy;
 
@@ -27,11 +25,9 @@ public class LinkPreviewHttpClient
     }
 
     public LinkPreviewHttpClient(
-        ILogger<LinkPreviewHttpClient> logger,
         HttpClient httpClient,
         BasicHttpClientPolicy httpClientPolicy)
     {
-        _logger = logger;
         _httpClient = httpClient;
         _httpClientPolicy = httpClientPolicy;
     }
@@ -88,9 +84,8 @@ public class LinkPreviewHttpClient
                     response.Content.Headers.TryGetValues("Content-Type", out var contentHeader) &&
                     (contentHeader.Any() || Regex.IsMatch(contentHeader.First(), "image/*", RegexOptions.IgnoreCase));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, ex.Message);
             return false;
         }
     }
