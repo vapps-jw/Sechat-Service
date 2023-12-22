@@ -20,7 +20,7 @@ jobs:
       - name: Inject Secrets
         uses: microsoft/variable-substitution@v1
         with:
-          files: './Sechat.Service/bin/Release/net7.0/publish/appsettings.Production.json'
+          files: './Sechat.Service/bin/Release/net8.0/publish/appsettings.Production.json'
         env:
           SechatEmails.Master: ${{ secrets.EMAIL_SECHAT_MASTER }}
           SechatEmails.System: ${{ secrets.EMAIL_SECHAT_SYSTEM }}
@@ -44,7 +44,7 @@ jobs:
         run: |
           echo "$ssh_key" > ~/ssh_key
           chmod 600 ~/ssh_key
-          rsync -e "ssh -p "$target_port" -i ~/ssh_key -o StrictHostKeyChecking=no" -avzr ./Sechat.Service/bin/Release/net7.0/publish/ "$user"@"$target_ip":/var/web-apps/sechat-api
+          rsync -e "ssh -p "$target_port" -i ~/ssh_key -o StrictHostKeyChecking=no" -avzr ./Sechat.Service/bin/Release/net8.0/publish/ "$user"@"$target_ip":/var/web-apps/sechat-api
         env:
           ssh_key: ${{ secrets.GIT_ACTIONS_SSH }}
           user: ${{ secrets.GIT_ACTIONS_USER }}
