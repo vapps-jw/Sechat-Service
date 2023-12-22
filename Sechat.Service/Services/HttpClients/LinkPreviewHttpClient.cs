@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Microsoft.Extensions.Logging;
 using Sechat.Service.Services.HttpClients.PollyPolicies;
 using System;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace Sechat.Service.Services.HttpClients;
 
 public class LinkPreviewHttpClient
 {
+    private readonly ILogger<LinkPreviewHttpClient> _logger;
     private readonly HttpClient _httpClient;
     private readonly BasicHttpClientPolicy _httpClientPolicy;
 
@@ -24,8 +26,12 @@ public class LinkPreviewHttpClient
         public string Link { get; set; } = string.Empty;
     }
 
-    public LinkPreviewHttpClient(HttpClient httpClient, BasicHttpClientPolicy httpClientPolicy)
+    public LinkPreviewHttpClient(
+        ILogger<LinkPreviewHttpClient> logger,
+        HttpClient httpClient,
+        BasicHttpClientPolicy httpClientPolicy)
     {
+        _logger = logger;
         _httpClient = httpClient;
         _httpClientPolicy = httpClientPolicy;
     }
@@ -65,20 +71,28 @@ public class LinkPreviewHttpClient
 
     private async Task<bool> CheckImage(string url)
     {
-        var response = await _httpClientPolicy.ExponentialHttpRetry.ExecuteAsync(()
-                => _httpClient.GetAsync(url));
-        var htmlString = await response.Content.ReadAsStringAsync();
+        try
+        {
+            var response = await _httpClientPolicy.ExponentialHttpRetry.ExecuteAsync(()
+                    => _httpClient.GetAsync(url));
+            var htmlString = await response.Content.ReadAsStringAsync();
 
-        if (!response.IsSuccessStatusCode) return false;
+            if (!response.IsSuccessStatusCode) return false;
 
-        var stream = await response.Content.ReadAsStreamAsync();
-        var readByte = new byte[stream.Length];
-        _ = stream.Read(readByte);
+            var stream = await response.Content.ReadAsStreamAsync();
+            var readByte = new byte[stream.Length];
+            _ = stream.Read(readByte);
 
-        var base64String = Convert.ToBase64String(readByte);
-        return IsBase64String(base64String) &&
-                response.Content.Headers.TryGetValues("Content-Type", out var contentHeader) &&
-                (contentHeader.Any() || Regex.IsMatch(contentHeader.First(), "image/*", RegexOptions.IgnoreCase));
+            var base64String = Convert.ToBase64String(readByte);
+            return IsBase64String(base64String) &&
+                    response.Content.Headers.TryGetValues("Content-Type", out var contentHeader) &&
+                    (contentHeader.Any() || Regex.IsMatch(contentHeader.First(), "image/*", RegexOptions.IgnoreCase));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            return false;
+        }
     }
 
     private async Task<string> GetImage(HtmlDocument htmlDocument)
