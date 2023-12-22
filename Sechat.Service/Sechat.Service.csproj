@@ -6,10 +6,6 @@
     <Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Content Remove="C:\Users\jonas\.nuget\packages\owaspheaders.core\7.5.1\contentFiles\any\netstandard2.0\README.md" />
-  </ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="12.0.1" />
 		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
