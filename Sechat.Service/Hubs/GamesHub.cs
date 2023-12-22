@@ -19,8 +19,6 @@ using static Sechat.Service.Configuration.AppConstants;
 namespace Sechat.Service.Hubs;
 public interface IGamesHub
 {
-    // Video call connection
-    //Task VideoCallRequested(StringMessage message);
 
 }
 
