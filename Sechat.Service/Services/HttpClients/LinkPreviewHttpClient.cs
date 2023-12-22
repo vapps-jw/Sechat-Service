@@ -56,8 +56,8 @@ public class LinkPreviewHttpClient
             Task.Run(async () => result.Img = await GetImage(htmlDocument)),
             Task.Run(async () => result.Favicon = await GetFavicon(htmlDocument, url)),
             Task.Run(() =>  result.Title = GetTitle(htmlDocument)),
-            Task.Run( () => result.Description = GetDescription(htmlDocument)),
-            Task.Run( () => result.Domain = GetDomain(htmlDocument)),
+            Task.Run(() => result.Description = GetDescription(htmlDocument)),
+            Task.Run(() => result.Domain = GetDomain(htmlDocument)),
         });
 
         return result;
