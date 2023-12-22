@@ -28,7 +28,7 @@ public class SechatContext : IdentityDbContext, IDataProtectionKeyContext
     public DbSet<CalendarEvent> CalendarEvents { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
     public DbSet<GlobalSetting> GlobalSettings { get; set; }
-    public DbSet<GameState> GameStates { get; set; }
+    //public DbSet<GameState> GameStates { get; set; }
 
     public SechatContext(DbContextOptions<SechatContext> options) : base(options)
     {
