@@ -42,6 +42,15 @@ public class NotificationsController : SechatControllerBase
         return await _userRepository.SaveChanges() > 0 ? Ok() : Problem();
     }
 
+    [HttpPost("is-subscribed"), ActionName(nameof(SubscribePush))]
+    public bool CheckSubscriptionPush([FromBody] PushSubscriptionDto pushSubscriptionDto)
+    {
+        var sub = _mapper.Map<NotificationSubscription>(pushSubscriptionDto);
+        sub.UserProfileId = UserId;
+
+        return _userRepository.AlreadySubscribed(sub);
+    }
+
     [HttpDelete("push-unubscribe"), ActionName(nameof(UnsubscribePush))]
     public async Task<IActionResult> UnsubscribePush()
     {
