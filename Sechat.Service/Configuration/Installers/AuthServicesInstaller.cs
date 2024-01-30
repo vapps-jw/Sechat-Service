@@ -71,6 +71,11 @@ public class AuthServicesInstaller : IServiceInstaller
                 .RequireAuthenticatedUser()
                 .RequireClaim(AppConstants.ClaimType.Role,
                     AppConstants.Role.Admin));
+
+            options.AddPolicy(AppConstants.AuthorizationPolicy.ChatPolicy, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireClaim(AppConstants.ClaimType.ServiceAccess,
+                    AppConstants.Service.Chat));
         });
 
         _ = webApplicationBuilder.Services.Configure<SecurityStampValidatorOptions>(options =>

@@ -5,10 +5,15 @@ using Sechat.Service.Configuration.MVCFilters;
 
 namespace Sechat.Service.Configuration.Installers;
 
-public class MVCInstaller : IServiceInstaller
+public class EndpointsInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder)
     {
+        _ = webApplicationBuilder.Services.AddOutputCache(options =>
+        {
+            options.AddBasePolicy(builder => builder.NoCache());
+        });
+
         _ = webApplicationBuilder.Services.AddControllers(option =>
         {
             _ = option.Filters.Add<OperationCancelledExceptionFilter>();

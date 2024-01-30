@@ -44,11 +44,18 @@ public class AppConstants
     public struct AuthorizationPolicy
     {
         public const string AdminPolicy = nameof(AdminPolicy);
+        public const string ChatPolicy = nameof(ChatPolicy);
     }
 
     public struct ClaimType
     {
         public const string Role = nameof(Role);
+        public const string ServiceAccess = nameof(ServiceAccess);
+    }
+
+    public struct Service
+    {
+        public const string Chat = nameof(Chat);
     }
 
     public struct Role
