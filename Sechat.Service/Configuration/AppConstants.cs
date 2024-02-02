@@ -53,9 +53,9 @@ public class AppConstants
         public const string ServiceClaim = nameof(ServiceClaim);
     }
 
-    public struct Service
+    public struct ServiceClaimValue
     {
-        public const string Chat = nameof(Chat);
+        public const string ChatAccess = nameof(ChatAccess);
     }
 
     public struct Role
