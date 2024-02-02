@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Sechat.Data.Repositories;
+using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Sechat.Service.Services;
@@ -74,6 +78,12 @@ public class UserDataService
         profileProjection.UserName = userName;
         profileProjection.Email = user.Email;
         profileProjection.EmailConfirmed = user.EmailConfirmed;
+
+        var claims = await _userManager.GetClaimsAsync(user) as List<Claim>;
+        profileProjection.Claims = claims
+            .Where(c => c.Type.Equals(AppConstants.ClaimType.ServiceClaim))
+            .Select(c => c.Value)
+            .ToList(); 
 
         return profileProjection;
     }

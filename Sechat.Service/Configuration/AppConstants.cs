@@ -50,7 +50,7 @@ public class AppConstants
     public struct ClaimType
     {
         public const string Role = nameof(Role);
-        public const string ServiceAccess = nameof(ServiceAccess);
+        public const string ServiceClaim = nameof(ServiceClaim);
     }
 
     public struct Service

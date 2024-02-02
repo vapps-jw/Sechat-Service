@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Sechat.Service.Dtos;
 
@@ -11,6 +12,7 @@ public class UserProfileProjection
     public bool EmailConfirmed { get; set; }
     public bool InvitationsAllowed { get; set; }
     public string ReferralPass { get; set; }
+    public List<string> Claims { get; set; } = [];
 
     public DateTime LastActivity { get; set; } = DateTime.UtcNow;
     public DateTime Created { get; set; } = DateTime.UtcNow;

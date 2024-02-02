@@ -74,7 +74,7 @@ public class AuthServicesInstaller : IServiceInstaller
 
             options.AddPolicy(AppConstants.AuthorizationPolicy.ChatPolicy, policy => policy
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppConstants.ClaimType.ServiceAccess,
+                .RequireClaim(AppConstants.ClaimType.ServiceClaim,
                     AppConstants.Service.Chat));
         });
 
