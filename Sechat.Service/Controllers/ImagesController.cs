@@ -10,6 +10,7 @@ namespace Sechat.Service.Controllers;
 
 [Authorize]
 [Route("[controller]")]
+[Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
 [ResponseCache(CacheProfileName = AppConstants.CacheProfiles.NoStore)]
 public class ImagesController : SechatControllerBase
 {

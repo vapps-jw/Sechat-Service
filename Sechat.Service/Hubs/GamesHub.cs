@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sechat.Data.Repositories;
+using Sechat.Service.Configuration;
 using Sechat.Service.Dtos;
 using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Services;
@@ -23,6 +24,7 @@ public interface IGamesHub
 }
 
 [Authorize]
+[Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
 public class GamesHub : SechatHubBase<IGamesHub>
 {
     private readonly Channel<DefaultNotificationDto> _pushNotificationChannel;

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Sechat.Service.Configuration;
 using Sechat.Service.Services;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace Sechat.Service.Controllers;
 
 [Authorize]
 [Route("[controller]")]
+[Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
 public class VideosController : SechatControllerBase
 {
     private readonly VideoConversionService _videoConversionService;

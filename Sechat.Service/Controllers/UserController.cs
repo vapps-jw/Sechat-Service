@@ -65,6 +65,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPost("suggest-contacts")]
+    [Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
     public async Task<IActionResult> GetSuggestedContacts([FromBody] UserControllerForms.SuggestedContacts suggestedContacts, CancellationToken cancellationToken)
     {
         var suggestions = await _contactSuggestionsService.CreateSuggectionsList(UserName, suggestedContacts.Data, cancellationToken);
@@ -72,6 +73,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpGet("contacts")]
+    [Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
     public IActionResult GetContacts() => throw new NotImplementedException();
 
     [HttpGet("get-profile")]
@@ -82,6 +84,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPost("request-contact")]
+    [Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
     public async Task<IActionResult> Invite([FromBody] ConnectionRequestDto invitationDto, CancellationToken cancellationToken)
     {
         if (UserName.Equals(invitationDto.Username)) return BadRequest("You cant invite yourself");
@@ -151,6 +154,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("block-contact")]
+    [Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
     public async Task<IActionResult> BlockContact(long contactId, CancellationToken cancellationToken)
     {
         var contact = _userRepository.BlockContact(contactId, UserId, UserName);
@@ -169,6 +173,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("allow-contact")]
+    [Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
     public async Task<IActionResult> AllowContact(long contactId, CancellationToken cancellationToken)
     {
         var contact = _userRepository.AllowContact(contactId, UserId);
@@ -195,6 +200,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("invitations-permission")]
+    [Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
     public async Task<IActionResult> AllowInvitations([FromBody] UserControllerForms.FlagForm flagForm)
     {
         var profile = _userRepository.GetUserProfile(UserId);
@@ -205,6 +211,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("approve-contact")]
+    [Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
     public async Task<IActionResult> ApproveContact(
         [FromServices] Channel<DefaultNotificationDto> channel,
         long contactId,
@@ -239,6 +246,7 @@ public class UserController : SechatControllerBase
     }
 
     [HttpPatch("profile-picture")]
+    [Authorize(AppConstants.AuthorizationPolicy.ChatPolicy)]
     public async Task<IActionResult> PrepareProfilePicture(IFormFile image, CancellationToken cancellationToken)
     {
         if (image is null) return BadRequest("Image not detected");
