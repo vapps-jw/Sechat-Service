@@ -15,6 +15,7 @@ using Sechat.Service.Dtos.ChatDtos;
 using Sechat.Service.Hubs;
 using Sechat.Service.Services;
 using Sechat.Service.Settings;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -95,12 +96,6 @@ public class AccountController : SechatControllerBase
             return BadRequest("New User registration turned off temporarily");
         }
 
-        var referralValidation = ctx.UserProfiles.Any(p => p.ReferralPass.Equals(signUpDetails.ReferralPass));
-        if (!referralValidation)
-        {
-            return BadRequest("Check your Referall");
-        }
-
         var user = new IdentityUser(signUpDetails.Username)
         {
             LockoutEnabled = true
@@ -116,6 +111,46 @@ public class AccountController : SechatControllerBase
 
         _logger.LogInformation($"User {signUpDetails.Username} has been created");
         return Ok();
+    }
+
+    [HttpPost("ask-for-chat")]
+    [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
+    public async Task<IActionResult> AskForChatAccess(
+        UserManager<IdentityUser> userManager,
+        [FromBody] ReferralPass referallPass,
+        SechatContext context)
+    {
+        var referralValidation = context.UserProfiles.Any(p => p.ReferralPass.Equals(referallPass.PassPhrase));
+        if (!referralValidation)
+        {
+            return BadRequest("Check your Referall");
+        }
+
+        var user = await userManager.GetUserAsync(User);
+        var currentClaims = (await userManager.GetClaimsAsync(user))
+           .Where(c => c.Type.Equals(AppConstants.ClaimType.ServiceClaim))
+           .Select(c => c.Value)
+           .ToList();
+
+        if (currentClaims.Any(cc => cc.Equals(AppConstants.ServiceClaimValue.ChatAccess)))
+        {
+            return BadRequest("You already have access");
+        }
+
+        var addResult = await userManager.AddClaimAsync(user, new Claim(AppConstants.ClaimType.ServiceClaim, AppConstants.ServiceClaimValue.ChatAccess));
+        return addResult.Succeeded ? Ok() : Problem();
+    }
+
+    [HttpGet("claims")]
+    public IActionResult GetClaims()
+    {
+        var claims = User.Claims as List<Claim>;
+        var reuslt = claims
+              .Where(c => c.Type.Equals(AppConstants.ClaimType.ServiceClaim))
+              .Select(c => c.Value)
+              .ToList();
+
+        return Ok(reuslt);
     }
 
     [HttpPost("logout")]

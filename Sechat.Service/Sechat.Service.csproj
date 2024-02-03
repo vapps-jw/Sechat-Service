@@ -20,7 +20,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.1" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.3.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.3.1" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.0" />
 		<PackageReference Include="OwaspHeaders.Core" Version="8.0.0" />
@@ -30,7 +30,7 @@
 		<PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
 		<PackageReference Include="Serilog.Sinks.Postgresql.Alternative" Version="4.0.2" />
 		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.2" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.3.0" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.3.1" />
 		<PackageReference Include="WebPush" Version="1.0.12" />
 	</ItemGroup>
 
