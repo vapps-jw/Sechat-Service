@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using static Sechat.Service.Configuration.AppConstants;
 
 namespace Sechat.Service.Hubs;
 public interface IChatHub
@@ -130,7 +129,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         try
         {
             var contactId = await IsContactAllowed(message.Message);
-            return string.IsNullOrEmpty(contactId) ? null : new StringMessage(ContactState.Online);
+            return string.IsNullOrEmpty(contactId) ? null : new StringMessage(AppConstants.ContactState.Online);
         }
         catch (Exception ex)
         {
@@ -223,7 +222,7 @@ public class ChatHub : SechatHubBase<IChatHub>
         var contactId = await IsContactAllowed(message.Message);
         if (string.IsNullOrEmpty(contactId)) return;
 
-        await _pushNotificationChannel.Writer.WriteAsync(new DefaultNotificationDto(PushNotificationType.IncomingVideoCall, contactId, UserName));
+        await _pushNotificationChannel.Writer.WriteAsync(new DefaultNotificationDto(AppConstants.PushNotificationType.IncomingVideoCall, contactId, UserName));
         await Clients.Group(contactId).VideoCallRequested(new StringMessage(UserName));
     }
 
@@ -467,7 +466,7 @@ public class ChatHub : SechatHubBase<IChatHub>
             var tasks = new List<Task>();
             foreach (var userContact in userContacts)
             {
-                tasks.Add(Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Online)));
+                tasks.Add(Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, AppConstants.ContactState.Online)));
             }
 
             await Task.WhenAll(tasks);
@@ -496,7 +495,7 @@ public class ChatHub : SechatHubBase<IChatHub>
                 var tasks = new List<Task>();
                 foreach (var userContact in userContacts)
                 {
-                    tasks.Add(Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, ContactState.Offline)));
+                    tasks.Add(Clients.Group(userContact).ContactStateChanged(new StringUserMessage(UserName, AppConstants.ContactState.Offline)));
                 }
                 await Task.WhenAll(tasks);
             }
