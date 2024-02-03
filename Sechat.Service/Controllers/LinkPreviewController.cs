@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Sechat.Service.Configuration;
 using Sechat.Service.Services.HttpClients;
 using System.Threading.Tasks;
-using static Sechat.Service.Controllers.LinkPreviewControllerForms;
 
 namespace Sechat.Service.Controllers;
 
@@ -17,7 +16,7 @@ public class LinkPreviewController : SechatControllerBase
     [HttpPost()]
     public async Task<IActionResult> GetLinkPreview(
         [FromServices] LinkPreviewHttpClient linkPreviewHttpClient,
-        [FromBody] PreviewRequestForm previewRequestForm)
+        [FromBody] LinkPreviewControllerForms.PreviewRequestForm previewRequestForm)
     {
         var linkPreview = await linkPreviewHttpClient.GetLinkPreview(previewRequestForm.Url);
         return Ok(linkPreview);

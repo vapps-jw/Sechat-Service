@@ -13,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using static Sechat.Service.Controllers.CalendarControllerForms;
 
 namespace Sechat.Service.Controllers;
 
@@ -114,7 +113,7 @@ public class CalendarController : SechatControllerBase
     }
 
     [HttpPost("event/{eventId}/reminders")]
-    public async Task<IActionResult> CreateReminders(string eventId, [FromBody] List<NewReminderForm> reminders, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateReminders(string eventId, [FromBody] List<CalendarControllerForms.NewReminderForm> reminders, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateRemindersCommand(eventId, UserId, reminders), cancellationToken);
         return result is not null

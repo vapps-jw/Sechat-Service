@@ -14,7 +14,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using static Sechat.Service.Controllers.AdminControllerForms;
 
 namespace Sechat.Service.Controllers;
 
@@ -56,7 +55,7 @@ public class AdminController : SechatControllerBase
     }
 
     [HttpPatch("global-setting")]
-    public async Task<IActionResult> UpdateGlobalSettings([FromBody] SettingForm form, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateGlobalSettings([FromBody] AdminControllerForms.SettingForm form, CancellationToken cancellationToken)
     {
         _logger.LogWarning("Global Setting change requested {req}", form);
         using var ctx = await _contextFactory.CreateDbContextAsync(cancellationToken);
@@ -115,7 +114,7 @@ public class AdminController : SechatControllerBase
     }
 
     [HttpPost("lock-user")]
-    public async Task<IActionResult> LockUserByUserName([FromBody] UserIdentifier userIdentifier)
+    public async Task<IActionResult> LockUserByUserName([FromBody] AdminControllerForms.UserIdentifier userIdentifier)
     {
         var user = await _userManager.FindByNameAsync(userIdentifier.UserName);
         if (user is null) return BadRequest("User does not exit");
@@ -133,7 +132,7 @@ public class AdminController : SechatControllerBase
     }
 
     [HttpPost("unlock-user")]
-    public async Task<IActionResult> UnlockUserByUserName([FromBody] UserIdentifier userIdentifier)
+    public async Task<IActionResult> UnlockUserByUserName([FromBody] AdminControllerForms.UserIdentifier userIdentifier)
     {
         var user = await _userManager.FindByNameAsync(userIdentifier.UserName);
         if (user is null) return BadRequest("User does not exit");
@@ -146,7 +145,7 @@ public class AdminController : SechatControllerBase
     public IActionResult GetUsers()
     {
         var users = _userManager.Users
-            .Select(u => new RichUserIdentifier()
+            .Select(u => new AdminControllerForms.RichUserIdentifier()
             {
                 Email = u.Email,
                 LockoutEnd = u.LockoutEnd,
