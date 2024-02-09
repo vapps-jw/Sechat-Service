@@ -1,5 +1,4 @@
-﻿using FluentAssertions.Common;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Service.Services.HttpClients;
 using Sechat.Service.Services.HttpClients.PollyPolicies;

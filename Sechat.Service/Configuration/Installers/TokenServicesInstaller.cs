@@ -6,5 +6,5 @@ namespace Sechat.Service.Configuration.Installers;
 
 public class TokenServicesInstaller : IServiceInstaller
 {
-    public void Install(WebApplicationBuilder webApplicationBuilder) => _ = webApplicationBuilder.Services.AddTransient<ITokenService, TokenService>();
+    public void Install(WebApplicationBuilder webApplicationBuilder) => _ = webApplicationBuilder.Services.AddTransient<TokenService>();
 }

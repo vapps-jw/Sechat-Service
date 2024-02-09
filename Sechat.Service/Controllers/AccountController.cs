@@ -85,6 +85,32 @@ public class AccountController : SechatControllerBase
     }
 
     [AllowAnonymous]
+    [HttpPost("login/token")]
+    [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
+    public async Task<IActionResult> SignInForToken(
+        [FromServices] TokenService tokenService,
+        [FromBody] UserCredentials userCredentials)
+    {
+        var user = await _userManager.FindByNameAsync(userCredentials.Username);
+        var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, userCredentials.Password, false);
+        if (!passwordCheck.Succeeded)
+        {
+            return BadRequest();
+        }
+
+        var token = await tokenService.GenerateToken(userCredentials.Username);
+        return string.IsNullOrEmpty(token) ? BadRequest() : Ok(token);
+    }
+
+    [HttpPost("create/token")]
+    public async Task<IActionResult> CreateToken(
+        [FromServices] TokenService tokenService)
+    {
+        var token = await tokenService.GenerateToken(UserName);
+        return string.IsNullOrEmpty(token) ? BadRequest() : Ok(token);
+    }
+
+    [AllowAnonymous]
     [HttpPost("register")]
     [EnableRateLimiting(AppConstants.RateLimiting.AnonymusRestricted)]
     public async Task<IActionResult> SignUp([FromBody] SignUpDetails signUpDetails, CancellationToken cancellationToken)

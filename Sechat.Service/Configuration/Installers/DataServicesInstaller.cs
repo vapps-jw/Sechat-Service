@@ -69,7 +69,7 @@ public class DataServicesInstaller : IServiceInstaller
 
         _ = webApplicationBuilder.Services.AddTransient<CryptographyService>();
         _ = webApplicationBuilder.Services.AddTransient<UserDataService>();
-        _ = webApplicationBuilder.Services.AddTransient<ITokenService, TokenService>();
+        _ = webApplicationBuilder.Services.AddTransient<TokenService>();
 
         _ = webApplicationBuilder.Services.AddAutoMapper(
             typeof(DefaultProfile),
