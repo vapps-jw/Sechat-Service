@@ -36,10 +36,15 @@ if (app.Environment.IsProduction())
     _ = app.UseHsts();
 }
 
+
+
 app.UseCors(AppConstants.CorsPolicy.WebClient);
 app.UseSecureHeadersMiddleware();
 app.UseSerilogRequestLogging();
+
 app.UseRouting();
+app.UseHttpCacheHeaders();
+
 app.UseRateLimiter();
 
 app.UseMiddleware<CustomResponseHeadersMiddleware>();

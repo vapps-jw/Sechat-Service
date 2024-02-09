@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using FluentAssertions.Common;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Sechat.Service.Services.HttpClients;
 using Sechat.Service.Services.HttpClients.PollyPolicies;
@@ -11,5 +12,15 @@ public class HttpServicesInstaller : IServiceInstaller
     {
         _ = webApplicationBuilder.Services.AddHttpClient<LinkPreviewHttpClient>();
         _ = webApplicationBuilder.Services.AddSingleton(new BasicHttpClientPolicy());
+
+        _ = webApplicationBuilder.Services.AddHttpCacheHeaders(
+            expirationModelOptions =>
+            {
+                expirationModelOptions.NoStore = true;
+            },
+            validationModelOptions =>
+            {
+                validationModelOptions.NoCache = true;
+            });
     }
 }

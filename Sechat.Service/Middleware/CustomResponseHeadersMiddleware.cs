@@ -18,16 +18,13 @@ public class CustomResponseHeadersMiddleware : IMiddleware
         {
             context.Response.Headers.Append("SECHAT-RES", "sechat-server-response");
             context.Response.Headers.Append("X-Developed-By", "JWTK");
-            context.Response.Headers[HeaderNames.CacheControl] = "no-store";
-            //context.Response.Headers[HeaderNames.CacheControl] = "max-age=0,no-cache,must-revalidate";
-            //context.Response.Headers[HeaderNames.Expires] = "Tue, 01 Jan 1970 00:00:00 GMT";
-            //context.Response.Headers[HeaderNames.Pragma] = "no-cache";
+            //context.Response.Headers[HeaderNames.CacheControl] = "no-store";
 
             context.Response.OnStarting(() =>
             {
                 if (context.Response.StatusCode == 405)
                 {
-                    context.Response.Headers[HeaderNames.CacheControl] = "no-store";
+                    //context.Response.Headers[HeaderNames.CacheControl] = "no-store";
                     context.Response.Headers.Append("SECHAT-AUTH", "Forbidden");
                 }
 
