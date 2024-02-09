@@ -17,8 +17,19 @@ public class AuthorizationTests
         var tokenService = scope.ServiceProvider.GetRequiredService<TokenService>();
 
         var token = await tokenService.GenerateToken("u1");
-        var test = await tokenService.ValidateToken("u1", token);
+        var test = tokenService.ValidateToken(token);
 
         Assert.True(test);
+    }
+
+    [Fact]
+    public void TokenServiceKeyGenerationTests()
+    {
+        using var masterApp = new MockedApi();
+        using var scope = masterApp.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<TokenService>();
+        var key = tokenService.GenerateSecretKey();
+
+        Assert.True(!string.IsNullOrEmpty(key));
     }
 }

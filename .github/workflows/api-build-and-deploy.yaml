@@ -40,6 +40,9 @@ jobs:
           CryptographySettings.DefaultKeyPart: ${{ secrets.CS_DEFAULT_KP }}
           CryptographySettings.DefaultInterations: ${{ secrets.CS_DEFAULT_INTR }}
           CryptographySettings.DefaultIV: ${{ secrets.CS_DEFAULT_IV }}
+          JwtOptions.Audience: ${{ secrets.JWT_AUDIENCE }}
+          JwtOptions.Issuer: ${{ secrets.JWT_ISSUER }}
+          JwtOptions.SecretKey: ${{ secrets.JWT_SECRET_KEY }}
       - name: Push to Linode
         run: |
           echo "$ssh_key" > ~/ssh_key

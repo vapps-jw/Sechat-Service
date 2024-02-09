@@ -43,6 +43,7 @@ public class AppConstants
 
     public struct AuthorizationPolicy
     {
+        public const string TokenPolicy = nameof(TokenPolicy);
         public const string AdminPolicy = nameof(AdminPolicy);
         public const string ChatPolicy = nameof(ChatPolicy);
     }

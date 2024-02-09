@@ -16,6 +16,6 @@ public class OptionsInstaller : IServiceInstaller
         _ = webApplicationBuilder.Services.Configure<VapidKeys>(webApplicationBuilder.Configuration.GetSection(nameof(VapidKeys)));
         _ = webApplicationBuilder.Services.Configure<SechatEmails>(webApplicationBuilder.Configuration.GetSection(nameof(SechatEmails)));
         _ = webApplicationBuilder.Services.Configure<FileSettings>(webApplicationBuilder.Configuration.GetSection(nameof(FileSettings)));
-        _ = webApplicationBuilder.Services.Configure<TokenSettings>(webApplicationBuilder.Configuration.GetSection(nameof(TokenSettings)));
+        _ = webApplicationBuilder.Services.Configure<JwtOptions>(webApplicationBuilder.Configuration.GetSection(nameof(JwtOptions)));
     }
 }

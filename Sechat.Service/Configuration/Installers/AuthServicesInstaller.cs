@@ -1,6 +1,7 @@
 ﻿using FluentAssertions.Common;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
@@ -8,63 +9,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Sechat.Data;
-using Sechat.Service.Settings;
+using Sechat.Service.Configuration.JWT;
 using System;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Sechat.Service.Configuration.Installers;
-
-//public class ConfigureJwtBearerOptions : IConfigureNamedOptions<JwtBearerOptions>
-//{
-//    private readonly IHostEnvironment _hostEnvironment;
-//    private readonly IOptionsMonitor<TokenSettings> _tokenSettings;
-
-//    public ConfigureJwtBearerOptions(
-//        IHostEnvironment hostEnvironment,
-//        IOptionsMonitor<TokenSettings> tokenSettings)
-//    {
-//        _hostEnvironment = hostEnvironment;
-//        _tokenSettings = tokenSettings;
-//    }
-
-//    public void Configure(JwtBearerOptions options)
-//    {
-//        // I decided to throw an exception here.
-//    }
-
-//    public void Configure(string name, JwtBearerOptions options)
-//    {
-
-//        //var token = "[encoded jwt]";
-//        //var handler = new JwtSecurityTokenHandler();
-//        //var jwtSecurityToken = handler.ReadJwtToken(token);
-
-//        var rsa = RSA.Create();
-//        rsa.ImportFromPem("");
-//        var key = new RsaSecurityKey(rsa);
-
-//        if (_hostEnvironment.IsDevelopment())
-//        {
-//            options.RequireHttpsMetadata = false;
-//        }
-
-//        options.SaveToken = true;
-//        options.TokenValidationParameters = new TokenValidationParameters
-//        {
-//            ValidIssuer = _tokenSettings.CurrentValue.Issuer,
-//            ValidAudience = _tokenSettings.CurrentValue.Audience,
-//            IssuerSigningKey = key,
-//            ValidateIssuerSigningKey = true,
-//            ClockSkew = TimeSpan.Zero,
-//            ValidateIssuer = true,
-//            ValidateAudience = true
-//        };
-//    }
-//}
 
 public class AuthServicesInstaller : IServiceInstaller
 {
@@ -109,29 +58,9 @@ public class AuthServicesInstaller : IServiceInstaller
             .AddDefaultTokenProviders();
         }
 
-        //_ = webApplicationBuilder.Services.AddAuthentication().AddJwtBearer("jwt", options =>
-        //{
-        //    var secretBytes = Encoding.UTF8.GetBytes(configuration.GetValue("AuthSettings:SecretKey", ""));
-        //    var key = new SymmetricSecurityKey(secretBytes);
-
-        //    if (webApplicationBuilder.Environment.IsDevelopment())
-        //    {
-        //        options.RequireHttpsMetadata = false;
-        //    }
-
-        //    options.SaveToken = true;
-        //    options.TokenValidationParameters = new TokenValidationParameters
-        //    {
-        //        ValidIssuer = configuration.GetValue("AuthSettings:Issuer", ""),
-        //        ValidAudience = configuration.GetValue("AuthSettings:Audience", ""),
-        //        IssuerSigningKey = key,
-        //        ValidateIssuerSigningKey = true,
-        //        ClockSkew = TimeSpan.Zero,
-        //        ValidateIssuer = true,
-        //        ValidateAudience = true
-        //    };
-
-        //});
+        _ = webApplicationBuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+        _ = webApplicationBuilder.Services.ConfigureOptions<JwtOptionsSetup>();
+        _ = webApplicationBuilder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
 
         _ = webApplicationBuilder.Services.ConfigureApplicationCookie(config =>
         {
@@ -147,6 +76,15 @@ public class AuthServicesInstaller : IServiceInstaller
 
         _ = webApplicationBuilder.Services.AddAuthorization(options =>
         {
+            options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme, IdentityConstants.ApplicationScheme)
+                .Build();
+
+            options.AddPolicy(AppConstants.AuthorizationPolicy.TokenPolicy, policy => policy
+                .RequireAuthenticatedUser()
+                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme));
+
             options.AddPolicy(AppConstants.AuthorizationPolicy.AdminPolicy, policy => policy
                 .RequireAuthenticatedUser()
                 .RequireClaim(AppConstants.ClaimType.Role,
