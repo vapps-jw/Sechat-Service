@@ -42,8 +42,8 @@ app.UseCors(AppConstants.CorsPolicy.WebClient);
 app.UseSecureHeadersMiddleware();
 app.UseSerilogRequestLogging();
 
+//app.UseHttpCacheHeaders();
 app.UseRouting();
-app.UseHttpCacheHeaders();
 
 app.UseRateLimiter();
 

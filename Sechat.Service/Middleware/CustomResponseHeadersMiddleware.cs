@@ -18,13 +18,13 @@ public class CustomResponseHeadersMiddleware : IMiddleware
         {
             context.Response.Headers.Append("SECHAT-RES", "sechat-server-response");
             context.Response.Headers.Append("X-Developed-By", "JWTK");
-            //context.Response.Headers[HeaderNames.CacheControl] = "no-store";
+            context.Response.Headers[HeaderNames.CacheControl] = "no-store";
 
             context.Response.OnStarting(() =>
             {
                 if (context.Response.StatusCode == 405)
                 {
-                    //context.Response.Headers[HeaderNames.CacheControl] = "no-store";
+                    context.Response.Headers[HeaderNames.CacheControl] = "no-store";
                     context.Response.Headers.Append("SECHAT-AUTH", "Forbidden");
                 }
 
