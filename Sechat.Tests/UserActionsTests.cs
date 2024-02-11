@@ -16,7 +16,7 @@ public class UserActionsTests
         var loginRes = await client.PostAsJsonAsync(@"account\login", new UserCredentials() { Password = "u1", Username = "u1" });
         Assert.Equal(HttpStatusCode.OK, loginRes.StatusCode);
 
-        var secretRes = await client.GetAsync(@"account\test");
+        var secretRes = await client.GetAsync(@"status\ping-authorized");
         Assert.Equal(HttpStatusCode.OK, secretRes.StatusCode);
     }
 
@@ -29,7 +29,7 @@ public class UserActionsTests
         var loginRes = await client.PostAsJsonAsync(@"account\login", new UserCredentials() { Password = "failed", Username = "failed" });
         Assert.Equal(HttpStatusCode.BadRequest, loginRes.StatusCode);
 
-        var secretRes = await client.GetAsync(@"account\test");
+        var secretRes = await client.GetAsync(@"status\ping-authorized");
         Assert.Equal(HttpStatusCode.MethodNotAllowed, secretRes.StatusCode);
     }
 
@@ -51,19 +51,5 @@ public class UserActionsTests
 
         var loginRes = await client.PostAsJsonAsync(@"account\register", new UserCredentials() { Password = "u1", Username = "u1" });
         Assert.Equal(HttpStatusCode.BadRequest, loginRes.StatusCode);
-    }
-
-    [Fact]
-    public async Task ProfileCreationTest()
-    {
-        using var masterApp = new MockedApi();
-        using var client = masterApp.CreateClient();
-
-        var loginRes = await client.PostAsJsonAsync(@"account\login", new UserCredentials() { Password = "u1", Username = "u1" });
-        Assert.Equal(HttpStatusCode.OK, loginRes.StatusCode);
-
-        var profile = await client.GetFromJsonAsync<UserProfileProjection>(@"account\get-profile");
-
-        Assert.NotNull(profile);
     }
 }

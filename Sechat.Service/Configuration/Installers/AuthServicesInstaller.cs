@@ -9,9 +9,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Sechat.Data;
-using Sechat.Service.Configuration.JWT;
 using System;
+using System.Text;
 
 namespace Sechat.Service.Configuration.Installers;
 
@@ -58,9 +59,32 @@ public class AuthServicesInstaller : IServiceInstaller
             .AddDefaultTokenProviders();
         }
 
-        _ = webApplicationBuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
-        _ = webApplicationBuilder.Services.ConfigureOptions<JwtOptionsSetup>();
-        _ = webApplicationBuilder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
+        _ = webApplicationBuilder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, config =>
+        {
+            var secretBytes = Encoding.UTF8.GetBytes(configuration.GetValue("JwtOptions:SecretKey", ""));
+            var key = new SymmetricSecurityKey(secretBytes);
+
+            if (webApplicationBuilder.Environment.IsDevelopment())
+            {
+                config.RequireHttpsMetadata = false;
+            }
+
+            config.SaveToken = true;
+            config.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidIssuer = configuration.GetValue("JwtOptions:Issuer", ""),
+                ValidAudience = configuration.GetValue("JwtOptions:Audience", ""),
+                IssuerSigningKey = key,
+                ValidateIssuerSigningKey = true,
+                ClockSkew = TimeSpan.Zero,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+            };
+        });
+
+        _ = webApplicationBuilder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
 
         _ = webApplicationBuilder.Services.ConfigureApplicationCookie(config =>
         {
@@ -69,10 +93,6 @@ public class AuthServicesInstaller : IServiceInstaller
             config.ExpireTimeSpan = TimeSpan.FromDays(30);
             config.Cookie.SameSite = SameSiteMode.Lax;
         });
-
-        _ = webApplicationBuilder.Services
-            .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
 
         _ = webApplicationBuilder.Services.AddAuthorization(options =>
         {
