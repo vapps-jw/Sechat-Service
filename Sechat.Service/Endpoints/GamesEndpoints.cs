@@ -11,7 +11,7 @@ namespace Sechat.Service.Endpoints;
 
 public static class GamesEndpoints
 {
-    public static void MapCalendarEndpoints(this IEndpointRouteBuilder app)
+    public static void MapGamesEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("games").RequireAuthorization();
         _ = group.MapGet("activeSessions", GetActiveSessions).WithName(nameof(GetActiveSessions));

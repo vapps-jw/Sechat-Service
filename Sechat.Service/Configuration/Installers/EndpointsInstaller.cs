@@ -9,6 +9,8 @@ public class EndpointsInstaller : IServiceInstaller
 {
     public void Install(WebApplicationBuilder webApplicationBuilder)
     {
+        webApplicationBuilder.Services.AddHealthChecks();
+
         _ = webApplicationBuilder.Services.AddOutputCache(options =>
         {
             options.AddBasePolicy(builder => builder.NoCache());

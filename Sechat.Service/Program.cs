@@ -1,10 +1,13 @@
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using OwaspHeaders.Core.Extensions;
 using Sechat.Service.Configuration;
 using Sechat.Service.Configuration.Installers;
+using Sechat.Service.Endpoints;
 using Sechat.Service.Hubs;
 using Sechat.Service.Middleware;
 using Sechat.Service.Utilities;
@@ -36,7 +39,11 @@ if (app.Environment.IsProduction())
     _ = app.UseHsts();
 }
 
-
+app.MapGamesEndpoints();
+app.MapHealthChecks("health", new HealthCheckOptions()
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+}).RequireAuthorization(AppConstants.AuthorizationPolicy.AdminPolicy);
 
 app.UseCors(AppConstants.CorsPolicy.WebClient);
 app.UseSecureHeadersMiddleware();
