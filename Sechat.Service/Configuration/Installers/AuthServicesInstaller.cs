@@ -34,8 +34,8 @@ public class AuthServicesInstaller : IServiceInstaller
                 options.Password.RequiredLength = 8;
 
                 options.Lockout.AllowedForNewUsers = true;
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+                options.Lockout.MaxFailedAccessAttempts = 10;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
             })
             .AddEntityFrameworkStores<SechatContext>()
             .AddDefaultTokenProviders();
