@@ -68,7 +68,8 @@ public class AdminController : SechatControllerBase
     }
 
     [HttpGet("usernames")]
-    public IActionResult GetUserNames(CancellationToken cancellationToken) => Ok(_userManager.Users.Select(iu => iu.UserName).OrderBy(u => u).ToList());
+    public async Task<IActionResult> GetUserNames(CancellationToken cancellationToken) => 
+        Ok(await _userManager.Users.Select(iu => iu.UserName).OrderBy(u => u).ToListAsync(cancellationToken));
 
     [HttpDelete("delete-account/{userName}")]
     public async Task<IActionResult> DeleteAccount(string userName, CancellationToken cancellationToken)
